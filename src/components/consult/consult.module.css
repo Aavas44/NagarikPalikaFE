@@ -1,0 +1,256 @@
+.portal {
+  min-height: 100vh;
+  background: #f9fafb;
+}
+
+.portalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.portalHeader a {
+  color: #042c53;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.portalNav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.portalNav a {
+  font-size: 14px;
+  font-weight: 400;
+  color: #6b7280;
+}
+
+.portalNav a:hover {
+  color: #185fa5;
+}
+
+.portalMain {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.portalCard {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.portalCard h1 {
+  font-size: 22px;
+  color: #042c53;
+  margin-bottom: 0.5rem;
+}
+
+.portalCard h2 {
+  font-size: 16px;
+  color: #042c53;
+  margin-bottom: 0.75rem;
+}
+
+.formGroup {
+  margin-bottom: 1rem;
+}
+
+.formGroup label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.formGroup textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.notice {
+  background: #e6f1fb;
+  border: 1px solid #b5d4f4;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  color: #0c447c;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.error {
+  background: #fcebeb;
+  color: #a32d2d;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 1rem;
+}
+
+.btnPrimary {
+  background: #185fa5;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btnPrimary:hover {
+  background: #0c447c;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  background: #fff;
+  color: #185fa5;
+  border: 1px solid #b5d4f4;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.btnDanger {
+  background: #fcebeb;
+  color: #a32d2d;
+  border: 1px solid #f09595;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.statusBadge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.statusAccepted {
+  background: #eaf3de;
+  color: #3b6d11;
+}
+
+.statusPending {
+  background: #fae8da;
+  color: #854f0b;
+}
+
+.advocateList {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.advocateItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 13px;
+}
+
+.advocateItem:last-child {
+  border-bottom: none;
+}
+
+.contactBox {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.contactBox p {
+  margin: 4px 0;
+}
+
+.paymentBtns {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.checkboxGroup label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  text-transform: none;
+  font-weight: 400;
+  color: #374151;
+  cursor: pointer;
+}
+
+.multiSelect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: #e6f1fb;
+  color: #185fa5;
+}
+
+@media (max-width: 640px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+
+  .portalMain {
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,668 @@
+{
+  "source": "SaralSewa_Nepali_Government_Glossary_v2.xlsx",
+  "title": "सरल सेवा (SaralSewa) — Nepali Government Glossary",
+  "count": 71,
+  "categories": [
+    {
+      "name": "Municipality Office",
+      "count": 15
+    },
+    {
+      "name": "Land & Revenue Office",
+      "count": 15
+    },
+    {
+      "name": "Local Government",
+      "count": 14
+    },
+    {
+      "name": "Business & Industry",
+      "count": 13
+    },
+    {
+      "name": "Legal & Judiciary",
+      "count": 14
+    }
+  ],
+  "entries": [
+    {
+      "category": "Municipality Office",
+      "number": 1,
+      "term": "सिफारिस",
+      "Roman Transliteration": "Sifaris",
+      "english": "Official Recommendation Letter",
+      "meaningNe": "सिफारिस भनेको नगरपालिका वा वडा कार्यालयले कुनै व्यक्तिको परिचय, बसोबास वा तथ्य प्रमाणित गर्न दिने आधिकारिक लिखित पत्र हो। यो पत्र अन्य सरकारी कार्यालयमा दरखास्त पेस गर्दा अनिवार्य रूपमा माग गरिन्छ। सिफारिसले व्यक्तिको नाम, ठेगाना, नागरिकता नम्बर र माग गरेको विवरण उल्लेख गर्दछ।",
+      "meaningEn": "A Sifaris is an official written recommendation or attestation issued by the Ward Office or Municipality certifying facts about a person — such as residence, identity, relationship, or property ownership. It is a mandatory supporting document when applying for most government services, passports, loans, and legal processes. The letter carries the official seal and signature of the ward chairperson or municipality chief."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 2,
+      "term": "घर बाटो सिफारिस",
+      "Roman Transliteration": "Ghar Bato Sifaris",
+      "english": "House Passage Recommendation",
+      "meaningNe": "घर बाटो सिफारिस भनेको कुनै व्यक्तिको घर वा जग्गामा आवतजावत गर्ने बाटोको अस्तित्व र प्रयोगको अधिकार प्रमाणित गर्न वडा कार्यालयले दिने लिखित सिफारिस हो। यो दस्तावेज साँधसिमाना विवाद भएका बेला वा घर निर्माण अनुमति लिँदा आवश्यक पर्दछ।",
+      "meaningEn": "A Ghar Bato Sifaris is a formal recommendation issued by the Ward Office certifying the existence and right of passage to a particular house or land parcel. It documents the recognized pathway, its width, direction, and the parties' agreement, and is required when applying for building permits, resolving boundary disputes, or registering property transactions that involve access roads."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 3,
+      "term": "जग्गा धनी प्रमाण पुर्जा",
+      "Roman Transliteration": "Jagga Dhani Praman Purja",
+      "english": "Land Ownership Certificate (Lalpurja)",
+      "meaningNe": "जग्गा धनी प्रमाण पुर्जा (लालपुर्जा) नेपालमा जग्गाको स्वामित्व प्रमाणित गर्ने सर्वोच्च कानुनी दस्तावेज हो। यो मालपोत कार्यालयले जारी गर्दछ र यसमा जग्गाको क्षेत्रफल, किसिम, वडा नम्बर र धनीको नाम उल्लेख हुन्छ। सम्पत्ति बिक्री, धितो वा हस्तान्तरणका लागि अनिवार्य।",
+      "meaningEn": "The Jagga Dhani Praman Purja, commonly known as Lalpurja (meaning 'red document'), is the supreme legal instrument of land ownership in Nepal. Issued by the Land Revenue Office (Malpot Karyalaya), it specifies the plot area, category (residential/agricultural/forest), ward number, VDC/Municipality, and the registered owner's name. It is indispensable for all property transactions including sale, mortgage, gift, and inheritance, and serves as primary evidence in property-related court cases."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 4,
+      "term": "जन्म दर्ता",
+      "Roman Transliteration": "Janma Darta",
+      "english": "Birth Registration",
+      "meaningNe": "जन्म दर्ता भनेको बच्चाको जन्मपछि सरकारी अभिलेखमा उसको जन्म विवरण (नाम, जन्म मिति, स्थान, अभिभावकको नाम) दर्ता गर्ने प्रशासनिक प्रक्रिया हो। नेपालमा जन्मेको ३५ दिनभित्र स्थानीय वडा कार्यालयमा दर्ता गर्नु अनिवार्य छ। यो नागरिकताको आधार हो।",
+      "meaningEn": "Birth Registration is the official administrative process of recording a child's birth in government records — including name, date of birth, place of birth, and parents' details — at the local Ward Office. Under Nepal's Vital Registration Act, registration must occur within 35 days of birth. The birth certificate issued serves as the foundational document for obtaining citizenship, passport, school enrollment, and all subsequent government services."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 5,
+      "term": "मृत्यु दर्ता",
+      "Roman Transliteration": "Mrityu Darta",
+      "english": "Death Registration",
+      "meaningNe": "मृत्यु दर्ता भनेको कुनै व्यक्तिको मृत्युपछि उक्त घटना वडा कार्यालयको सरकारी अभिलेखमा दर्ता गर्ने प्रक्रिया हो। मृत्यु दर्ता प्रमाणपत्र सम्पत्ति हस्तान्तरण, बिमा दाबी, पेन्सन बन्द गर्न र कानुनी उत्तराधिकार निर्धारण गर्न आवश्यक पर्दछ।",
+      "meaningEn": "Death Registration is the official process of recording a person's death in government records at the Ward Office. The resulting death certificate is legally required to close bank accounts, transfer property rights, settle insurance claims, discontinue pension payments, and establish legal heirship. In Nepal, it must be registered at the ward office of the deceased's last residence, typically within 35 days."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 6,
+      "term": "विवाह दर्ता",
+      "Roman Transliteration": "Vivaha Darta",
+      "english": "Marriage Registration",
+      "meaningNe": "विवाह दर्ता भनेको वडा कार्यालय वा अदालतमा गरिएको विवाहको कानुनी मान्यता प्राप्त दर्ता हो। यसमा दुवै पक्षको सहमति, साक्षीहरूको उपस्थिति र आधिकारिक मुचुल्का आवश्यक पर्दछ। विवाह दर्ताले सम्पत्ति अधिकार, नागरिकता र सामाजिक सुरक्षा सुविधाहरू निर्धारण गर्दछ।",
+      "meaningEn": "Marriage Registration is the legal recognition of a marriage by the Ward Office or court, creating an official marriage certificate. Both parties must provide consent, witnesses must be present, and a formal declaration is recorded. The certificate governs property rights, citizenship eligibility for spouses, succession, social security benefits, and is required for passport, visa, and dependent documentation purposes."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 7,
+      "term": "सम्बन्ध विच्छेद दर्ता",
+      "Roman Transliteration": "Sambandha Vichchhed Darta",
+      "english": "Divorce Registration",
+      "meaningNe": "सम्बन्ध विच्छेद दर्ता भनेको अदालतको फैसला वा पारस्परिक सहमतिका आधारमा विवाह भंग भएको तथ्य सरकारी अभिलेखमा दर्ता गर्ने प्रक्रिया हो। मुलुकी देवानी संहिता २०७४ अनुसार सम्बन्ध विच्छेदपछि सम्पत्ति बाँडफाँट, बच्चाको अभिभावकत्व र भरणपोषण निर्धारण गरिन्छ।",
+      "meaningEn": "Divorce Registration is the formal recording of a marriage dissolution in government records, following either a court decree or mutual consent. Under the Muluki Civil Code 2074, registration triggers legal consequences including division of joint property, determination of child custody and guardianship, maintenance obligations, and the restoration of each party's independent legal status for remarriage and property rights."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 8,
+      "term": "बसाइँ सराइ दर्ता",
+      "Roman Transliteration": "Basai Sarai Darta",
+      "english": "Migration Registration",
+      "meaningNe": "बसाइँ सराइ दर्ता भनेको एउटा स्थानबाट अर्को स्थानमा स्थायी रूपमा बसोबास सारेको तथ्य सरकारी अभिलेखमा दर्ता गर्ने प्रक्रिया हो। यो दर्ताले मतदाता नामावली, सरकारी सेवा र नागरिकता अद्यावधिक गर्न आधार प्रदान गर्दछ।",
+      "meaningEn": "Migration Registration (Basai Sarai Darta) is the official recording of permanent relocation from one administrative unit to another. When a household shifts residence, they must register the departure at the origin ward and register arrival at the destination ward. This updates voter rolls, citizenship address, social security records, and is required to access local government services at the new location."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 9,
+      "term": "चारकिल्ला प्रमाणित",
+      "Roman Transliteration": "Char Killa Pramanit",
+      "english": "Four-Boundary Certification",
+      "meaningNe": "चारकिल्ला प्रमाणित भनेको कुनै जग्गाको चारैतिरको सिमाना (पूर्व, पश्चिम, उत्तर, दक्षिण) को विवरण वडा कार्यालयबाट प्रमाणित गर्ने प्रक्रिया हो। यो दस्तावेज जग्गा बेचबिखन, धितो राख्न र सम्पत्ति नामसारी गर्दा अनिवार्य रूपमा माग गरिन्छ।",
+      "meaningEn": "Char Killa Pramanit is the official certification of a land parcel's four cardinal boundaries (East, West, North, South), issued by the Ward Office. It specifies what lies on each side — whether a road, river, another plot, or a neighbor's land — and identifies the neighboring landowners by name. This document is mandatory when registering property sale, mortgage, partition, or any land transaction at the Land Revenue Office."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 10,
+      "term": "नागरिकता सिफारिस",
+      "Roman Transliteration": "Nagarikata Sifaris",
+      "english": "Citizenship Recommendation",
+      "meaningNe": "नागरिकता सिफारिस भनेको वडा कार्यालयले व्यक्तिको पहिचान र नागरिकताको दाबीलाई प्रमाणित गरी जिल्ला प्रशासन कार्यालयमा पठाउने आधिकारिक पत्र हो। यसमा आवेदकको जन्म विवरण, बसोबास र अभिभावकको जानकारी समावेश हुन्छ।",
+      "meaningEn": "Nagarikata Sifaris is a formal recommendation letter issued by the Ward Office to the District Administration Office (DAO), certifying the applicant's identity, permanent residence, and eligibility for citizenship. It includes the applicant's birth date, place of birth, parents' citizenship details, and ward verification. Without this document, the DAO will not process a citizenship application."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 11,
+      "term": "घर नक्सा पास",
+      "Roman Transliteration": "Ghar Naksa Pass",
+      "english": "Building Plan Approval",
+      "meaningNe": "घर नक्सा पास भनेको नगरपालिका वा स्थानीय सरकारले भवन निर्माण गर्नु अगाडि दिने आधिकारिक स्वीकृति हो। यसमा वास्तुकला र संरचनाको नक्सा, जग्गा धनी प्रमाणपत्र र चारकिल्ला कागजात पेस गर्नु पर्दछ। बिना नक्सा पास निर्माण गर्नु गैरकानुनी छ।",
+      "meaningEn": "Ghar Naksa Pass is the mandatory building plan approval issued by the Municipality or local government before any construction begins. The applicant must submit architectural and structural drawings, land ownership certificate (Lalpurja), Char Killa certification, and site plan. Construction without approval is illegal and can result in demolition orders, fines, and refusal of water/electricity connections. Approval ensures the structure meets zoning, safety, and setback regulations."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 12,
+      "term": "व्यवसाय दर्ता सिफारिस",
+      "Roman Transliteration": "Byabasaya Darta Sifaris",
+      "english": "Business Registration Recommendation",
+      "meaningNe": "व्यवसाय दर्ता सिफारिस भनेको वडा कार्यालयले कुनै व्यवसाय सञ्चालन गर्न उचित ठाउँ, व्यवसायीको परिचय र व्यवसायको प्रकृति प्रमाणित गरी दिने सिफारिस पत्र हो। यो पत्र जिल्ला वाणिज्य कार्यालय वा उद्योग कार्यालयमा व्यवसाय दर्ता गर्दा अनिवार्य हुन्छ।",
+      "meaningEn": "A Business Registration Sifaris is an official recommendation from the Ward Office certifying the applicant's identity, the proposed business location, and the nature of the business. It is a prerequisite when registering a business at the District Commerce Office or the Office of the Company Registrar. The letter confirms that the business premises are within the ward's jurisdiction and that the applicant is a resident of that ward."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 13,
+      "term": "घरजग्गा कर",
+      "Roman Transliteration": "GharJagga Kar",
+      "english": "Property Tax",
+      "meaningNe": "घरजग्गा कर भनेको स्थानीय सरकारले भवन र जग्गाको मूल्यांकनमा आधारित भई घरधनी वा जग्गाधनीबाट वार्षिक रूपमा उठाउने राजस्व कर हो। कर तिर्न बाँकी भएमा जग्गा रोक्का राखिन्छ र सम्पत्ति लिलाम गर्न सकिन्छ।",
+      "meaningEn": "GharJagga Kar is the annual property tax levied by the local government (Municipality or Rural Municipality) on land and buildings, based on assessed value. Non-payment results in penalties, freezing of the property in land records, and ultimately public auction. Property tax clearance certificates are required when transferring ownership, obtaining loans, or renewing business licenses."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 14,
+      "term": "मोही लगत कट्टा",
+      "Roman Transliteration": "Mohi Lagat Katta",
+      "english": "Tenant Farmer Record Removal",
+      "meaningNe": "मोही लगत कट्टा भनेको जग्गामा कमाउने अधिकार (मोहियानी हक) राख्ने किसानको नाम मालपोत अभिलेखबाट हटाउने प्रक्रिया हो। मोहियानी हक अन्त्यपछि जग्गाधनीले पूर्ण स्वामित्व पुनः प्राप्त गर्दछ। यो प्रक्रियामा कानुनी सूचना र क्षतिपूर्ति भुक्तानी आवश्यक हुन सक्छ।",
+      "meaningEn": "Mohi Lagat Katta is the administrative process of removing a tenant farmer's (Mohi's) cultivating rights from the Land Revenue Office records. Under Nepal's land reform laws, certain farmers had statutory tenancy rights (Mohiyani Hak) recorded in the Khatiyan. After legal settlement and any applicable compensation, the tenant's name is struck from the record, restoring full unencumbered ownership to the landowner. This process requires formal application and verification at the Malpot office."
+    },
+    {
+      "category": "Municipality Office",
+      "number": 15,
+      "term": "सार्वजनिक सम्पत्ति सिफारिस",
+      "Roman Transliteration": "Sarwajanik Sampatti Sifaris",
+      "english": "Public Property Recommendation",
+      "meaningNe": "सार्वजनिक सम्पत्ति सिफारिस भनेको कुनै जग्गा वा सम्पत्ति सार्वजनिक उपयोगका लागि (सडक, पाटी, धार्मिक स्थल आदि) रहेको तथ्य वडा कार्यालयले प्रमाणित गर्ने लिखित सिफारिस हो। यसले स्वामित्व विवादमा स्थानीय सरकारको दृष्टिकोण प्रस्तुत गर्दछ।",
+      "meaningEn": "A Sarwajanik Sampatti Sifaris is a written recommendation from the Ward Office certifying that a particular land or property is dedicated to public use — such as a road, public resting place (pati/pauwa), temple grounds, or community facility. It is submitted as evidence in disputes over public land encroachment, land acquisition proceedings, or when petitioning for maintenance and development funds from the municipality."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 1,
+      "term": "लालपुर्जा",
+      "Roman Transliteration": "Lalpurja",
+      "english": "Land Ownership Certificate",
+      "meaningNe": "लालपुर्जा नेपालमा जग्गाको स्वामित्व प्रमाणित गर्ने सर्वोच्च कानुनी दस्तावेज हो। मालपोत कार्यालयले जारी गर्ने यो प्रमाणपत्रमा जग्गाको क्षेत्रफल, किसिम, वडा/नगरपालिका र धनीको नाम उल्लेख हुन्छ। सम्पत्ति बिक्री, धितो, दान र उत्तराधिकारका लागि अपरिहार्य दस्तावेज।",
+      "meaningEn": "Lalpurja (literally 'red document') is the supreme legal certificate of land ownership in Nepal, issued by the Land Revenue Office (Malpot Karyalaya) after registration and verification. It records the plot size, land type (Abadi/Pakho/Kharbari etc.), ward and municipality, and the registered owner's full name and citizenship number. It is the primary evidence in all property transactions — sale, mortgage, gift, partition, and inheritance — and is essential for obtaining bank loans and resolving land disputes in court."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 2,
+      "term": "दाखिल खारेज",
+      "Roman Transliteration": "Dakhil Kharej",
+      "english": "Ownership Transfer in Revenue Records",
+      "meaningNe": "दाखिल खारेज भनेको मालपोत कार्यालयको राजस्व अभिलेखमा पुरानो मालिकको नाम हटाई (खारेज) नयाँ मालिकको नाम राख्ने (दाखिल) प्रक्रिया हो। जग्गा खरिद वा अन्य हस्तान्तरणपछि यो प्रक्रिया गर्नु अनिवार्य छ। बिना दाखिल खारेज, नयाँ मालिकको नाम सरकारी अभिलेखमा दर्ज हुँदैन।",
+      "meaningEn": "Dakhil Kharej is the mandatory revenue record amendment at the Land Revenue Office: 'Dakhil' means inserting the new owner's name into the Khatiyan (record of rights), and 'Kharej' means striking out the previous owner's name. This must be completed after every property transaction — purchase, inheritance, gift, or court order — to officially reflect the change of ownership. Without Dakhil Kharej, the new owner has no official government record of ownership, making future transactions impossible."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 3,
+      "term": "नामसारी",
+      "Roman Transliteration": "Namsari",
+      "english": "Name Transfer",
+      "meaningNe": "नामसारी भनेको जग्गाको सरकारी अभिलेखमा नयाँ मालिकको नाम दर्ता गर्ने प्रशासनिक प्रक्रिया हो। खरिद, उत्तराधिकार वा दानपछि मालपोतमा आवेदन दिएर यो प्रक्रिया पूरा गरिन्छ। यसमा लालपुर्जा, नागरिकता र हस्तान्तरण दस्तावेज आवश्यक पर्दछ।",
+      "meaningEn": "Namsari literally means 'name transfer' — the administrative process by which the Land Revenue Office officially updates its records to reflect the new property owner's name. It is required after purchase, inheritance, or gifting. The applicant submits the original Lalpurja, citizenship documents, and the transfer instrument (sale deed, partition deed, or court order). Once completed, the Malpot issues an updated Lalpurja bearing the new owner's name."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 4,
+      "term": "रोक्का",
+      "Roman Transliteration": "Rokka",
+      "english": "Property Freeze/Hold",
+      "meaningNe": "रोक्का भनेको मालपोत कार्यालयको अभिलेखमा कुनै जग्गाको कारोबार (बिक्री, धितो, हस्तान्तरण) गर्न अस्थायी रूपमा रोक लगाउने प्रक्रिया हो। बैंकले ऋण धितो वापत, अदालतले विवादमा वा सरकारले अनुसन्धानको क्रममा रोक्का राख्न सक्दछ।",
+      "meaningEn": "Rokka is the official freezing of a property in Land Revenue Office records, preventing any sale, mortgage, or transfer. It is placed at the request of banks and financial institutions when property is used as loan collateral, by courts during property disputes, or by government agencies during investigations. By government directive, Rokka must be processed within 24 hours. As long as Rokka is active, no transaction can be registered on the property."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 5,
+      "term": "फुकुवा",
+      "Roman Transliteration": "Phukuwa",
+      "english": "Property Freeze Release",
+      "meaningNe": "फुकुवा भनेको मालपोत कार्यालयमा रहेको सम्पत्तिको रोक्का हटाउने प्रक्रिया हो। ऋण चुक्ता भएपछि वा अदालतको आदेशले रोक्का फुकाउन बैंक वा सम्बन्धित निकायले आवेदन दिन्छ र मालपोतले अभिलेख अद्यावधिक गर्दछ।",
+      "meaningEn": "Phukuwa is the formal release of a property freeze (Rokka) from the Land Revenue Office records. Once the triggering condition is resolved — a loan is fully repaid, a court case is settled, or a government investigation concludes — the requesting party (bank, court, or agency) submits a release application to the Malpot. The government has directed that Phukuwa must be processed digitally and completed within 24 hours of request."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 6,
+      "term": "अंशबन्डा",
+      "Roman Transliteration": "Anshbanda",
+      "english": "Property Partition Among Heirs",
+      "meaningNe": "अंशबन्डा भनेको पारिवारिक वा पुख्र्यौली सम्पत्तिलाई हकदारहरू बीच कानुनी रूपमा बाँडफाँट गर्ने प्रक्रिया हो। मुलुकी देवानी संहिता २०७४ को धारा २०५–२३६ अनुसार हकदारहरूले आपसी सहमति वा अदालती आदेशबाट अंशबन्डा गर्न सक्दछन्। बाँडफाँट पत्र (अंशबन्डा कागजात) मालपोतमा दर्ता गर्नु पर्दछ।",
+      "meaningEn": "Anshbanda is the legal division and partition of ancestral or joint family property among all entitled heirs (coparceners), giving each a defined and independent share. Governed by the Muluki Civil Code 2074, Articles 205–236, it covers both ancestral property (Paitrik Sampatti) and self-earned property where applicable. The partition can be done by mutual agreement or court order. The resulting partition deed must be signed by all parties and registered at the Land Revenue Office, after which each heir receives their own Lalpurja."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 7,
+      "term": "तमसुक",
+      "Roman Transliteration": "Tamsuk",
+      "english": "Promissory Note / Loan Bond",
+      "meaningNe": "तमसुक भनेको दुई पक्षबिच नगद लेनदेनमा रकमको सुरक्षा र आपसी विश्वासका लागि तयार गरिने लिखत हो। निजी लिखत कानुन २०४५ र मुलुकी देवानी संहिता २०७४ धारा ४७४–४९२ अन्तर्गत यसका चार किसिम छन्: कपाली (व्यक्तिगत जमानत), दृष्टिबन्धक (चल सम्पत्ति धितो), भोगबन्धक (सम्पत्ति भोगाधिकार) र लखबन्धक (पुनः धितो)। रु. ५०,०००भन्दा बढी रकमको तमसुक वडा वा मालपोतमा दर्ता गर्नु अनिवार्य छ।",
+      "meaningEn": "A Tamsuk is a formal promissory note or loan bond executed between two parties to record a financial transaction and ensure repayment. Governed by the Private Document Act 2045 and Muluki Civil Code 2074 (Sections 474–492), there are four types: (1) Kapali — unsecured personal bond with only the borrower's personal guarantee; (2) Drishtibandak — property pledged as visible collateral with a maximum 5-year term; (3) Bhogbandak — creditor takes usufruct (use and enjoyment) of the property until repayment; (4) Lakhbandak — sub-mortgage on already-mortgaged property. Tamsuk over NPR 50,000 must be registered at the ward office or Land Revenue Office to be legally enforceable."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 8,
+      "term": "कित्ता नम्बर",
+      "Roman Transliteration": "Kitta Number",
+      "english": "Plot Number",
+      "meaningNe": "कित्ता नम्बर भनेको मालपोत कार्यालयको नक्सा (नापी नक्सा) मा प्रत्येक जग्गाको टुक्रालाई दिइएको अद्वितीय पहिचान नम्बर हो। यो नम्बरले लालपुर्जा, खतियान र नापी नक्सामा एउटै जग्गालाई जोड्दछ र सम्पत्ति खोज्न तथा प्रमाणित गर्न प्रयोग गरिन्छ।",
+      "meaningEn": "A Kitta Number is the unique parcel identification number assigned to each individual plot of land on the cadastral survey map (Napi Naksha) maintained by the Land Revenue Office. It links the physical parcel on the ground to its entry in the Lalpurja (ownership certificate) and Khatiyan (record of rights). Every property search, tax assessment, and transaction uses the Kitta Number as the primary identifier. A single owner may hold multiple Kitta Numbers if they own multiple parcels."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 9,
+      "term": "खतियान",
+      "Roman Transliteration": "Khatiyan",
+      "english": "Land Record Register",
+      "meaningNe": "खतियान भनेको मालपोत कार्यालयमा राखिने आधिकारिक जग्गा अभिलेख पुस्तक हो जसमा प्रत्येक कित्ताको मालिक, क्षेत्रफल, किसिम र मोहियानी विवरण लेखिएको हुन्छ। यो अभिलेख स्वामित्व विवाद, कर निर्धारण र दाखिल खारेज प्रक्रियामा प्रयोग हुन्छ।",
+      "meaningEn": "The Khatiyan is the official land register (Record of Rights) maintained by the Land Revenue Office, recording for each Kitta: the owner's name, area, land type, cultivation rights (if any Mohi), and encumbrances. It is the authoritative source for determining ownership, resolving disputes, computing property taxes, and processing Dakhil Kharej. The Khatiyan and the cadastral map (Napi Naksha) together form the two pillars of Nepal's land records system."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 10,
+      "term": "जग्गा नापी",
+      "Roman Transliteration": "Jagga Napi",
+      "english": "Land Survey",
+      "meaningNe": "जग्गा नापी भनेको भूमि व्यवस्था, सहकारी तथा गरिबी निवारण मन्त्रालयको नाप नक्सा विभागले जग्गाको क्षेत्रफल, आकार र सिमाना मापन गर्ने आधिकारिक भूमि सर्वेक्षण प्रक्रिया हो। नापी नक्साले जग्गाको वास्तविक अवस्था कागजातसँग मिल्दो छ कि छैन जाँच गर्दछ।",
+      "meaningEn": "Jagga Napi is the official land survey conducted by the Department of Survey under the Ministry of Land Management, Cooperatives and Poverty Alleviation, measuring the exact area, boundaries, and shape of each land parcel and producing the cadastral map (Napi Naksha). When discrepancies exist between actual ground conditions and official records — such as after floods, boundary adjustments, or subdivision — a new Napi is required to update records. The survey is also needed for first-time registration of previously unregistered land."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 11,
+      "term": "जग्गा एकीकरण",
+      "Roman Transliteration": "Jagga Ekikaran",
+      "english": "Land Consolidation/Pooling",
+      "meaningNe": "जग्गा एकीकरण भनेको छरिएका साना जग्गाका टुक्राहरूलाई एकत्रित गरी ठूलो, सुव्यवस्थित कित्तामा परिणत गर्ने प्रक्रिया हो। शहरी विकास परियोजना वा कृषि सुधार कार्यक्रमहरूमा यो प्रक्रिया अपनाइन्छ। एकीकरणपछि पुरानो लालपुर्जा खारेज हुन्छ र नयाँ जारी हुन्छ।",
+      "meaningEn": "Jagga Ekikaran is the process of consolidating multiple small, fragmented land parcels owned by different individuals into a larger, well-planned plot — typically for urban development (land pooling projects) or agricultural improvement programs. Participants give up their original scattered plots and receive a proportionally smaller but more valuable consolidated plot in return. After consolidation, original Lalpurjas are cancelled and new ones issued for the consolidated parcels."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 12,
+      "term": "सुकुम्बासी",
+      "Roman Transliteration": "Sukumbasi",
+      "english": "Squatter/Landless Person",
+      "meaningNe": "सुकुम्बासी भनेको आफ्नो जग्गा नभएको र अरूको वा सरकारी जग्गामा बसोबास गर्ने व्यक्ति हो। नेपाल सरकारले समय–समयमा भूमिहीन सुकुम्बासीहरूलाई जग्गाको पर्चा (अस्थायी स्वामित्व) दिने कार्यक्रम ल्याएको छ। यसको निर्धारण जिल्ला भूमि आयोगले गर्दछ।",
+      "meaningEn": "Sukumbasi refers to a landless squatter — a person who has no registered land of their own and lives on government-owned, public, or others' land without formal title. The Government of Nepal has periodically run land distribution programs to provide Sukumbasi families with Purja (provisional ownership certificates). Their cases are adjudicated by the District Land Commission. Sukumbasi status affects eligibility for land reform benefits, social housing, and poverty alleviation programs."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 13,
+      "term": "भू–उपयोग नक्सा",
+      "Roman Transliteration": "Bhu-Upayog Naksha",
+      "english": "Land Use Map",
+      "meaningNe": "भू–उपयोग नक्सा भनेको जग्गाको किसिम र उपयोग (कृषि, आवासीय, वन, व्यापारिक, औद्योगिक) वर्गीकरण देखाउने आधिकारिक नक्सा हो। यो वर्गीकरणले निर्माण अनुमति, कर दर र कृषि ऋण योग्यता निर्धारण गर्दछ।",
+      "meaningEn": "A Bhu-Upayog Naksha (Land Use Map) is the official map classifying each land parcel by its designated use category: agricultural (Krishi), residential (Awasiya), commercial (Byabasayik), industrial (Audyogik), forest (Ban), or public (Sarwajanik). The classification determines applicable building regulations, property tax rates, eligibility for agricultural loans, and restrictions on land conversion. Changing a parcel's land use category requires a formal application and approval."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 14,
+      "term": "जग्गा रूपान्तरण",
+      "Roman Transliteration": "Jagga Rupantaran",
+      "english": "Land Conversion",
+      "meaningNe": "जग्गा रूपान्तरण भनेको कृषि जग्गालाई आवासीय वा व्यापारिक प्रयोजनमा परिणत गर्न सरकारी स्वीकृति लिने प्रक्रिया हो। भूमि व्यवस्था कार्यालय र स्थानीय सरकारबाट अनुमति लिनु पर्दछ र रूपान्तरण शुल्क तिर्नु पर्दछ।",
+      "meaningEn": "Jagga Rupantaran is the formal process of converting land from one designated use category to another — most commonly from agricultural to residential or commercial. Approval is required from the Land Management Office and the local government, and a conversion fee is levied based on land area and location. Without conversion approval, constructing buildings on agricultural land is illegal. After approval, the Lalpurja is updated to reflect the new land use classification."
+    },
+    {
+      "category": "Land & Revenue Office",
+      "number": 15,
+      "term": "श्रेस्ता",
+      "Roman Transliteration": "Shresta",
+      "english": "Land Revenue Record/Register",
+      "meaningNe": "श्रेस्ता भनेको मालपोत कार्यालयमा राखिने विस्तृत भूमि राजस्व अभिलेख हो जसमा जग्गाको कर तिराइ, हस्तान्तरण इतिहास र स्वामित्व परिवर्तनको विवरण लेखिएको हुन्छ। श्रेस्ता अद्यावधिक नगरे कर बाँकी हुन सक्छ।",
+      "meaningEn": "Shresta is the comprehensive land revenue register maintained at the Land Revenue Office, recording each parcel's tax payment history, ownership transfer chronology, encumbrances, and revenue status. It is distinct from the Khatiyan in that it focuses on fiscal and transactional history rather than just current ownership. An outdated Shresta can indicate unpaid taxes, which will block future transactions until all arrears are cleared."
+    },
+    {
+      "category": "Local Government",
+      "number": 1,
+      "term": "स्थानीय सरकार",
+      "Roman Transliteration": "Sthaniya Sarkar",
+      "english": "Local Government",
+      "meaningNe": "स्थानीय सरकार भनेको नेपालको संघीय संरचनाको तेस्रो तह हो जसमा महानगरपालिका, उपमहानगरपालिका, नगरपालिका र गाउँपालिका पर्दछन्। नेपालको संविधान २०७२ र स्थानीय सरकार सञ्चालन ऐन २०७४ अनुसार स्थानीय सरकारलाई २२ वटा एकल अधिकार र ३३ वटा साझा अधिकार प्रदान गरिएको छ।",
+      "meaningEn": "Local Government is the third tier of Nepal's federal structure, comprising Metropolitan Cities (Mahanagarpalikas), Sub-Metropolitan Cities, Municipalities, and Rural Municipalities (Gaunpalikas). Under the Constitution of Nepal 2072 and the Local Government Operation Act 2074, local governments hold 22 exclusive powers and 33 concurrent powers including education, health, local infrastructure, agriculture, and social welfare. They levy local taxes, formulate local laws, and deliver direct services to citizens."
+    },
+    {
+      "category": "Local Government",
+      "number": 2,
+      "term": "वडा कार्यालय",
+      "Roman Transliteration": "Wada Karyalaya",
+      "english": "Ward Office",
+      "meaningNe": "वडा कार्यालय भनेको स्थानीय सरकारको सबैभन्दा तल्लो प्रशासनिक एकाइ हो जसले सिफारिस, दर्ता र नागरिक सेवाहरू प्रदान गर्दछ। वडा अध्यक्ष र चार सदस्यहरूले वडाको प्रशासनिक र विकास कार्यहरू सञ्चालन गर्दछन्।",
+      "meaningEn": "The Ward Office (Wada Karyalaya) is the lowest administrative unit of local government, directly serving citizens at the grassroots level. Led by an elected Ward Chairperson and four Ward Members, it provides all local-level services: issuing sifaris (recommendations), registering births/deaths/marriages, providing introductory letters for citizenship, and facilitating public services. There are 6,743 wards across Nepal's 753 local governments."
+    },
+    {
+      "category": "Local Government",
+      "number": 3,
+      "term": "गाउँपालिका",
+      "Roman Transliteration": "Gaunpalika",
+      "english": "Rural Municipality",
+      "meaningNe": "गाउँपालिका भनेको ग्रामीण क्षेत्रमा स्थापित स्थानीय सरकारको एकाइ हो। नेपालमा ४७९ गाउँपालिकाहरू छन्। गाउँपालिकाले स्थानीय करारोपण, विकास बजेट, प्राथमिक शिक्षा र स्वास्थ्य सेवाहरूको व्यवस्थापन गर्दछ।",
+      "meaningEn": "Gaunpalika is the local government unit established in rural areas of Nepal. There are 479 Rural Municipalities across Nepal as of 2075 BS. They manage local tax collection, capital development budgets, primary education, basic health services, agricultural extension, local road maintenance, and social welfare programs. The Gaunpalika Sabha (assembly) and Gaunpalika Executive form its legislative and executive branches respectively."
+    },
+    {
+      "category": "Local Government",
+      "number": 4,
+      "term": "नगरपालिका",
+      "Roman Transliteration": "Nagarpalikaika",
+      "english": "Municipality",
+      "meaningNe": "नगरपालिका भनेको शहरी क्षेत्रमा स्थापित स्थानीय सरकारको एकाइ हो। नेपालमा २७६ नगरपालिकाहरू छन् (महानगर र उपमहानगर समेत)। यसले शहरी पूर्वाधार, बजार व्यवस्थापन, भवन अनुमति र स्थानीय करको व्यवस्थापन गर्दछ।",
+      "meaningEn": "Nagarpailika is the local government unit established in urban areas. Nepal has 276 Municipalities (including Metropolitans and Sub-Metropolitans). They manage urban infrastructure, market regulation, building permit approvals, property tax, local public transport, waste management, and urban planning. Metropolitan Cities (Kathmandu, Pokhara, Lalitpur etc.) have additional powers and higher revenue bases."
+    },
+    {
+      "category": "Local Government",
+      "number": 5,
+      "term": "कर निर्धारण",
+      "Roman Transliteration": "Kar Nirdharan",
+      "english": "Tax Assessment",
+      "meaningNe": "कर निर्धारण भनेको स्थानीय सरकारले व्यवसाय, सम्पत्ति वा सेवाहरूमा लाग्ने करको रकम निर्धारण गर्ने प्रक्रिया हो। यो वार्षिक रूपमा गरिन्छ र करदाताले निर्धारित रकम तिर्नु पर्दछ। विवाद भएमा पुनरावेदन गर्न सकिन्छ।",
+      "meaningEn": "Kar Nirdharan is the formal tax assessment process by which the local government determines the tax liability of individuals and businesses on property, income from business, and services. Conducted annually, it involves inspecting business premises, reviewing submitted accounts, and issuing a tax demand notice. Taxpayers may appeal the assessment to the Revenue Tribunal if they disagree with the determined amount. Unpaid taxes accrue penalties."
+    },
+    {
+      "category": "Local Government",
+      "number": 6,
+      "term": "अनुदान",
+      "Roman Transliteration": "Anudan",
+      "english": "Grant/Subsidy",
+      "meaningNe": "अनुदान भनेको सरकारले विशेष उद्देश्यका लागि (कृषि, उद्योग, शिक्षा, स्वास्थ्य) प्रदान गर्ने आर्थिक सहायता हो जुन फिर्ता गर्नु पर्दैन। अनुदानका लागि निर्धारित मापदण्ड पूरा गरी सम्बन्धित कार्यालयमा आवेदन दिनु पर्दछ।",
+      "meaningEn": "Anudan is a non-repayable financial grant provided by the government (federal, provincial, or local) to individuals, businesses, cooperatives, or communities for specific purposes such as agriculture modernization, industry establishment, education scholarships, or health programs. Applicants must meet eligibility criteria and submit documentation to the relevant office. Misuse of granted funds can lead to legal action and recovery proceedings."
+    },
+    {
+      "category": "Local Government",
+      "number": 7,
+      "term": "सामाजिक सुरक्षा भत्ता",
+      "Roman Transliteration": "Samajik Suraksha Bhatta",
+      "english": "Social Security Allowance",
+      "meaningNe": "सामाजिक सुरक्षा भत्ता भनेको नेपाल सरकारले वृद्ध (७० वर्ष माथि), एकल महिला, अपाङ्गता भएका व्यक्ति र दलित वृद्धहरूलाई दिने मासिक नगद सहायता हो। यो भत्ता स्थानीय सरकार मार्फत वितरण गरिन्छ र बैंक खाता अनिवार्य छ।",
+      "meaningEn": "Samajik Suraksha Bhatta is the Government of Nepal's monthly cash transfer program providing social security to vulnerable groups: senior citizens (70+ years; 60+ for Dalits), single women (widows), persons with disabilities, and endangered indigenous nationalities. Distributed through local governments via bank accounts, the program is governed by the Social Security Act 2075. Eligibility requires Nepali citizenship, permanent residence in the ward, and registration with the local government."
+    },
+    {
+      "category": "Local Government",
+      "number": 8,
+      "term": "योजना तर्जुमा",
+      "Roman Transliteration": "Yojana Tarjuma",
+      "english": "Development Plan Formulation",
+      "meaningNe": "योजना तर्जुमा भनेको स्थानीय सरकारले वार्षिक बजेट र विकास कार्यक्रम तयार पार्ने प्रक्रिया हो। यसमा वडाको मागपत्र, नागरिक सभाको सुझाव र प्राथमिकीकरण समावेश हुन्छ। वार्षिक योजनाले स्थानीय पूर्वाधार, सामाजिक र आर्थिक विकासका कार्यक्रम निर्धारण गर्दछ।",
+      "meaningEn": "Yojana Tarjuma is the annual development plan formulation process of local governments. It begins with ward-level citizen assemblies (Nagarik Sabha) where residents identify needs and priorities. Ward demands are aggregated and prioritized by the executive, and the annual plan and budget are approved by the local assembly. The plan governs capital expenditure on infrastructure, social programs, and administrative operations for the fiscal year."
+    },
+    {
+      "category": "Local Government",
+      "number": 9,
+      "term": "उपभोक्ता समिति",
+      "Roman Transliteration": "Upabhokta Samiti",
+      "english": "Consumer/Users' Committee",
+      "meaningNe": "उपभोक्ता समिति भनेको स्थानीय विकास आयोजना (सडक, खानेपानी, भवन) कार्यान्वयन गर्न स्थानीय समुदायबाट गठन गरिने समिति हो। यो समितिले ठेक्कापट्टा प्रक्रिया बिना सामग्री खरिद र निर्माण गर्न सक्दछ। यसमा महिला र अल्पसंख्यकको प्रतिनिधित्व अनिवार्य छ।",
+      "meaningEn": "An Upabhokta Samiti is a community-based committee formed to directly implement local development projects — such as road construction, drinking water, school buildings, or irrigation canals — funded by the local government. Instead of formal contractor procurement, the committee purchases materials and supervises labor from the community, keeping funds and benefits local. Formation requires mandatory representation of women and marginalized groups. Accounts must be audited after project completion."
+    },
+    {
+      "category": "Local Government",
+      "number": 10,
+      "term": "लेखा परीक्षण",
+      "Roman Transliteration": "Lekha Parikshan",
+      "english": "Audit",
+      "meaningNe": "लेखा परीक्षण भनेको सरकारी वा सार्वजनिक निकायको आय–व्यय, लेखा र वित्तीय विवरणको स्वतन्त्र जाँच तथा प्रमाणीकरण हो। महालेखा परीक्षकको कार्यालयले सरकारी निकायको लेखापरीक्षण गर्दछ। अनियमितता फेला परेमा बेरुजु उठाइन्छ।",
+      "meaningEn": "Lekha Parikshan is the independent examination and verification of financial statements, accounts, and expenditure of government or public bodies to ensure accuracy, legality, and propriety. The Office of the Auditor General (OAG) under Article 241 of the Constitution of Nepal 2072 is the supreme audit institution. Irregularities found are classified as Beruju (audit objections) that must be cleared. Uncleared Beruju can disqualify an entity from receiving future government funding."
+    },
+    {
+      "category": "Local Government",
+      "number": 11,
+      "term": "सार्वजनिक सुनुवाइ",
+      "Roman Transliteration": "Sarwajanik Sunuwai",
+      "english": "Public Hearing",
+      "meaningNe": "सार्वजनिक सुनुवाइ भनेको स्थानीय सरकार वा सरकारी निकायले आफ्ना कार्यक्रम, बजेट र निर्णयहरूको जानकारी नागरिकलाई दिई उनीहरूको प्रतिक्रिया लिने प्रक्रिया हो। यो सुशासनको एक महत्वपूर्ण उपकरण हो र कानुनी रूपमा अनिवार्य छ।",
+      "meaningEn": "Sarwajanik Sunuwai is a mandatory public hearing through which local governments and public bodies disclose their plans, budgets, expenditures, and decisions to citizens and solicit feedback. Required under the Local Government Operation Act 2074 and the Right to Information Act 2064, it serves as a key accountability tool. Citizens can raise objections, and the body must respond on the record. Non-compliance can be challenged through the right-to-information process."
+    },
+    {
+      "category": "Local Government",
+      "number": 12,
+      "term": "सामाजिक परीक्षण",
+      "Roman Transliteration": "Samajik Parikshan",
+      "english": "Social Audit",
+      "meaningNe": "सामाजिक परीक्षण भनेको सामुदायिक स्तरमा सरकारी कार्यक्रम र बजेट खर्चको नागरिक निगरानी र मूल्यांकन हो। उपभोक्ता समिति र स्थानीय समुदायले परियोजनाको काम, खर्च र गुणस्तर सार्वजनिक रूपमा जाँच गर्दछन्।",
+      "meaningEn": "Samajik Parikshan is a community-based social audit process where citizens directly verify and evaluate government programs, project quality, and expenditure at the local level. Community members inspect completed works (roads, buildings, water systems), review expenditure reports, and publicly present findings in a community meeting. It is a complementary mechanism to financial audits and is legally required for projects implemented through Upabhokta Samitis. Findings are shared with the local government and OAG."
+    },
+    {
+      "category": "Local Government",
+      "number": 13,
+      "term": "गाउँ सभा / नगर सभा",
+      "Roman Transliteration": "Gaun Sabha / Nagar Sabha",
+      "english": "Local Assembly",
+      "meaningNe": "गाउँ सभा वा नगर सभा भनेको स्थानीय सरकारको विधायिकी निकाय हो जसमा निर्वाचित जनप्रतिनिधिहरू हुन्छन्। यो सभाले स्थानीय ऐन, बजेट, कर र नीतिहरू पारित गर्दछ र कार्यपालिकाको जवाफदेहिता सुनिश्चित गर्दछ।",
+      "meaningEn": "The Gaun Sabha (Rural Municipal Assembly) or Nagar Sabha (Municipal Assembly) is the legislative body of the local government, composed of all elected representatives including ward chairpersons and members. It enacts local laws (local acts), approves the annual budget and tax rates, endorses development plans, and holds the executive accountable. Ordinary resolutions require a simple majority; some decisions require a two-thirds majority."
+    },
+    {
+      "category": "Local Government",
+      "number": 14,
+      "term": "स्थानीय ऐन",
+      "Roman Transliteration": "Sthaniya Ain",
+      "english": "Local Act/Bylaws",
+      "meaningNe": "स्थानीय ऐन भनेको गाउँ सभा वा नगर सभाले आफ्नो अधिकार क्षेत्रभित्र पारित गर्ने कानुन हो। स्थानीय करारोपण, भवन विनियमावली, व्यवसाय सञ्चालन, फोहोर व्यवस्थापन आदि विषयमा स्थानीय ऐन बनाउन सकिन्छ। यी ऐनहरू संघ र प्रदेशको ऐनसँग बाझिनु हुँदैन।",
+      "meaningEn": "Sthaniya Ain are local laws enacted by the Gaun Sabha or Nagar Sabha using legislative powers granted under the Constitution of Nepal 2072 and the Local Government Operation Act 2074. These cover local taxation, business operation licenses, building regulations, waste management, public health, and local governance procedures. Local laws must not conflict with federal or provincial laws; if they do, the federal or provincial law prevails."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 1,
+      "term": "व्यवसाय दर्ता",
+      "Roman Transliteration": "Byabasaya Darta",
+      "english": "Business Registration",
+      "meaningNe": "व्यवसाय दर्ता भनेको कुनै व्यवसाय कानुनी रूपमा सञ्चालन गर्न सम्बन्धित सरकारी कार्यालयमा आफ्नो व्यवसाय दर्ता गर्ने प्रक्रिया हो। व्यवसायको प्रकार अनुसार एकल स्वामित्व, साझेदारी, कम्पनी वा सहकारीको रूपमा दर्ता गर्न सकिन्छ। दर्ता बिना व्यापार गर्नु अवैध छ।",
+      "meaningEn": "Business Registration is the legal process of registering a business entity with the relevant government authority — the Office of the Company Registrar (for companies), Department of Commerce (for firms/partnerships), or Ward Office (for micro-enterprises). Different structures — sole proprietorship, partnership, private limited company (Pvt. Ltd.), or public limited company — have different registration requirements, minimum capital thresholds, and governance rules. Registration is mandatory; operating without it is illegal and subject to fines."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 2,
+      "term": "कम्पनी दर्ता",
+      "Roman Transliteration": "Company Darta",
+      "english": "Company Registration",
+      "meaningNe": "कम्पनी दर्ता भनेको कम्पनी ऐन २०६३ अनुसार कम्पनी रजिस्ट्रारको कार्यालयमा निजी वा सार्वजनिक सीमित कम्पनी खोल्न दर्ता गर्ने प्रक्रिया हो। यसमा प्रबन्धपत्र, नियमावली, न्यूनतम पूँजी र संचालकहरूको विवरण आवश्यक पर्दछ।",
+      "meaningEn": "Company Registration is the formal incorporation of a private or public limited company under the Companies Act 2063 (Kumpani Ain 2063) at the Office of the Company Registrar. Required documents include the Memorandum of Association (Prabandha Patra), Articles of Association (Niyamawali), minimum paid-up capital (NPR 100,000 for private limited), and details of directors. The registered company receives a Certificate of Incorporation (Darta Praman Patra) and a Permanent Account Number (PAN). Foreign investment requires additional approval from the Department of Industry."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 3,
+      "term": "उद्योग दर्ता",
+      "Roman Transliteration": "Udhyog Darta",
+      "english": "Industry Registration",
+      "meaningNe": "उद्योग दर्ता भनेको उद्योग ऐन २०७३ अनुसार उत्पादनमूलक वा सेवामूलक उद्योग सञ्चालन गर्न विभाग वा कार्यालयमा दर्ता गर्ने प्रक्रिया हो। लगानीको आकार अनुसार कुटीर, साना, मझौला र ठूला उद्योगका श्रेणी छन् र प्रत्येक श्रेणीको दर्ता फरक निकायमा हुन्छ।",
+      "meaningEn": "Industry Registration is the process of registering a manufacturing or service industry under the Industrial Enterprises Act 2073 (Udhyog Ain 2073). Industries are classified by fixed capital investment: Cottage Industries (under NPR 150,000), Small Industries (NPR 150,000 – 50 million), Medium Industries (NPR 50 million – 150 million), and Large Industries (above NPR 150 million). Registration authority varies: Ward Office for cottage, District Industry Commerce Office for small, and Department of Industry for medium and large. Registered industries receive tax benefits, subsidized loans, and government support."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 4,
+      "term": "व्यापार इजाजत",
+      "Roman Transliteration": "Byapar Ijajat",
+      "english": "Trade License",
+      "meaningNe": "व्यापार इजाजत भनेको व्यवसाय सञ्चालन गर्न स्थानीय सरकारले दिने वार्षिक अनुमतिपत्र हो। यो दरखास्त, व्यवसाय दर्ता प्रमाण, कर चुक्ता प्रमाण र कार्यालय ठेगाना प्रमाणित गरेर प्राप्त गर्न सकिन्छ। वार्षिक नवीकरण अनिवार्य छ।",
+      "meaningEn": "A Byapar Ijajat (Trade License) is the annual operating license issued by the local government (Municipality or Gaunpalika) permitting a business to operate at a specific location. Required documents include business registration certificate, tax clearance, lease agreement or property ownership proof, and citizenship. Annual renewal is mandatory; operating with an expired license results in fines. Different rates apply by business type and size. The license is the first requirement for opening a business bank account."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 5,
+      "term": "कर चुक्ता प्रमाणपत्र",
+      "Roman Transliteration": "Kar Chukta Pramanpatra",
+      "english": "Tax Clearance Certificate",
+      "meaningNe": "कर चुक्ता प्रमाणपत्र भनेको आन्तरिक राजस्व विभागले करदाताले सबै कर दायित्व पूरा गरेको प्रमाण दिने दस्तावेज हो। व्यापार इजाजत नवीकरण, ठेक्का बोलपत्र, वित्तीय संस्थाबाट कर्जा र विदेश भ्रमणका लागि आवश्यक हुन्छ।",
+      "meaningEn": "A Kar Chukta Pramanpatra (Tax Clearance Certificate) is issued by the Inland Revenue Department (IRD) confirming that a taxpayer has no outstanding tax liabilities. It is required for: renewing trade licenses, bidding on government contracts, obtaining bank loans, registering property transactions, and in some cases for visa applications. It is obtained by filing all pending tax returns, paying assessed taxes, and applying at the Tax Office with supporting financial documents."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 6,
+      "term": "स्थायी लेखा नम्बर (PAN)",
+      "Roman Transliteration": "Sthayi Lekha Nambar (PAN)",
+      "english": "Permanent Account Number",
+      "meaningNe": "स्थायी लेखा नम्बर (PAN) भनेको आन्तरिक राजस्व विभागले करदातालाई दिने अद्वितीय कर पहिचान नम्बर हो। व्यवसाय दर्ता, बैंक खाता खोल्न, ठेक्का लिन र कर तिर्न PAN अनिवार्य छ। PAN बिना कुनै पनि आधिकारिक आर्थिक कारोबार गर्न सकिँदैन।",
+      "meaningEn": "The Permanent Account Number (PAN) is a unique 9-digit taxpayer identification number issued by Nepal's Inland Revenue Department to all individuals and businesses required to pay tax. It is mandatory for business registration, opening corporate bank accounts, receiving payments for services, participating in government procurement, and filing income tax returns. The PAN is linked to all tax records and financial transactions of the holder throughout their lifetime or the entity's existence."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 7,
+      "term": "मूल्य अभिवृद्धि कर (VAT)",
+      "Roman Transliteration": "Mulya Abhivriddhi Kar (VAT)",
+      "english": "Value Added Tax",
+      "meaningNe": "मूल्य अभिवृद्धि कर (VAT) भनेको वस्तु वा सेवाको मूल्यमा थपिने अप्रत्यक्ष कर हो जुन उत्पादन, वितरण र बिक्रीका प्रत्येक चरणमा लाग्दछ। नेपालमा VAT दर १३% छ। वार्षिक कारोबार रु. ५० लाखभन्दा बढी भएका व्यवसायहरूले VAT दर्ता गर्नु अनिवार्य छ।",
+      "meaningEn": "Value Added Tax (VAT) is an indirect tax levied at each stage of the supply chain — production, distribution, and retail — on the value added at each stage. Nepal's standard VAT rate is 13%, set under the Value Added Tax Act 2052. Businesses with annual turnover exceeding NPR 5 million must compulsorily register for VAT. VAT-registered businesses collect tax from customers, offset input tax credits, and remit the net amount to the IRD monthly or quarterly."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 8,
+      "term": "आयकर",
+      "Roman Transliteration": "Aayakar",
+      "english": "Income Tax",
+      "meaningNe": "आयकर भनेको व्यक्ति वा संस्थाको वार्षिक आयमा लाग्ने प्रत्यक्ष कर हो। नेपालको आयकर ऐन २०५८ अनुसार व्यक्तिगत र संस्थागत आयमा फरक फरक दरले कर लाग्दछ। कर विवरण (Tax Return) प्रत्येक वर्षको असार मसान्तभित्र दाखिल गर्नु पर्दछ।",
+      "meaningEn": "Aayakar (Income Tax) is a direct tax on the annual income of individuals and corporate entities, governed by the Income Tax Act 2058 (Aayakar Ain 2058). Individual tax rates are progressive (1%–36% depending on income bracket and marital status). Corporate tax rates are generally 25%, with lower rates for industries such as manufacturing (20%) and special economic zones. Annual tax returns (Kar Vivaran) must be filed by end of Ashadh (mid-July). Failure to file or pay on time results in interest and penalties."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 9,
+      "term": "ऋण पत्र / बन्डापत्र",
+      "Roman Transliteration": "Rinapatra / Bandapatra",
+      "english": "Debenture / Bond",
+      "meaningNe": "ऋण पत्र वा बन्डापत्र भनेको कुनै कम्पनी वा संस्थाले दीर्घकालीन ऋण उठाउन लगानीकर्ताहरूलाई दिने तोकिएको ब्याज र भुक्तानी अवधि भएको लिखत हो। कम्पनी ऐन २०६३ अनुसार बन्डापत्र जारी गर्न नेपाल धितोपत्र बोर्डको स्वीकृति आवश्यक पर्दछ।",
+      "meaningEn": "A Rinapatra or Bandapatra (Debenture/Bond) is a long-term debt instrument issued by a company or government entity to raise capital, promising the holder repayment of principal at maturity plus periodic interest payments at a specified rate. In Nepal, issuance of debentures requires approval from the Securities Board of Nepal (SEBON) under the Companies Act 2063 and Securities Act 2063. Debentures may be secured (backed by assets) or unsecured, and may be listed on the Nepal Stock Exchange (NEPSE)."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 10,
+      "term": "बाणिज्य बैंक",
+      "Roman Transliteration": "Banijya Bank",
+      "english": "Commercial Bank",
+      "meaningNe": "बाणिज्य बैंक भनेको नेपाल राष्ट्र बैंकको 'क' वर्ग लाइसेन्स प्राप्त गरेको वित्तीय संस्था हो जसले निक्षेप संकलन, कर्जा प्रवाह, विदेशी विनिमय र भुक्तानी सेवाहरू प्रदान गर्दछ। न्यूनतम पूँजी रु. ८ अर्ब आवश्यक छ।",
+      "meaningEn": "A Baanijya Bank (Commercial Bank) is a 'Class A' licensed financial institution under the Nepal Rastra Bank (NRB) Act 2058, authorized to accept deposits, extend loans, conduct foreign exchange transactions, issue letters of credit, and provide full banking services. They must maintain a minimum paid-up capital of NPR 8 billion (as of recent NRB directives). Commercial banks are the primary channel for government payments, trade finance, and formal sector credit in Nepal."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 11,
+      "term": "धितोपत्र",
+      "Roman Transliteration": "Dhitopatra",
+      "english": "Securities",
+      "meaningNe": "धितोपत्र भनेको शेयर, डिबेन्चर, म्युचुअल फन्ड एकाइ, ट्रेजरी बिल जस्ता वित्तीय उपकरणहरू हो जुन धितोपत्र बोर्ड (SEBON) को नियमन अनुसार जारी र कारोबार गरिन्छ। नेपाल स्टक एक्सचेन्ज (NEPSE) मा सूचीकृत कम्पनीहरूका शेयर किनबेच गर्न सकिन्छ।",
+      "meaningEn": "Dhitopatra (Securities) refers to financial instruments — shares, debentures, mutual fund units, government treasury bills, and bonds — that represent ownership or debt claims and can be traded. The Securities Board of Nepal (SEBON) regulates issuance and trading under the Securities Act 2063. Public companies list their shares on the Nepal Stock Exchange (NEPSE) for trading. Citizens can buy and sell shares through licensed broker firms; a DEMAT account with CDS and Clearing Ltd. is required."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 12,
+      "term": "बीमा",
+      "Roman Transliteration": "Bima",
+      "english": "Insurance",
+      "meaningNe": "बीमा भनेको बीमा कम्पनीले नियमित प्रिमियम भुक्तानीको बदलामा बीमितलाई तोकिएका जोखिम (जीवन, सम्पत्ति, स्वास्थ्य, दुर्घटना) विरुद्ध क्षतिपूर्ति दिने आर्थिक व्यवस्था हो। नेपालमा बीमा समिति (Beema Samiti) ले बीमा कम्पनीहरूको नियमन गर्दछ।",
+      "meaningEn": "Bima (Insurance) is a contractual arrangement in which an insurance company (insurer) provides financial compensation for specified losses to the policyholder (insured) in exchange for regular premium payments. Nepal's insurance sector is regulated by the Insurance Board (Beema Samiti). Types include life insurance (Jiban Bima), non-life/general insurance (Nirjeevan Bima), health insurance, vehicle insurance, and crop insurance. Third-party vehicle insurance is legally mandatory for all vehicles on Nepal's roads."
+    },
+    {
+      "category": "Business & Industry",
+      "number": 13,
+      "term": "लघु वित्त",
+      "Roman Transliteration": "Laghu Bitt",
+      "english": "Microfinance",
+      "meaningNe": "लघु वित्त भनेको गरिब, महिला र सीमान्तकृत समुदायलाई साना ऋण, बचत र बीमा सेवाहरू प्रदान गर्ने वित्तीय संस्था वा कार्यक्रम हो। नेपाल राष्ट्र बैंकको 'घ' वर्ग लाइसेन्स अन्तर्गत सञ्चालित लघु वित्त संस्थाहरूले समूह जमानत (Group Guarantee) पद्धतिमा ऋण प्रवाह गर्दछन्।",
+      "meaningEn": "Laghu Bitt (Microfinance) refers to Class D licensed financial institutions under Nepal Rastra Bank providing small loans (typically NPR 25,000 – 300,000), savings, and micro-insurance to low-income households, women, and marginalized communities who cannot access formal banking. The Grameen Bank model of group lending (Group Guarantee — Samuha Jamani) is widely used, where groups of 5–10 members collectively guarantee each other's loans. Microfinance has been a key tool for rural poverty alleviation and women's economic empowerment in Nepal."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 1,
+      "term": "तामेली",
+      "Roman Transliteration": "Tameli",
+      "english": "Case Archival / Filed Away",
+      "meaningNe": "तामेली भन्नाले कुनै मुद्दा वा दरखास्तको कारबाही तोकिएको म्याद भित्र कुनै कदम नचालिएमा वा सबै कारबाही सम्पन्न भएपछि त्यसलाई अभिलेख कोठामा राख्ने प्रक्रियालाई बुझिन्छ। तामेली भएको मुद्दामा थप कारबाही हुँदैन र यो कानुनी रूपमा बन्द मानिन्छ। पुनः खोल्न विशेष कारण र अदालतको आदेश आवश्यक पर्दछ।",
+      "meaningEn": "Tameli is the formal archival or 'filing away' of a case, application, or legal proceeding when no action is taken within the prescribed period or when all prescribed procedures have been exhausted. Once Tameli is applied, no further action takes place on the matter — it is considered legally closed and transferred to the record room. Reopening a Tameli case requires showing sufficient cause and obtaining a specific court order. The concept prevents indefinite pendency of inactive cases."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 2,
+      "term": "वारेसनामा",
+      "Roman Transliteration": "Wareshnama",
+      "english": "Power of Attorney",
+      "meaningNe": "वारेसनामा भनेको प्रतिनिधिलाई अधिकार दिनेगरी लेखिएको लिखित पत्र हो। वारेसले वारिस नियुक्ति गर्ने पक्षको तर्फबाट मिलापत्र बाहेक सबै काम गर्न पाउँदछन्। दुई प्रकार छन्: (१) साधारण वारेसनामा — देवानी र फौजदारी मुद्दाका लागि; (२) अधिकृत वारेसनामा — सम्पत्ति हस्तान्तरण सहितका कार्यका लागि, जसलाई अदालत वा दूतावासबाट प्रमाणित गर्नु पर्दछ।",
+      "meaningEn": "Wareshnama (Power of Attorney) is a formal written document granting a designated representative (Waris/Agent) authority to act on behalf of the principal in legal, administrative, or property matters. The agent can perform all acts on the principal's behalf except entering into settlement agreements (Milapatra). There are two types: (1) Ordinary Power of Attorney (Sadharana Wareshnama) — for civil and criminal court proceedings; (2) Authorized/Special Power of Attorney (Adhikriit Wareshnama) — for property transfer, banking, and cross-border transactions, which must be notarized by a court or embassy."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 3,
+      "term": "लिखत",
+      "Roman Transliteration": "Likhat",
+      "english": "Legal Document / Written Instrument",
+      "meaningNe": "लिखत भनेको कानुनी अधिकार, दायित्व वा सम्झौता स्थापित गर्ने लिखित दस्तावेज हो। निजी लिखत र सार्वजनिक लिखत गरी दुई किसिम हुन्छ। निजी लिखत कानुन २०४५ र मुलुकी देवानी संहिता २०७४ अनुसार लिखतको मान्यता, रद्दीकरण र प्रमाणिकरण निर्धारण गरिन्छ।",
+      "meaningEn": "Likhat (Legal Document/Instrument) is any written document that establishes, transfers, modifies, or extinguishes legal rights, duties, or obligations. In Nepali law, there are private documents (Niji Likhat — signed by parties) and public documents (Sarwajanik Likhat — issued by public authorities). Under the Private Document Registration Act 2045 and Muluki Civil Code 2074, certain documents must be registered to be legally valid and enforceable in court. Unregistered documents that should have been registered may be rejected as evidence."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 4,
+      "term": "छोडपत्र",
+      "Roman Transliteration": "Chhadpatra",
+      "english": "Deed of Release / Waiver",
+      "meaningNe": "छोडपत्र भनेको कुनै व्यक्तिले आफ्नो कुनै हक, दाबी वा सम्पत्तिमाथिको अधिकार स्वेच्छाले त्याग गर्ने लिखित दस्तावेज हो। सम्पत्ति अधिकार, सेवासुविधा, बीमा दाबी वा मुद्दामामिलाको समाधानमा छोडपत्र प्रयोग हुन्छ। छोडपत्र सहीछाप र साक्षीसहित तयार गरिनु पर्दछ।",
+      "meaningEn": "A Chhadpatra (Deed of Release or Waiver) is a formal written document by which a person voluntarily relinquishes or surrenders their right, claim, or interest — in property, inheritance, insurance proceeds, or litigation. It is irrevocable once validly executed. It must be signed by the releasing party, witnessed, and in many cases notarized or registered to be legally effective. A Chhadpatra is commonly used to resolve inheritance disputes, clear encumbrances on property before sale, and settle insurance or employment claims."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 5,
+      "term": "मिलापत्र",
+      "Roman Transliteration": "Milapatra",
+      "english": "Compromise/Settlement Deed",
+      "meaningNe": "मिलापत्र भनेको दुई वा सोभन्दा बढी पक्षहरूबिच विवाद मिटाउन गरिने लिखित सम्झौता हो। मिलापत्र अदालतमा पेस गर्दा मुद्दा स्वतः फिर्ता हुन्छ। मुलुकी देवानी कार्यविधि संहिता २०७४ अनुसार सबै देवानी मुद्दामध्ये ७५% मिलापत्रबाट सम्पन्न गर्ने लक्ष्य राखिएको छ।",
+      "meaningEn": "Milapatra is a formal written compromise or settlement agreement executed between disputing parties to resolve their dispute without continuing litigation. When a Milapatra is presented to the court, the case is automatically withdrawn and dismissed. Under the Muluki Civil Procedure Code 2074, courts actively encourage Milapatra, and some categories of civil disputes (property, family, neighborhood disputes) require a mediation attempt before trial. A court-recorded Milapatra has the force of a decree and is final and binding."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 6,
+      "term": "फिरादपत्र",
+      "Roman Transliteration": "Firadpatra",
+      "english": "Complaint/Petition to Court",
+      "meaningNe": "फिरादपत्र भनेको अदालतमा मुद्दा दायर गर्दा पीडित पक्षले आफ्नो उजुरी र माग उल्लेख गरेर पेस गर्ने लिखित निवेदन हो। यसमा पक्षहरूको विवरण, विवादको तथ्य र माग गरिएको राहत उल्लेख हुन्छ। फिरादपत्रको आधारमा अदालतले सम्बन्धित पक्षलाई सूचना जारी गर्दछ।",
+      "meaningEn": "A Firadpatra is the formal written complaint or petition filed by the aggrieved party (plaintiff) to initiate a civil or criminal court case. It must contain: names and addresses of all parties, statement of facts constituting the cause of action, the relief or remedy sought, and supporting documents. Based on the Firadpatra, the court issues notices to the opposite party. In criminal cases, the government prosecutor (Sarkari Wakil) files the Firadpatra on behalf of the state. Filing fees and stamp duty are required."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 7,
+      "term": "पुनरावेदन",
+      "Roman Transliteration": "Punarawedan",
+      "english": "Appeal",
+      "meaningNe": "पुनरावेदन भनेको शुरुको अदालतले गरेको फैसला वा अन्तिम आदेशमा चित्त नबुझ्ने पक्षले माथिल्लो अदालतमा पुनः विचार गराउन गर्ने आवेदन हो। मुलुकी देवानी कार्यविधि संहिता २०७४ धारा २०५ (देवानी) र धारा १३४ (फौजदारी) अनुसार फैसलाको ३० दिनभित्र पुनरावेदन गर्नु पर्दछ। मिलापत्र भएको, दाबी फिर्ता लिएको वा म्याद गुज्रेको अवस्थामा पुनरावेदन गर्न पाइँदैन।",
+      "meaningEn": "Punarawedan (Appeal) is the formal legal process by which a party dissatisfied with a court's judgment or final order applies to a higher court (Appellate Court or Supreme Court) for review and reversal. Under the Muluki Civil Procedure Code 2074, Section 205 (civil) and Section 134 (criminal), appeals must be filed within 30 days of the judgment. An appeal is not permitted when: the case was settled by Milapatra, the claim was voluntarily withdrawn, the deadline was missed, or the matter was previously dismissed on similar grounds."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 8,
+      "term": "म्याद",
+      "Roman Transliteration": "Myad",
+      "english": "Legal Deadline / Limitation Period",
+      "meaningNe": "म्याद भनेको कानुनी कारबाही सुरु गर्न वा सम्पन्न गर्न तोकिएको समय सीमा हो। म्याद नाघेपछि कारबाही गर्न नपाइने हुन्छ। हदम्यादको सिद्धान्त अनुसार मुलुकी देवानी संहिता २०७४ मा विभिन्न दाबीका लागि फरक म्याद तोकिएको छ (जमानत मुद्दा ३ वर्ष, सम्पत्ति मुद्दा ६ वर्ष आदि)।",
+      "meaningEn": "Myad refers to any legally prescribed time limit or limitation period for initiating or completing a legal action. Under the statute of limitations (Hadmyad) provisions of the Muluki Civil Code 2074, different claim types have different limitation periods: 3 years for guarantee/surety claims, 6 years for property disputes, and 2 years for personal injury claims. After the Myad expires, the right to sue is extinguished. Courts strictly enforce limitation periods, and a lapsed Myad is a complete defense. Courts may grant extensions only in exceptional circumstances."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 9,
+      "term": "हकदैया",
+      "Roman Transliteration": "Hakdaiya",
+      "english": "Legal Entitlement / Right",
+      "meaningNe": "हकदैया भनेको कानुनले कुनै व्यक्तिलाई प्रदान गरेको दाबी गर्ने, उपभोग गर्ने वा प्राप्त गर्ने अधिकार हो। सम्पत्तिको हकदैया, उत्तराधिकारको हकदैया र सामाजिक सुरक्षाको हकदैया यसका प्रमुख उदाहरण हन्। यो अधिकार बिना अदालतमा दाबी गर्न सकिँदैन।",
+      "meaningEn": "Hakdaiya refers to a legal entitlement or vested right that a person holds by operation of law — the right to claim, enjoy, or receive something. It commonly arises in property (right to one's share of ancestral property), succession (right to inherit), and social security (right to allowance). A person must have a recognized Hakdaiya to have legal standing (Locus Standi) to bring a claim in court. Disputes over Hakdaiya — such as whether someone is a legitimate heir — are common subjects of litigation."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 10,
+      "term": "जमानत",
+      "Roman Transliteration": "Jamaanat",
+      "english": "Bail / Surety",
+      "meaningNe": "जमानत भनेको आरोपीलाई थुनाबाट मुक्त गराउन अदालतले तोकेको सर्तहरू पालना गर्ने प्रतिबद्धताको बदलामा दिइने अस्थायी स्वतन्त्रता हो। जमानत नगद, सम्पत्ति धितो वा व्यक्तिगत जमानतदारको माध्यमबाट दिन सकिन्छ। जमानतको सर्त उल्लंघन भएमा जमानत रकम जफत हुन्छ।",
+      "meaningEn": "Jamaanat (Bail) is the provisional release of an accused person from detention, conditioned on guaranteeing their appearance at future court proceedings and compliance with court conditions. Bail can be given as: cash deposit (Naghad Jamaanat), property mortgage (Sampatti Dhito), or personal surety (Byaktigat Jamindar). The amount is set by the court based on charge severity, flight risk, and criminal history. Violation of bail conditions results in forfeiture of the bail amount and re-arrest."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 11,
+      "term": "मुचुल्का",
+      "Roman Transliteration": "Muchulka",
+      "english": "Written Pledge / Recognizance",
+      "meaningNe": "मुचुल्का भनेको अदालतमा आरोपी वा सम्बन्धित पक्षले तोकिएका अदालती सर्तहरू (निर्धारित मितिमा उपस्थित हुने, अर्को अपराध नगर्ने आदि) पालना गर्ने प्रतिज्ञापत्र हो। यो नगद जमानतको विकल्पका रूपमा प्रयोग हुन्छ र यसमा व्यक्तिको सम्पत्ति जफत हुन सक्ने सर्त हुन सक्छ।",
+      "meaningEn": "A Muchulka is a formal written recognizance or pledge given to a court by an accused or a party, committing to appear on all scheduled court dates, comply with court conditions, refrain from committing further offenses, and not interfere with witnesses. It serves as an alternative to monetary bail in appropriate circumstances. If conditions are violated, the person's pledged property or assets may be forfeited. It is also used outside courts — by police stations for minor offenses, and by government employers for conduct undertakings."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 12,
+      "term": "दण्ड जरिवाना",
+      "Roman Transliteration": "Danda Jaribana",
+      "english": "Fine and Penalty",
+      "meaningNe": "दण्ड जरिवाना भनेको कानुन उल्लंघन गरेमा अदालत वा सरकारी निकायले लगाउने आर्थिक सजाय हो। यो जेल सजायको सट्टामा वा अतिरिक्त रूपमा लगाइन्छ। नतिर्दा थप ब्याज लाग्दछ र सम्पत्ति जफत हुन सक्छ।",
+      "meaningEn": "Danda Jaribana is the monetary fine and penalty imposed by a court or government authority as punishment for violation of laws or regulations. It can be imposed in addition to or instead of imprisonment. Fines are common for tax evasion, traffic violations, building code violations, and environmental offenses. Unpaid fines accrue additional interest and may ultimately result in distrait (seizure and auction of property). Revenue from fines is deposited in the government treasury."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 13,
+      "term": "उजुरी",
+      "Roman Transliteration": "Ujuri",
+      "english": "Formal Complaint",
+      "meaningNe": "उजुरी भनेको पीडित व्यक्तिले प्रहरी, अदालत वा सम्बन्धित निकायमा पेस गर्ने औपचारिक गुनासो हो। उजुरीका आधारमा सम्बन्धित निकायले अनुसन्धान सुरु गर्दछ। फौजदारी कसुरमा उजुरी दर्ता गरेपछि मात्र कानुनी कारबाही सुरु हुन्छ।",
+      "meaningEn": "An Ujuri (Formal Complaint) is the official complaint lodged by an aggrieved person with the police, court, or concerned authority initiating a legal proceeding. For criminal offenses, the Ujuri triggers police investigation (Anusandhan) and prosecution. For civil and administrative matters, it initiates inquiry or adjudication. It must state the facts, identify the accused or responsible party, and specify the relief or action requested. A false or frivolous Ujuri can itself attract legal liability."
+    },
+    {
+      "category": "Legal & Judiciary",
+      "number": 14,
+      "term": "फैसला",
+      "Roman Transliteration": "Faisala",
+      "english": "Court Judgment / Decision",
+      "meaningNe": "फैसला भनेको अदालतले मुद्दाको कानुनी विश्लेषण र तथ्यका आधारमा दिने अन्तिम निर्णय हो। फैसलामा तथ्य निर्धारण, लागू हुने कानुन, निष्कर्ष र सजाय वा राहत उल्लेख हुन्छ। फैसला बाध्यकारी हुन्छ र पालना नगरेमा अवहेलना कारबाही हुन्छ।",
+      "meaningEn": "Faisala is the final judgment or decision pronounced by a court at the conclusion of a case, based on legal analysis of facts and applicable law. A judgment contains: findings of fact (Tathya Nirdharan), applicable legal provisions, legal reasoning (Kanooni Nirushan), and the operative order — acquittal/conviction in criminal cases, or granting/dismissing relief in civil cases. A final judgment is binding on all parties and must be executed. Non-compliance constitutes contempt of court (Adalat Avahela)."
+    }
+  ]
+}

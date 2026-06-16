@@ -1,0 +1,128 @@
+"use client";
+
+import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
+import { pickLocalized } from "@/i18n/messages";
+import type { Category, Stats, Template, Term } from "@/types";
+import type { SaralSewaCategoryCard } from "@/types/saralsewa";
+import styles from "@/app/user.module.css";
+
+const iconColorClass: Record<SaralSewaCategoryCard["iconColor"], string> = {
+  blue: styles.cardIconBlue,
+  green: styles.cardIconGreen,
+  amber: styles.cardIconAmber,
+  teal: styles.cardIconTeal,
+};
+
+interface UserHomeProps {
+  stats: Stats;
+  categories: SaralSewaCategoryCard[];
+  terms: Term[];
+  templates: Template[];
+}
+
+export function UserHome({ stats, categories, terms, templates }: UserHomeProps) {
+  const { locale, msg } = useLanguage();
+
+  const categoryLabel = (cat: Category) =>
+    msg.categories[cat as keyof typeof msg.categories] ?? cat;
+
+  return (
+    <>
+      <div className={styles.stats}>
+        <div className={styles.stat}>
+          <div className={styles.statNum}>{stats.termsCount}+</div>
+          <div className={styles.statLabel}>{msg.stats.terms}</div>
+        </div>
+        <div className={styles.stat}>
+          <div className={styles.statNum}>{stats.templatesCount}+</div>
+          <div className={styles.statLabel}>{msg.stats.templates}</div>
+        </div>
+        <div className={styles.stat}>
+          <div className={styles.statNum}>{stats.departmentsCount}</div>
+          <div className={styles.statLabel}>{msg.stats.departments}</div>
+        </div>
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.section} id="categories">
+        <div className={styles.sectionHeader}>
+          <h2>{msg.sections.browseCategory}</h2>
+        </div>
+        <div className={styles.cards}>
+          {categories.map((cat) => (
+            <Link key={cat.slug} href={`/categories/${cat.slug}`} className={styles.card}>
+              <div className={`${styles.cardIcon} ${iconColorClass[cat.iconColor]}`}>
+                {cat.icon}
+              </div>
+              <h3>{cat.name}</h3>
+              <p>{msg.sections.categoryTermCount.replace("{count}", String(cat.count))}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.section} id="terminology">
+        <div className={styles.sectionHeader}>
+          <h2>{msg.sections.commonTerms}</h2>
+          <Link href="/terminology">{msg.sections.viewAllTerms}</Link>
+        </div>
+        <div className={styles.termList}>
+          {terms.map((term) => (
+            <div key={term.id} className={styles.termItem}>
+              <div className={styles.termItemHeader}>
+                <span className={styles.termName}>{pickLocalized(locale, term.name)}</span>
+                <span className={styles.termCat}>{categoryLabel(term.category)}</span>
+              </div>
+              <p className={styles.termDef}>{pickLocalized(locale, term.definition)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.divider} />
+
+      <div className={styles.section} id="templates">
+        <div className={styles.sectionHeader}>
+          <h2>{msg.sections.applicationTemplates}</h2>
+          <a href="#">{msg.sections.browseAllTemplates}</a>
+        </div>
+        <div className={styles.templateGrid}>
+          {templates.map((tmpl) => (
+            <TemplateCard key={tmpl.id} template={tmpl} />
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function TemplateCard({ template }: { template: Template }) {
+  const { locale, msg } = useLanguage();
+
+  return (
+    <div className={styles.tmplCard}>
+      <div
+        className={styles.tmplPreview}
+        style={{ background: template.previewGradient }}
+      >
+        {template.previewEmoji}
+      </div>
+      <div className={styles.tmplBody}>
+        <h3>{pickLocalized(locale, template.name)}</h3>
+        <p>{pickLocalized(locale, template.description)}</p>
+      </div>
+      <div className={styles.tmplFooter}>
+        <button type="button" className={styles.btnDl}>
+          ⬇ {msg.templates.download}
+        </button>
+        <button type="button" className={styles.btnCopy}>
+          ⎘ {msg.templates.copy}
+        </button>
+      </div>
+    </div>
+  );
+}
