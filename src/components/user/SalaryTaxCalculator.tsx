@@ -362,29 +362,28 @@ export function SalaryTaxCalculator() {
             <div className={`${styles.emiFadeCard} ${styles.emiFormSection}`}>
             <h3 className={styles.emiSubsectionTitle}>{t.annualDeductions}</h3>
 
-            <div className={styles.emiRow}>
-              <div className={styles.emiField}>
-                <label htmlFor="ssf">{t.ssf}</label>
-                <input
-                  id="ssf"
-                  type="number"
-                  min="0"
-                  className={styles.emiNumberInput}
-                  value={ssf}
-                  onChange={(e) => setSsf(e.target.value)}
-                />
-              </div>
-              <div className={styles.emiField}>
-                <label htmlFor="epf">{t.epf}</label>
-                <input
-                  id="epf"
-                  type="number"
-                  min="0"
-                  className={styles.emiNumberInput}
-                  value={epf}
-                  onChange={(e) => setEpf(e.target.value)}
-                />
-              </div>
+            <div className={styles.emiField}>
+              <label htmlFor="ssf">{t.ssf}</label>
+              <input
+                id="ssf"
+                type="number"
+                min="0"
+                className={styles.emiNumberInput}
+                value={ssf}
+                onChange={(e) => setSsf(e.target.value)}
+              />
+            </div>
+
+            <div className={styles.emiField}>
+              <label htmlFor="epf">{t.epf}</label>
+              <input
+                id="epf"
+                type="number"
+                min="0"
+                className={styles.emiNumberInput}
+                value={epf}
+                onChange={(e) => setEpf(e.target.value)}
+              />
             </div>
 
             <div className={styles.emiField}>
@@ -403,6 +402,7 @@ export function SalaryTaxCalculator() {
             <div className={styles.emiRow}>
               <div className={styles.emiField}>
                 <label htmlFor="life-insurance">{t.lifeInsurance}</label>
+                <p className={styles.emiFieldHint}>{t.lifeInsuranceHint}</p>
                 <input
                   id="life-insurance"
                   type="number"
@@ -415,6 +415,7 @@ export function SalaryTaxCalculator() {
               </div>
               <div className={styles.emiField}>
                 <label htmlFor="medical-insurance">{t.medicalInsurance}</label>
+                <p className={styles.emiFieldHint}>{t.medicalInsuranceHint}</p>
                 <input
                   id="medical-insurance"
                   type="number"

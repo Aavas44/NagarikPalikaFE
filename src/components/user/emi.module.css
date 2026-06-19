@@ -69,6 +69,11 @@
   color: #9ca3af;
 }
 
+.emiField label + .emiFieldHint {
+  margin-top: 0.2rem;
+  margin-bottom: 0.5rem;
+}
+
 .emiRange {
   width: 100%;
   height: 6px;
