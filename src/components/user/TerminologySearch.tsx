@@ -6,7 +6,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import type { GlossarySearchResponse, GlossarySearchResult } from "@/types/glossary";
 import styles from "@/app/user.module.css";
 
-export function TerminologySearch() {
+export function TerminologySearch({ glossaryTermsCount }: { glossaryTermsCount: number }) {
   const { locale, msg } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -100,12 +100,13 @@ export function TerminologySearch() {
   };
 
   const t = msg.terminology;
+  const formattedCount = glossaryTermsCount.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP");
 
   return (
     <div className={styles.terminologyPage}>
       <header className={styles.terminologyHeader}>
         <h1>{t.title}</h1>
-        <p>{t.subtitle}</p>
+        <p>{t.subtitle.replace("{count}", formattedCount)}</p>
         <form className={styles.searchBar} onSubmit={handleSubmit}>
           <input
             ref={inputRef}

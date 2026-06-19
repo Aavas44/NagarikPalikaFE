@@ -158,7 +158,7 @@ export function LandConverterCalculator() {
   return (
     <section className={pageStyles.calculatorPage}>
       <div className={`${pageStyles.calculatorPageInner} ${styles.emiPageInner}`}>
-        <Link href="/" className={pageStyles.calculatorBack}>
+        <Link href="/calculators" className={pageStyles.calculatorBack}>
           ← {msg.calculators.back}
         </Link>
         <header className={styles.emiHeader}>

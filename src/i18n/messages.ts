@@ -7,6 +7,7 @@ export const messages = {
       templates: "Templates",
       allTemplates: "All templates →",
       calculators: "Calculators",
+      allCalculators: "All calculators →",
       consultLawyer: "Consult Lawyer",
       faq: "FAQ",
       help: "Help",
@@ -23,6 +24,7 @@ export const messages = {
     stats: {
       terms: "Terms explained",
       templates: "Application templates",
+      calculators: "Calculators",
       departments: "Government departments",
     },
     sections: {
@@ -79,6 +81,11 @@ export const messages = {
       fillHint: "Fill in the underlined fields with your details. Use Print to save or print the form.",
       print: "Print",
     },
+    calculatorsPage: {
+      back: "Back to home",
+      title: "Calculators",
+      subtitle: "{count} free tools for tax, loans, and land in Nepal.",
+    },
     footer: {
       disclaimer: "Nagarik Palika — not affiliated with the Government of Nepal",
       privacy: "Privacy",
@@ -107,11 +114,17 @@ export const messages = {
     },
     calculators: {
       salaryTax: "Salary Tax Calculator",
+      salaryTaxDesc: "Estimate annual income tax under Nepal salary rules (FY 2083/84).",
       capitalGains: "Capital Gains Calculator",
+      capitalGainsDesc: "Estimate tax on property and investment gains.",
       vehicleTax: "Vehicle Tax Calculator",
+      vehicleTaxDesc: "Estimate annual vehicle tax by type and engine capacity.",
       landRegistrationTax: "Land Registration Tax Calculator",
+      landRegistrationTaxDesc: "Estimate stamp duty and registration fees for land transfers.",
       emi: "EMI Calculator",
+      emiDesc: "Monthly loan repayment for home, vehicle, or personal loans.",
       landConverter: "Land Converter",
+      landConverterDesc: "Convert Ropani, Bigha, and metric land units.",
       comingSoon: "This calculator is coming soon.",
       back: "All calculators",
       emiForm: {
@@ -250,7 +263,7 @@ export const messages = {
     },
     terminology: {
       title: "Legal terminology glossary",
-      subtitle: "Search 6,000+ terms from the Kanuni Shabdakosh (Nepali legal dictionary).",
+      subtitle: "Search {count} terms from the Kanuni Shabdakosh and SaralSewa government glossary.",
       searchPlaceholder: "Search by Nepali term or Roman transliteration, e.g. Bharti",
       searchHint: "Matches Nepali script, Roman transliteration, and English where available.",
       search: "Search",
@@ -260,7 +273,8 @@ export const messages = {
       meaningLabelEn: "Definition",
       meaningLabelNe: "अर्थ",
       close: "Close",
-      source: "Source: कानूनी शब्दकोश (Legal Dictionary of Nepal)",
+      source:
+        "Sources: कानूनी शब्दकोश (Legal Dictionary of Nepal) and SaralSewa Nepali Government Glossary.",
     },
     login: {
       title: "Admin sign in",
@@ -277,6 +291,7 @@ export const messages = {
       templates: "टेम्प्लेटहरू",
       allTemplates: "सबै टेम्प्लेटहरू →",
       calculators: "क्याल्कुलेटरहरू",
+      allCalculators: "सबै क्याल्कुलेटरहरू →",
       consultLawyer: "वकिलसँग सल्लाह",
       faq: "बारम्बार सोधिने प्रश्न",
       help: "सहायता",
@@ -293,6 +308,7 @@ export const messages = {
     stats: {
       terms: "व्याख्या गरिएका शब्दहरू",
       templates: "आवेदन टेम्प्लेटहरू",
+      calculators: "क्याल्कुलेटरहरू",
       departments: "सरकारी विभागहरू",
     },
     sections: {
@@ -349,6 +365,11 @@ export const messages = {
       fillHint: "रेखाङ्कित ठाउँहरूमा आफ्नो विवरण भर्नुहोस्। प्रिन्ट बटनले फारम प्रिन्ट वा PDF बचत गर्न मद्दत गर्छ।",
       print: "प्रिन्ट",
     },
+    calculatorsPage: {
+      back: "गृहपृष्ठमा फर्कनुहोस्",
+      title: "क्याल्कुलेटरहरू",
+      subtitle: "नेपालमा कर, ऋण र जग्गाका लागि {count} निःशुल्क उपकरणहरू।",
+    },
     footer: {
       disclaimer: "नागरिक पालिका — नेपाल सरकारसँग सम्बद्ध छैन",
       privacy: "गोपनीयता",
@@ -377,11 +398,17 @@ export const messages = {
     },
     calculators: {
       salaryTax: "तलब कर क्याल्कुलेटर",
+      salaryTaxDesc: "नेपालको तलब कर नियम (आ.व. २०८३/८४) अनुसार वार्षिक आयकर अनुमान।",
       capitalGains: "पूँजीगत लाभ कर क्याल्कुलेटर",
+      capitalGainsDesc: "सम्पत्ति र लगानीबाट भएको लाभमा कर अनुमान।",
       vehicleTax: "सवारी कर क्याल्कुलेटर",
+      vehicleTaxDesc: "सवारी प्रकार र इन्जिन क्षमताअनुसार वार्षिक कर अनुमान।",
       landRegistrationTax: "जग्गा दर्ता कर क्याल्कुलेटर",
+      landRegistrationTaxDesc: "जग्गा हस्तान्तरणमा स्ट्याम्प शुल्क र दर्ता खर्च अनुमान।",
       emi: "EMI क्याल्कुलेटर",
+      emiDesc: "घर, सवारी वा व्यक्तिगत ऋणको मासिक किस्ता अनुमान।",
       landConverter: "जग्गा रूपान्तरण",
+      landConverterDesc: "रोपनी, बिघा र मेट्रिक जग्गा एकाइ रूपान्तरण।",
       comingSoon: "यो क्याल्कुलेटर चाँडै उपलब्ध हुनेछ।",
       back: "सबै क्याल्कुलेटरहरू",
       emiForm: {
@@ -520,7 +547,7 @@ export const messages = {
     },
     terminology: {
       title: "कानूनी शब्दावली शब्दकोश",
-      subtitle: "कानूनी शब्दकोशबाट ६,०००+ शब्दहरू खोज्नुहोस्।",
+      subtitle: "कानूनी शब्दकोश र सरल सेवा सरकारी शब्दकोशबाट {count} शब्दहरू खोज्नुहोस्।",
       searchPlaceholder: "नेपाली शब्द वा रोमन लिप्यन्तरण खोज्नुहोस्, जस्तै Bharti",
       searchHint: "देवनागरी, रोमन लिप्यन्तरण र उपलब्ध अङ्ग्रेजी अर्थसँग मिल्दछ।",
       search: "खोज",
@@ -530,7 +557,7 @@ export const messages = {
       meaningLabelEn: "Definition",
       meaningLabelNe: "अर्थ",
       close: "बन्द गर्नुहोस्",
-      source: "स्रोत: कानूनी शब्दकोश",
+      source: "स्रोत: कानूनी शब्दकोश र सरल सेवा सरकारी शब्दकोश",
     },
     login: {
       title: "प्रशासक साइन इन",

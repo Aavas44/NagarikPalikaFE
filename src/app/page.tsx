@@ -6,6 +6,7 @@ import {
   getTemplates,
   getTerms,
 } from "@/lib/api";
+import { getCombinedGlossaryTermCount } from "@/lib/glossary";
 import { getSaralSewaCategories } from "@/lib/saralsewa-glossary";
 import { UserNav } from "@/components/user/UserNav";
 import { Hero } from "@/components/user/Hero";
@@ -17,13 +18,15 @@ import { UserFooter } from "@/components/user/UserFooter";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [stats, categories, terms, templates, quickTags, lawyers] = await Promise.all([
+  const [stats, categories, terms, templates, quickTags, lawyers, glossaryTermsCount] =
+    await Promise.all([
     getStats(),
     getSaralSewaCategories(),
     getTerms({ status: "published" }),
     getTemplates({ status: "published" }),
     getQuickTags(),
     getLawyers({ status: "published" }),
+    getCombinedGlossaryTermCount(),
   ]);
 
   return (
@@ -32,6 +35,7 @@ export default async function HomePage() {
       <Hero quickTags={quickTags} />
       <UserHome
         stats={stats}
+        glossaryTermsCount={glossaryTermsCount}
         categories={categories}
         terms={terms}
         templates={templates}

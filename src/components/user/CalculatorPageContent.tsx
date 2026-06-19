@@ -22,7 +22,7 @@ function PlaceholderCalculator({ slug }: { slug: CalculatorSlug }) {
   return (
     <section className={styles.calculatorPage}>
       <div className={styles.calculatorPageInner}>
-        <Link href="/" className={styles.calculatorBack}>
+        <Link href="/calculators" className={styles.calculatorBack}>
           ← {msg.calculators.back}
         </Link>
         <h1>{msg.calculators[item.labelKey]}</h1>

@@ -2,10 +2,11 @@ import fs from "fs/promises";
 import type { GlossaryEntry, GlossaryFile, GlossarySearchResult } from "@/types/glossary";
 import { dataFilePath } from "@/lib/dataPath";
 import {
+  dedupeGlossaryKey,
   mergeGlossaryResults,
   scoreGlossaryLabels,
 } from "@/lib/glossarySearchCore";
-import { searchSaralSewaGlossary } from "@/lib/saralsewa-glossary";
+import { getSaralSewaEntries, searchSaralSewaGlossary } from "@/lib/saralsewa-glossary";
 
 const GLOSSARY_PATH = dataFilePath("kanuni-shabdakosh-glossary-roman-fixed.json");
 
@@ -76,7 +77,20 @@ export async function searchGlossary(
   return mergeGlossaryResults([saral, kanuni], limit);
 }
 
-export async function getGlossaryCount(): Promise<number> {
-  const entries = await loadEntries();
-  return entries.length;
+export async function getCombinedGlossaryTermCount(): Promise<number> {
+  const [kanuniEntries, saralEntries] = await Promise.all([loadEntries(), getSaralSewaEntries()]);
+
+  const keys = new Set<string>();
+
+  for (const entry of kanuniEntries) {
+    if (!entry.meaning?.trim()) continue;
+    keys.add(dedupeGlossaryKey(entry.term, entry["Roman Transliteration"] ?? ""));
+  }
+
+  for (const entry of saralEntries) {
+    if (!entry.meaningNe?.trim() && !entry.meaningEn?.trim()) continue;
+    keys.add(dedupeGlossaryKey(entry.term, entry["Roman Transliteration"] ?? ""));
+  }
+
+  return keys.size;
 }

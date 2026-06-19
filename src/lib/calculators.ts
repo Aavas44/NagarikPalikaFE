@@ -1,15 +1,64 @@
+export type CalculatorIconColor = "blue" | "green" | "amber" | "teal";
+
 export const CALCULATOR_ITEMS = [
-  { slug: "salary-tax", labelKey: "salaryTax" },
-  { slug: "capital-gains", labelKey: "capitalGains" },
-  { slug: "vehicle-tax", labelKey: "vehicleTax" },
-  { slug: "land-registration-tax", labelKey: "landRegistrationTax" },
-  { slug: "emi", labelKey: "emi" },
-  { slug: "land-converter", labelKey: "landConverter" },
+  {
+    slug: "salary-tax",
+    labelKey: "salaryTax",
+    descriptionKey: "salaryTaxDesc",
+    icon: "💰",
+    iconColor: "blue",
+    available: true,
+  },
+  {
+    slug: "emi",
+    labelKey: "emi",
+    descriptionKey: "emiDesc",
+    icon: "🏦",
+    iconColor: "teal",
+    available: true,
+  },
+  {
+    slug: "land-converter",
+    labelKey: "landConverter",
+    descriptionKey: "landConverterDesc",
+    icon: "📐",
+    iconColor: "green",
+    available: true,
+  },
+  {
+    slug: "land-registration-tax",
+    labelKey: "landRegistrationTax",
+    descriptionKey: "landRegistrationTaxDesc",
+    icon: "🏠",
+    iconColor: "amber",
+    available: false,
+  },
+  {
+    slug: "capital-gains",
+    labelKey: "capitalGains",
+    descriptionKey: "capitalGainsDesc",
+    icon: "📈",
+    iconColor: "green",
+    available: false,
+  },
+  {
+    slug: "vehicle-tax",
+    labelKey: "vehicleTax",
+    descriptionKey: "vehicleTaxDesc",
+    icon: "🚗",
+    iconColor: "amber",
+    available: false,
+  },
 ] as const;
 
 export type CalculatorSlug = (typeof CALCULATOR_ITEMS)[number]["slug"];
 export type CalculatorLabelKey = (typeof CALCULATOR_ITEMS)[number]["labelKey"];
+export type CalculatorDescriptionKey = (typeof CALCULATOR_ITEMS)[number]["descriptionKey"];
 
 export function isCalculatorSlug(slug: string): slug is CalculatorSlug {
   return CALCULATOR_ITEMS.some((item) => item.slug === slug);
+}
+
+export function getCalculatorCount(): number {
+  return CALCULATOR_ITEMS.length;
 }

@@ -40,6 +40,9 @@ export function CalculatorsNavDropdown() {
         </svg>
       </button>
       <div className={styles.navDropdownMenu} role="menu">
+        <Link href="/calculators" className={styles.navDropdownItem} role="menuitem">
+          {msg.nav.allCalculators}
+        </Link>
         {CALCULATOR_ITEMS.map((item) => {
           const label = msg.calculators[item.labelKey];
           return (

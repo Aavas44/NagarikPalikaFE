@@ -76,9 +76,14 @@ export async function getSaralSewaCategoryBySlug(
   };
 }
 
-export async function getAllCategorySlugs(): Promise<string[]> {
-  const categories = await getSaralSewaCategories();
-  return categories.map((c) => c.slug);
+export async function getSaralSewaEntries(): Promise<SaralSewaEntry[]> {
+  const data = await loadGlossary();
+  return data.entries;
+}
+
+export async function getSaralSewaGlossaryCount(): Promise<number> {
+  const entries = await getSaralSewaEntries();
+  return entries.filter((entry) => entry.meaningNe?.trim() || entry.meaningEn?.trim()).length;
 }
 
 function scoreSaralSewaEntry(entry: SaralSewaEntry, query: string): number {

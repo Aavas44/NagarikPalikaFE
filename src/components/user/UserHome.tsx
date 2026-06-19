@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { pickLocalized } from "@/i18n/messages";
+import { getCalculatorCount } from "@/lib/calculators";
 import type { Category, Stats, Template, Term } from "@/types";
 import type { SaralSewaCategoryCard } from "@/types/saralsewa";
 import styles from "@/app/user.module.css";
@@ -16,12 +17,13 @@ const iconColorClass: Record<SaralSewaCategoryCard["iconColor"], string> = {
 
 interface UserHomeProps {
   stats: Stats;
+  glossaryTermsCount: number;
   categories: SaralSewaCategoryCard[];
   terms: Term[];
   templates: Template[];
 }
 
-export function UserHome({ stats, categories, terms, templates }: UserHomeProps) {
+export function UserHome({ stats, glossaryTermsCount, categories, terms, templates }: UserHomeProps) {
   const { locale, msg } = useLanguage();
 
   const categoryLabel = (cat: Category) =>
@@ -30,18 +32,20 @@ export function UserHome({ stats, categories, terms, templates }: UserHomeProps)
   return (
     <>
       <div className={styles.stats}>
-        <div className={styles.stat}>
-          <div className={styles.statNum}>{stats.termsCount}+</div>
+        <Link href="/terminology" className={styles.stat}>
+          <div className={styles.statNum}>
+            {glossaryTermsCount.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")}
+          </div>
           <div className={styles.statLabel}>{msg.stats.terms}</div>
-        </div>
-        <div className={styles.stat}>
+        </Link>
+        <Link href="/templates" className={styles.stat}>
           <div className={styles.statNum}>{stats.templatesCount}+</div>
           <div className={styles.statLabel}>{msg.stats.templates}</div>
-        </div>
-        <div className={styles.stat}>
-          <div className={styles.statNum}>{stats.departmentsCount}</div>
-          <div className={styles.statLabel}>{msg.stats.departments}</div>
-        </div>
+        </Link>
+        <Link href="/calculators" className={styles.stat}>
+          <div className={styles.statNum}>{getCalculatorCount()}</div>
+          <div className={styles.statLabel}>{msg.stats.calculators}</div>
+        </Link>
       </div>
 
       <div className={styles.divider} />
