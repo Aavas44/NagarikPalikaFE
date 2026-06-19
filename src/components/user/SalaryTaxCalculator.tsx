@@ -54,8 +54,8 @@ export function SalaryTaxCalculator() {
   const [allowance, setAllowance] = useState("0");
   const [months, setMonths] = useState("12");
   const [salaryPeriods, setSalaryPeriods] = useState<SalaryPeriodRow[]>([
-    createPeriodRow(),
-    createPeriodRow(),
+    createPeriodRow("50000", "3"),
+    createPeriodRow("65000", "5"),
   ]);
   const [bonus, setBonus] = useState("0");
   const [ssf, setSsf] = useState("0");
@@ -69,20 +69,20 @@ export function SalaryTaxCalculator() {
     [incomeMode, salaryPeriods]
   );
 
-  const periodTotals = useMemo(
-    () => (parsedPeriods.length > 0 ? sumSalaryPeriods(parsedPeriods) : null),
-    [parsedPeriods]
-  );
+  const periodTotals = useMemo(() => {
+    if (incomeMode !== "variable") return null;
+    return sumSalaryPeriods(parsedPeriods);
+  }, [incomeMode, parsedPeriods]);
 
   const effectiveMonths = useMemo(() => {
-    if (incomeMode === "variable" && periodTotals) return periodTotals.totalMonths;
+    if (incomeMode === "variable") return periodTotals?.totalMonths ?? 1;
     return Math.min(20, Math.max(1, parseInt(months, 10) || 12));
   }, [incomeMode, periodTotals, months]);
 
   const totalSalary = useMemo(() => {
     const salaryIncome =
-      incomeMode === "variable" && periodTotals
-        ? periodTotals.totalSalaryIncome
+      incomeMode === "variable"
+        ? (periodTotals?.totalSalaryIncome ?? 0)
         : parseAmount(monthlySalary) * effectiveMonths;
     return salaryIncome + parseAmount(allowance) + parseAmount(bonus);
   }, [incomeMode, periodTotals, monthlySalary, effectiveMonths, allowance, bonus]);

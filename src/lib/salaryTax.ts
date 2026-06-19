@@ -38,7 +38,7 @@ export function sumSalaryPeriods(periods: SalaryPeriod[]): {
 
   return {
     totalSalaryIncome,
-    totalMonths: Math.max(1, totalMonths || 12),
+    totalMonths: Math.max(1, totalMonths),
   };
 }
 
@@ -50,7 +50,7 @@ function resolveSalaryIncome(input: SalaryTaxInput): {
   salaryIncome: number;
   monthCount: number;
 } {
-  if (input.salaryPeriods && input.salaryPeriods.length > 0) {
+  if (input.salaryPeriods !== undefined) {
     const { totalSalaryIncome, totalMonths } = sumSalaryPeriods(input.salaryPeriods);
     return { salaryIncome: totalSalaryIncome, monthCount: clampMonths(totalMonths) };
   }
