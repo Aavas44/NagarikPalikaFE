@@ -38,7 +38,8 @@ export function SalaryTaxCalculator() {
 
   const totalSalary = useMemo(
     () =>
-      (parseAmount(monthlySalary) + parseAmount(allowance)) * (parseInt(months, 10) || 0) +
+      parseAmount(monthlySalary) * (parseInt(months, 10) || 0) +
+      parseAmount(allowance) +
       parseAmount(bonus),
     [monthlySalary, allowance, months, bonus]
   );
@@ -169,20 +170,6 @@ export function SalaryTaxCalculator() {
                 />
               </div>
               <div className={styles.emiField}>
-                <label htmlFor="allowance">{t.allowance}</label>
-                <input
-                  id="allowance"
-                  type="number"
-                  min="0"
-                  className={styles.emiNumberInput}
-                  value={allowance}
-                  onChange={(e) => setAllowance(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className={styles.emiRow}>
-              <div className={styles.emiField}>
                 <label htmlFor="months">{t.months}</label>
                 <input
                   id="months"
@@ -192,6 +179,22 @@ export function SalaryTaxCalculator() {
                   className={styles.emiNumberInput}
                   value={months}
                   onChange={(e) => setMonths(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <h4 className={styles.emiSubsectionSubtitle}>{t.annualAllowanceBonus}</h4>
+
+            <div className={styles.emiRow}>
+              <div className={styles.emiField}>
+                <label htmlFor="allowance">{t.allowance}</label>
+                <input
+                  id="allowance"
+                  type="number"
+                  min="0"
+                  className={styles.emiNumberInput}
+                  value={allowance}
+                  onChange={(e) => setAllowance(e.target.value)}
                 />
               </div>
               <div className={styles.emiField}>
@@ -283,44 +286,53 @@ export function SalaryTaxCalculator() {
           <div className={`${styles.emiPanel} ${styles.emiResultsPanel}`}>
             <h2 className={styles.emiPanelTitle}>{t.estimatedTax}</h2>
 
-            <div className={styles.emiEmiHero}>
-              <span className={styles.emiEmiLabel}>{t.netTaxLiability}</span>
-              <span className={styles.emiEmiAmount}>{formatNpr(result.netTax)}</span>
-              <span className={styles.emiEmiSub}>
-                {t.perYear} · {t.monthlyTax}: {formatNpr(result.monthlyTax)}
-              </span>
+            <div className={`${styles.emiStat} ${styles.emiFadeCard} ${styles.emiStatAssessable}`}>
+              <span className={styles.emiStatLabel}>{t.netAssessable}</span>
+              <span className={styles.emiStatValue}>{formatNpr(result.netAssessable)}</span>
+            </div>
+
+            <div className={styles.emiTaxLiabilitySection}>
+              <span className={styles.emiTaxLiabilityHeading}>{t.netTaxLiability}</span>
+              <div className={styles.emiTaxLiabilityGrid}>
+                <div className={`${styles.emiTaxLiabilityBox} ${styles.emiFadeCard}`}>
+                  <span className={styles.emiTaxLiabilityPeriod}>{t.annualTax}</span>
+                  <span className={styles.emiTaxLiabilityAmount}>{formatNpr(result.netTax)}</span>
+                </div>
+                <div className={`${styles.emiTaxLiabilityBox} ${styles.emiFadeCard}`}>
+                  <span className={styles.emiTaxLiabilityPeriod}>{t.monthlyTax}</span>
+                  <span className={styles.emiTaxLiabilityAmount}>
+                    {formatNpr(result.monthlyTax)}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className={styles.emiStatGrid}>
-              <div className={styles.emiStat}>
+              <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
                 <span className={styles.emiStatLabel}>{t.totalIncome}</span>
                 <span className={styles.emiStatValue}>{formatNpr(result.totalIncome)}</span>
               </div>
-              <div className={styles.emiStat}>
+              <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
+                <span className={styles.emiStatLabel}>{t.totalDeduction}</span>
+                <span className={styles.emiStatValue}>{formatNpr(result.totalDeduction)}</span>
+              </div>
+              <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
                 <span className={styles.emiStatLabel}>{t.retirementApplied}</span>
                 <span className={styles.emiStatValue}>
                   {formatNpr(result.appliedRetirement)}
                 </span>
               </div>
-              <div className={styles.emiStat}>
+              <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
                 <span className={styles.emiStatLabel}>{t.lifeInsuranceApplied}</span>
                 <span className={styles.emiStatValue}>
                   {formatNpr(result.appliedLifeInsurance)}
                 </span>
               </div>
-              <div className={styles.emiStat}>
+              <div className={`${styles.emiStat} ${styles.emiFadeCard} ${styles.emiStatFull}`}>
                 <span className={styles.emiStatLabel}>{t.medicalInsuranceApplied}</span>
                 <span className={styles.emiStatValue}>
                   {formatNpr(result.appliedMedicalInsurance)}
                 </span>
-              </div>
-              <div className={styles.emiStat}>
-                <span className={styles.emiStatLabel}>{t.totalDeduction}</span>
-                <span className={styles.emiStatValue}>{formatNpr(result.totalDeduction)}</span>
-              </div>
-              <div className={`${styles.emiStat} ${styles.emiStatFull}`}>
-                <span className={styles.emiStatLabel}>{t.netAssessable}</span>
-                <span className={styles.emiStatValue}>{formatNpr(result.netAssessable)}</span>
               </div>
             </div>
 

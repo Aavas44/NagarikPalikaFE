@@ -118,7 +118,7 @@ function calculateSlabTax(
 export function calculateSalaryTax(input: SalaryTaxInput): SalaryTaxResult {
   const totalIncome = Math.max(
     0,
-    (input.monthlySalary + input.allowance) * input.months + input.bonus
+    input.monthlySalary * input.months + input.allowance + input.bonus
   );
 
   const retirementCap = input.isSsfContributor ? 500_000 : 300_000;
