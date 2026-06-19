@@ -127,30 +127,55 @@
 
 .emiUnitToggle {
   display: flex;
-  background: #f3f4f6;
-  border-radius: 8px;
-  padding: 3px;
-  border: 1px solid #e5e7eb;
+  gap: 3px;
+  width: 100%;
+  background: linear-gradient(180deg, #d1d5db 0%, #e5e7eb 45%, #f3f4f6 100%);
+  border-radius: 10px;
+  padding: 4px;
+  border: 1px solid #cbd5e1;
+  box-shadow:
+    inset 0 2px 5px rgba(15, 23, 42, 0.14),
+    0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .emiUnitBtn,
 .emiUnitActive {
+  flex: 1;
   border: none;
   background: transparent;
-  padding: 5px 12px;
+  padding: 8px 12px;
   font-size: 12px;
-  font-weight: 500;
-  border-radius: 6px;
+  font-weight: 600;
+  border-radius: 7px;
   cursor: pointer;
   font-family: inherit;
   color: #6b7280;
-  transition: all 0.15s;
+  text-align: center;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    color 0.15s ease,
+    transform 0.12s ease;
+}
+
+.emiUnitBtn:hover {
+  color: #374151;
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .emiUnitActive {
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
   color: #185fa5;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 2px 5px rgba(15, 23, 42, 0.14),
+    0 1px 2px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transform: translateY(-1px);
+}
+
+.emiUnitActive:hover {
+  color: #0c447c;
+  background: linear-gradient(180deg, #ffffff 0%, #e6f1fb 100%);
 }
 
 .emiEmiHero {
@@ -284,9 +309,98 @@
 .emiFadeCard .emiStatLabel,
 .emiFadeCard .emiStatValue,
 .emiFadeCard .emiTaxLiabilityPeriod,
-.emiFadeCard .emiTaxLiabilityAmount {
+.emiFadeCard .emiTaxLiabilityAmount,
+.emiFadeCard .emiField,
+.emiFadeCard .emiRow,
+.emiFadeCard .emiCheckboxRow,
+.emiFadeCard .emiComputedRow,
+.emiFadeCard .emiUnitToggle,
+.emiFadeCard .emiPeriodList,
+.emiFadeCard .emiAddPeriodBtn,
+.emiFadeCard .emiSubsectionTitle,
+.emiFadeCard .emiSubsectionSubtitle,
+.emiFadeCard .emiPeriodCardHeader,
+.emiFadeCard .emiPeriodCardTitle {
   position: relative;
   z-index: 2;
+}
+
+.emiFormSection {
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+}
+
+.emiFormSection:last-child {
+  margin-bottom: 0;
+}
+
+.emiFormSection .emiSubsectionTitle {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.emiFadeCard .emiNumberInput,
+.emiFadeCard select.emiNumberInput {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(181, 212, 244, 0.85);
+}
+
+.emiFadeCard .emiNumberInput:focus,
+.emiFadeCard select.emiNumberInput:focus {
+  background: #fff;
+  border-color: #185fa5;
+}
+
+.emiFadeCard .emiComputedRow {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(181, 212, 244, 0.65);
+  margin-bottom: 0;
+}
+
+.emiFadeCard .emiComputedRow strong {
+  color: #042c53;
+}
+
+.emiFadeCard .emiUnitToggle {
+  background: linear-gradient(180deg, #b8cce8 0%, #d8e8f8 50%, #eef6ff 100%);
+  border-color: #9ec5e8;
+  box-shadow:
+    inset 0 3px 6px rgba(24, 95, 165, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.emiFadeCard .emiUnitBtn {
+  color: #4b5563;
+}
+
+.emiFadeCard .emiUnitBtn:hover {
+  background: rgba(255, 255, 255, 0.55);
+  color: #1f2937;
+}
+
+.emiFadeCard .emiUnitActive {
+  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+  color: #0c447c;
+  box-shadow:
+    0 3px 7px rgba(24, 95, 165, 0.22),
+    0 1px 3px rgba(24, 95, 165, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.emiFadeCard .emiUnitActive:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #cfe4fb 100%);
+  color: #042c53;
+}
+
+.emiFadeCard .emiAddPeriodBtn {
+  background: rgba(255, 255, 255, 0.65);
+  border-color: rgba(181, 212, 244, 0.85);
+}
+
+.emiFadeCard .emiAddPeriodBtn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #185fa5;
 }
 
 .emiFadeCard:hover {
@@ -513,6 +627,67 @@
   margin: 0.75rem 0 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.emiPeriodList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.emiPeriodCard {
+  padding: 0.85rem;
+  margin-bottom: 0;
+}
+
+.emiPeriodCard .emiField {
+  margin-bottom: 0;
+}
+
+.emiPeriodCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.emiPeriodCardTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.emiPeriodRemoveBtn {
+  border: none;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.emiPeriodRemoveBtn:hover {
+  color: #b91c1c;
+}
+
+.emiAddPeriodBtn {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 8px 12px;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #185fa5;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.emiAddPeriodBtn:hover {
+  background: #f9fafb;
+  border-color: #185fa5;
 }
 
 .emiRow {

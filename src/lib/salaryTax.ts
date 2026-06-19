@@ -1,6 +1,11 @@
 export type MaritalStatus = "unmarried" | "married";
 export type FiscalYear = "2083-84" | "2082-83";
 
+export interface SalaryPeriod {
+  monthlySalary: number;
+  months: number;
+}
+
 export interface SalaryTaxInput {
   fiscalYear: FiscalYear;
   maritalStatus: MaritalStatus;
@@ -10,11 +15,51 @@ export interface SalaryTaxInput {
   allowance: number;
   months: number;
   bonus: number;
+  salaryPeriods?: SalaryPeriod[];
   ssf: number;
   epf: number;
   cit: number;
   lifeInsurance: number;
   medicalInsurance: number;
+}
+
+export function sumSalaryPeriods(periods: SalaryPeriod[]): {
+  totalSalaryIncome: number;
+  totalMonths: number;
+} {
+  let totalSalaryIncome = 0;
+  let totalMonths = 0;
+
+  for (const period of periods) {
+    const months = Math.max(0, period.months);
+    totalSalaryIncome += Math.max(0, period.monthlySalary) * months;
+    totalMonths += months;
+  }
+
+  return {
+    totalSalaryIncome,
+    totalMonths: Math.max(1, totalMonths || 12),
+  };
+}
+
+function clampMonths(months: number): number {
+  return Math.min(20, Math.max(1, months));
+}
+
+function resolveSalaryIncome(input: SalaryTaxInput): {
+  salaryIncome: number;
+  monthCount: number;
+} {
+  if (input.salaryPeriods && input.salaryPeriods.length > 0) {
+    const { totalSalaryIncome, totalMonths } = sumSalaryPeriods(input.salaryPeriods);
+    return { salaryIncome: totalSalaryIncome, monthCount: clampMonths(totalMonths) };
+  }
+
+  const monthCount = clampMonths(input.months > 0 ? input.months : 12);
+  return {
+    salaryIncome: Math.max(0, input.monthlySalary) * monthCount,
+    monthCount,
+  };
 }
 
 export interface TaxSlabBreakdown {
@@ -116,10 +161,8 @@ function calculateSlabTax(
 }
 
 export function calculateSalaryTax(input: SalaryTaxInput): SalaryTaxResult {
-  const totalIncome = Math.max(
-    0,
-    input.monthlySalary * input.months + input.allowance + input.bonus
-  );
+  const { salaryIncome, monthCount } = resolveSalaryIncome(input);
+  const totalIncome = Math.max(0, salaryIncome + input.allowance + input.bonus);
 
   const retirementCap = input.isSsfContributor ? 500_000 : 300_000;
   const retirementLimit = Math.min(retirementCap, totalIncome / 3);
@@ -152,7 +195,6 @@ export function calculateSalaryTax(input: SalaryTaxInput): SalaryTaxResult {
   const femaleRebate =
     input.isFemale && input.maritalStatus === "unmarried" ? grossTax * 0.1 : 0;
   const netTax = Math.max(0, grossTax - femaleRebate);
-  const monthCount = input.months > 0 ? input.months : 12;
   const monthlyTax = netTax / monthCount;
 
   return {

@@ -7,8 +7,10 @@ import { formatNpr } from "@/lib/emi";
 import {
   calculateSalaryTax,
   formatRate,
+  sumSalaryPeriods,
   type FiscalYear,
   type MaritalStatus,
+  type SalaryPeriod,
 } from "@/lib/salaryTax";
 import pageStyles from "@/app/user.module.css";
 import styles from "./emi.module.css";
@@ -16,6 +18,27 @@ import styles from "./emi.module.css";
 function parseAmount(value: string): number {
   const n = Number(value.replace(/,/g, ""));
   return Number.isFinite(n) ? Math.max(0, n) : 0;
+}
+
+type IncomeMode = "fixed" | "variable";
+
+interface SalaryPeriodRow {
+  id: string;
+  salary: string;
+  months: string;
+}
+
+function createPeriodRow(salary = "", months = ""): SalaryPeriodRow {
+  return { id: crypto.randomUUID(), salary, months };
+}
+
+function parseSalaryPeriods(rows: SalaryPeriodRow[]): SalaryPeriod[] {
+  return rows
+    .map((row) => ({
+      monthlySalary: parseAmount(row.salary),
+      months: Math.max(0, parseInt(row.months, 10) || 0),
+    }))
+    .filter((row) => row.monthlySalary > 0 && row.months > 0);
 }
 
 export function SalaryTaxCalculator() {
@@ -26,9 +49,14 @@ export function SalaryTaxCalculator() {
   const [maritalStatus, setMaritalStatus] = useState<MaritalStatus>("unmarried");
   const [isSsfContributor, setIsSsfContributor] = useState(false);
   const [isFemale, setIsFemale] = useState(false);
+  const [incomeMode, setIncomeMode] = useState<IncomeMode>("fixed");
   const [monthlySalary, setMonthlySalary] = useState("75000");
   const [allowance, setAllowance] = useState("0");
   const [months, setMonths] = useState("12");
+  const [salaryPeriods, setSalaryPeriods] = useState<SalaryPeriodRow[]>([
+    createPeriodRow(),
+    createPeriodRow(),
+  ]);
   const [bonus, setBonus] = useState("0");
   const [ssf, setSsf] = useState("0");
   const [epf, setEpf] = useState("0");
@@ -36,13 +64,28 @@ export function SalaryTaxCalculator() {
   const [lifeInsurance, setLifeInsurance] = useState("0");
   const [medicalInsurance, setMedicalInsurance] = useState("0");
 
-  const totalSalary = useMemo(
-    () =>
-      parseAmount(monthlySalary) * (parseInt(months, 10) || 0) +
-      parseAmount(allowance) +
-      parseAmount(bonus),
-    [monthlySalary, allowance, months, bonus]
+  const parsedPeriods = useMemo(
+    () => (incomeMode === "variable" ? parseSalaryPeriods(salaryPeriods) : []),
+    [incomeMode, salaryPeriods]
   );
+
+  const periodTotals = useMemo(
+    () => (parsedPeriods.length > 0 ? sumSalaryPeriods(parsedPeriods) : null),
+    [parsedPeriods]
+  );
+
+  const effectiveMonths = useMemo(() => {
+    if (incomeMode === "variable" && periodTotals) return periodTotals.totalMonths;
+    return Math.min(20, Math.max(1, parseInt(months, 10) || 12));
+  }, [incomeMode, periodTotals, months]);
+
+  const totalSalary = useMemo(() => {
+    const salaryIncome =
+      incomeMode === "variable" && periodTotals
+        ? periodTotals.totalSalaryIncome
+        : parseAmount(monthlySalary) * effectiveMonths;
+    return salaryIncome + parseAmount(allowance) + parseAmount(bonus);
+  }, [incomeMode, periodTotals, monthlySalary, effectiveMonths, allowance, bonus]);
 
   const result = useMemo(
     () =>
@@ -53,7 +96,8 @@ export function SalaryTaxCalculator() {
         isFemale,
         monthlySalary: parseAmount(monthlySalary),
         allowance: parseAmount(allowance),
-        months: Math.min(20, Math.max(1, parseInt(months, 10) || 12)),
+        months: effectiveMonths,
+        salaryPeriods: incomeMode === "variable" ? parsedPeriods : undefined,
         bonus: parseAmount(bonus),
         ssf: parseAmount(ssf),
         epf: parseAmount(epf),
@@ -66,9 +110,11 @@ export function SalaryTaxCalculator() {
       maritalStatus,
       isSsfContributor,
       isFemale,
+      incomeMode,
+      parsedPeriods,
       monthlySalary,
       allowance,
-      months,
+      effectiveMonths,
       bonus,
       ssf,
       epf,
@@ -77,6 +123,20 @@ export function SalaryTaxCalculator() {
       medicalInsurance,
     ]
   );
+
+  const updatePeriod = (id: string, field: "salary" | "months", value: string) => {
+    setSalaryPeriods((rows) =>
+      rows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+    );
+  };
+
+  const addPeriod = () => {
+    setSalaryPeriods((rows) => [...rows, createPeriodRow()]);
+  };
+
+  const removePeriod = (id: string) => {
+    setSalaryPeriods((rows) => (rows.length > 1 ? rows.filter((row) => row.id !== id) : rows));
+  };
 
   return (
     <section className={pageStyles.calculatorPage}>
@@ -93,6 +153,7 @@ export function SalaryTaxCalculator() {
           <div className={styles.emiPanel}>
             <h2 className={styles.emiPanelTitle}>{t.yourDetails}</h2>
 
+            <div className={`${styles.emiFadeCard} ${styles.emiFormSection}`}>
             <div className={styles.emiField}>
               <label htmlFor="fiscal-year">{t.fiscalYear}</label>
               <select
@@ -154,34 +215,116 @@ export function SalaryTaxCalculator() {
                 </span>
               </label>
             </div>
+            </div>
 
+            <div className={`${styles.emiFadeCard} ${styles.emiFormSection}`}>
             <h3 className={styles.emiSubsectionTitle}>{t.annualIncome}</h3>
 
-            <div className={styles.emiRow}>
-              <div className={styles.emiField}>
-                <label htmlFor="monthly-salary">{t.monthlySalary}</label>
-                <input
-                  id="monthly-salary"
-                  type="number"
-                  min="0"
-                  className={styles.emiNumberInput}
-                  value={monthlySalary}
-                  onChange={(e) => setMonthlySalary(e.target.value)}
-                />
-              </div>
-              <div className={styles.emiField}>
-                <label htmlFor="months">{t.months}</label>
-                <input
-                  id="months"
-                  type="number"
-                  min="1"
-                  max="20"
-                  className={styles.emiNumberInput}
-                  value={months}
-                  onChange={(e) => setMonths(e.target.value)}
-                />
+            <div className={styles.emiField}>
+              <div className={styles.emiUnitToggle} role="group" aria-label={t.annualIncome}>
+                <button
+                  type="button"
+                  className={incomeMode === "fixed" ? styles.emiUnitActive : styles.emiUnitBtn}
+                  onClick={() => setIncomeMode("fixed")}
+                >
+                  {t.incomeModeFixed}
+                </button>
+                <button
+                  type="button"
+                  className={incomeMode === "variable" ? styles.emiUnitActive : styles.emiUnitBtn}
+                  onClick={() => setIncomeMode("variable")}
+                >
+                  {t.incomeModeVariable}
+                </button>
               </div>
             </div>
+
+            {incomeMode === "fixed" ? (
+              <div className={styles.emiRow}>
+                <div className={styles.emiField}>
+                  <label htmlFor="monthly-salary">{t.monthlySalary}</label>
+                  <input
+                    id="monthly-salary"
+                    type="number"
+                    min="0"
+                    className={styles.emiNumberInput}
+                    value={monthlySalary}
+                    onChange={(e) => setMonthlySalary(e.target.value)}
+                  />
+                </div>
+                <div className={styles.emiField}>
+                  <label htmlFor="months">{t.months}</label>
+                  <input
+                    id="months"
+                    type="number"
+                    min="1"
+                    max="20"
+                    className={styles.emiNumberInput}
+                    value={months}
+                    onChange={(e) => setMonths(e.target.value)}
+                  />
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className={styles.emiPeriodList}>
+                  {salaryPeriods.map((period, index) => (
+                    <div key={period.id} className={`${styles.emiFadeCard} ${styles.emiPeriodCard}`}>
+                      <div className={styles.emiPeriodCardHeader}>
+                        <span className={styles.emiPeriodCardTitle}>
+                          {t.periodLabel.replace("{n}", String(index + 1))}
+                        </span>
+                        {salaryPeriods.length > 1 && (
+                          <button
+                            type="button"
+                            className={styles.emiPeriodRemoveBtn}
+                            onClick={() => removePeriod(period.id)}
+                          >
+                            {t.removeSalaryPeriod}
+                          </button>
+                        )}
+                      </div>
+                      <div className={styles.emiRow}>
+                        <div className={styles.emiField}>
+                          <label htmlFor={`period-salary-${period.id}`}>{t.monthlySalary}</label>
+                          <input
+                            id={`period-salary-${period.id}`}
+                            type="number"
+                            min="0"
+                            placeholder="0"
+                            className={styles.emiNumberInput}
+                            value={period.salary}
+                            onChange={(e) => updatePeriod(period.id, "salary", e.target.value)}
+                          />
+                        </div>
+                        <div className={styles.emiField}>
+                          <label htmlFor={`period-months-${period.id}`}>{t.months}</label>
+                          <input
+                            id={`period-months-${period.id}`}
+                            type="number"
+                            min="1"
+                            max="20"
+                            placeholder="0"
+                            className={styles.emiNumberInput}
+                            value={period.months}
+                            onChange={(e) => updatePeriod(period.id, "months", e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className={styles.emiAddPeriodBtn} onClick={addPeriod}>
+                  {t.addSalaryPeriod}
+                </button>
+                {periodTotals && (
+                  <div className={styles.emiComputedRow}>
+                    <span>{t.totalMonths}</span>
+                    <strong>{periodTotals.totalMonths}</strong>
+                  </div>
+                )}
+              </>
+            )}
 
             <h4 className={styles.emiSubsectionSubtitle}>{t.annualAllowanceBonus}</h4>
 
@@ -214,7 +357,9 @@ export function SalaryTaxCalculator() {
               <span>{t.totalSalary}</span>
               <strong>{formatNpr(totalSalary)}</strong>
             </div>
+            </div>
 
+            <div className={`${styles.emiFadeCard} ${styles.emiFormSection}`}>
             <h3 className={styles.emiSubsectionTitle}>{t.annualDeductions}</h3>
 
             <div className={styles.emiRow}>
@@ -280,6 +425,7 @@ export function SalaryTaxCalculator() {
                   onChange={(e) => setMedicalInsurance(e.target.value)}
                 />
               </div>
+            </div>
             </div>
           </div>
 
