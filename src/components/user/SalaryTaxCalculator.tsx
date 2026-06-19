@@ -27,6 +27,7 @@ export function SalaryTaxCalculator() {
   const [isSsfContributor, setIsSsfContributor] = useState(false);
   const [isFemale, setIsFemale] = useState(false);
   const [monthlySalary, setMonthlySalary] = useState("75000");
+  const [allowance, setAllowance] = useState("0");
   const [months, setMonths] = useState("12");
   const [bonus, setBonus] = useState("0");
   const [ssf, setSsf] = useState("0");
@@ -36,8 +37,10 @@ export function SalaryTaxCalculator() {
   const [medicalInsurance, setMedicalInsurance] = useState("0");
 
   const totalSalary = useMemo(
-    () => parseAmount(monthlySalary) * (parseInt(months, 10) || 0) + parseAmount(bonus),
-    [monthlySalary, months, bonus]
+    () =>
+      (parseAmount(monthlySalary) + parseAmount(allowance)) * (parseInt(months, 10) || 0) +
+      parseAmount(bonus),
+    [monthlySalary, allowance, months, bonus]
   );
 
   const result = useMemo(
@@ -48,7 +51,8 @@ export function SalaryTaxCalculator() {
         isSsfContributor,
         isFemale,
         monthlySalary: parseAmount(monthlySalary),
-        months: parseInt(months, 10) || 12,
+        allowance: parseAmount(allowance),
+        months: Math.min(20, Math.max(1, parseInt(months, 10) || 12)),
         bonus: parseAmount(bonus),
         ssf: parseAmount(ssf),
         epf: parseAmount(epf),
@@ -62,6 +66,7 @@ export function SalaryTaxCalculator() {
       isSsfContributor,
       isFemale,
       monthlySalary,
+      allowance,
       months,
       bonus,
       ssf,
@@ -164,29 +169,42 @@ export function SalaryTaxCalculator() {
                 />
               </div>
               <div className={styles.emiField}>
+                <label htmlFor="allowance">{t.allowance}</label>
+                <input
+                  id="allowance"
+                  type="number"
+                  min="0"
+                  className={styles.emiNumberInput}
+                  value={allowance}
+                  onChange={(e) => setAllowance(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className={styles.emiRow}>
+              <div className={styles.emiField}>
                 <label htmlFor="months">{t.months}</label>
                 <input
                   id="months"
                   type="number"
                   min="1"
-                  max="12"
+                  max="20"
                   className={styles.emiNumberInput}
                   value={months}
                   onChange={(e) => setMonths(e.target.value)}
                 />
               </div>
-            </div>
-
-            <div className={styles.emiField}>
-              <label htmlFor="bonus">{t.bonus}</label>
-              <input
-                id="bonus"
-                type="number"
-                min="0"
-                className={styles.emiNumberInput}
-                value={bonus}
-                onChange={(e) => setBonus(e.target.value)}
-              />
+              <div className={styles.emiField}>
+                <label htmlFor="bonus">{t.bonus}</label>
+                <input
+                  id="bonus"
+                  type="number"
+                  min="0"
+                  className={styles.emiNumberInput}
+                  value={bonus}
+                  onChange={(e) => setBonus(e.target.value)}
+                />
+              </div>
             </div>
 
             <div className={styles.emiComputedRow}>

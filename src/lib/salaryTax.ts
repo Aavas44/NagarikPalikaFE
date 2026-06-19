@@ -7,6 +7,7 @@ export interface SalaryTaxInput {
   isSsfContributor: boolean;
   isFemale: boolean;
   monthlySalary: number;
+  allowance: number;
   months: number;
   bonus: number;
   ssf: number;
@@ -115,7 +116,10 @@ function calculateSlabTax(
 }
 
 export function calculateSalaryTax(input: SalaryTaxInput): SalaryTaxResult {
-  const totalIncome = Math.max(0, input.monthlySalary * input.months + input.bonus);
+  const totalIncome = Math.max(
+    0,
+    (input.monthlySalary + input.allowance) * input.months + input.bonus
+  );
 
   const retirementCap = input.isSsfContributor ? 500_000 : 300_000;
   const retirementLimit = Math.min(retirementCap, totalIncome / 3);

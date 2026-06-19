@@ -17,6 +17,9 @@ export interface GlossarySearchResult {
   romanTransliteration: string;
   english: string | null;
   meaning: string;
+  meaningNe?: string | null;
+  meaningEn?: string | null;
+  source?: "saralsewa" | "kanuni";
   score: number;
 }
 

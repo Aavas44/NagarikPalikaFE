@@ -4,7 +4,9 @@ import type {
   SaralSewaEntry,
   SaralSewaGlossary,
 } from "@/types/saralsewa";
+import type { GlossarySearchResult } from "@/types/glossary";
 import { dataFilePath } from "@/lib/dataPath";
+import { scoreGlossaryLabels } from "@/lib/glossarySearchCore";
 
 const GLOSSARY_PATH = dataFilePath("saralsewa-nepali-government-glossary.json");
 
@@ -77,4 +79,45 @@ export async function getSaralSewaCategoryBySlug(
 export async function getAllCategorySlugs(): Promise<string[]> {
   const categories = await getSaralSewaCategories();
   return categories.map((c) => c.slug);
+}
+
+function scoreSaralSewaEntry(entry: SaralSewaEntry, query: string): number {
+  return scoreGlossaryLabels(query, {
+    term: entry.term,
+    roman: entry["Roman Transliteration"] ?? "",
+    english: entry.english,
+  });
+}
+
+export async function searchSaralSewaGlossary(
+  query: string,
+  limit = 30
+): Promise<{ total: number; results: GlossarySearchResult[] }> {
+  const data = await loadGlossary();
+  const trimmed = query.trim();
+
+  if (!trimmed) {
+    return { total: 0, results: [] };
+  }
+
+  const scored = data.entries
+    .map((entry) => ({
+      entry,
+      score: scoreSaralSewaEntry(entry, trimmed),
+    }))
+    .filter(({ score }) => score > 0)
+    .sort((a, b) => b.score - a.score || a.entry.term.localeCompare(b.entry.term));
+
+  const results: GlossarySearchResult[] = scored.slice(0, limit).map(({ entry, score }) => ({
+    term: entry.term,
+    romanTransliteration: entry["Roman Transliteration"],
+    english: entry.english,
+    meaning: entry.meaningNe ?? "",
+    meaningNe: entry.meaningNe,
+    meaningEn: entry.meaningEn,
+    source: "saralsewa",
+    score,
+  }));
+
+  return { total: scored.length, results };
 }

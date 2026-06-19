@@ -52,6 +52,10 @@ export function getTemplates(params?: {
   return fetchJson<Template[]>(`/templates${query ? `?${query}` : ""}`);
 }
 
+export function getTemplate(slug: string): Promise<Template> {
+  return fetchJson<Template>(`/templates/${encodeURIComponent(slug)}`);
+}
+
 export function getCategories(): Promise<CategoryCard[]> {
   return fetchJson<CategoryCard[]>("/categories");
 }

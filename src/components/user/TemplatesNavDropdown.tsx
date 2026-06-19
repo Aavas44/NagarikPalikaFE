@@ -1,19 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
-import { CALCULATOR_ITEMS } from "@/lib/calculators";
+import { pickLocalized } from "@/i18n/messages";
+import { getTemplates } from "@/lib/api";
+import type { Template } from "@/types";
 import styles from "@/app/user.module.css";
 import { useNavDropdown } from "./useNavDropdown";
 
-export function CalculatorsNavDropdown() {
-  const { msg } = useLanguage();
+export function TemplatesNavDropdown() {
+  const { locale, msg } = useLanguage();
+  const [templates, setTemplates] = useState<Template[]>([]);
   const { open, rootRef, triggerRef, toggle, onMouseEnter, onMouseLeave } = useNavDropdown();
+
+  useEffect(() => {
+    getTemplates({ status: "published" })
+      .then(setTemplates)
+      .catch(() => setTemplates([]));
+  }, []);
 
   return (
     <div
       ref={rootRef}
-      className={`${styles.navDropdown} ${styles.navDropdownCalculators} ${
+      className={`${styles.navDropdown} ${styles.navDropdownTemplates} ${
         open ? styles.navDropdownOpen : ""
       }`}
       onMouseEnter={onMouseEnter}
@@ -27,7 +37,7 @@ export function CalculatorsNavDropdown() {
         aria-expanded={open}
         onClick={toggle}
       >
-        {msg.nav.calculators}
+        {msg.nav.templates}
         <svg
           className={styles.navDropdownChevron}
           viewBox="0 0 12 12"
@@ -40,12 +50,12 @@ export function CalculatorsNavDropdown() {
         </svg>
       </button>
       <div className={styles.navDropdownMenu} role="menu">
-        {CALCULATOR_ITEMS.map((item) => {
-          const label = msg.calculators[item.labelKey];
+        {templates.map((tmpl) => {
+          const label = pickLocalized(locale, tmpl.name);
           return (
             <Link
-              key={item.slug}
-              href={`/calculators/${item.slug}`}
+              key={tmpl.id}
+              href={`/templates/${tmpl.id}`}
               className={styles.navDropdownItem}
               role="menuitem"
               title={label}
@@ -54,6 +64,15 @@ export function CalculatorsNavDropdown() {
             </Link>
           );
         })}
+        <div className={styles.navDropdownDivider} />
+        <Link
+          href="/templates"
+          className={styles.navDropdownItem}
+          role="menuitem"
+          title={msg.nav.allTemplates}
+        >
+          {msg.nav.allTemplates}
+        </Link>
       </div>
     </div>
   );

@@ -88,41 +88,25 @@ export function UserHome({ stats, categories, terms, templates }: UserHomeProps)
       <div className={styles.section} id="templates">
         <div className={styles.sectionHeader}>
           <h2>{msg.sections.applicationTemplates}</h2>
-          <a href="#">{msg.sections.browseAllTemplates}</a>
+          <Link href="/templates">{msg.sections.browseAllTemplates}</Link>
         </div>
         <div className={styles.templateGrid}>
           {templates.map((tmpl) => (
-            <TemplateCard key={tmpl.id} template={tmpl} />
+            <Link key={tmpl.id} href={`/templates/${tmpl.id}`} className={styles.tmplCard}>
+              <div
+                className={styles.tmplPreview}
+                style={{ background: tmpl.previewGradient }}
+              >
+                {tmpl.previewEmoji}
+              </div>
+              <div className={styles.tmplBody}>
+                <h3>{pickLocalized(locale, tmpl.name)}</h3>
+                <p>{pickLocalized(locale, tmpl.description)}</p>
+              </div>
+            </Link>
           ))}
         </div>
       </div>
     </>
-  );
-}
-
-function TemplateCard({ template }: { template: Template }) {
-  const { locale, msg } = useLanguage();
-
-  return (
-    <div className={styles.tmplCard}>
-      <div
-        className={styles.tmplPreview}
-        style={{ background: template.previewGradient }}
-      >
-        {template.previewEmoji}
-      </div>
-      <div className={styles.tmplBody}>
-        <h3>{pickLocalized(locale, template.name)}</h3>
-        <p>{pickLocalized(locale, template.description)}</p>
-      </div>
-      <div className={styles.tmplFooter}>
-        <button type="button" className={styles.btnDl}>
-          ⬇ {msg.templates.download}
-        </button>
-        <button type="button" className={styles.btnCopy}>
-          ⎘ {msg.templates.copy}
-        </button>
-      </div>
-    </div>
   );
 }

@@ -14,11 +14,22 @@
 .navLogo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #042c53;
   text-decoration: none;
+  flex-shrink: 0;
+}
+
+.navLogoImage {
+  height: 44px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.navLogoIcon {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .navLogo svg {
@@ -29,67 +40,72 @@
 
 .navLinks {
   display: flex;
-  gap: 1.5rem;
+  align-items: center;
+  gap: 2px;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 500;
+  line-height: 1.25;
   color: #6b7280;
-}
-
-.navLinks a {
   text-decoration: none;
+  border: none;
+  background: transparent;
+  font-family: inherit;
   cursor: pointer;
-  transition: color 0.15s;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
 }
 
-.navLinks a:hover {
+.navLink:hover {
   color: #185fa5;
+  background: #f3f4f6;
 }
 
 .navDropdown {
   position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
-/* Invisible bridge so the menu stays open while moving the pointer down */
+/* Narrow bridge — only under this trigger, not into neighboring nav items */
 .navDropdown::before {
   content: "";
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: max(100%, 240px);
-  height: 12px;
+  left: 0;
+  right: 0;
+  height: 10px;
 }
 
-.navDropdownTrigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 14px;
-  font-family: inherit;
-  color: #6b7280;
-  cursor: default;
-  transition: color 0.15s;
+.navDropdownOpen {
+  z-index: 30;
 }
 
-.navDropdown:hover .navDropdownTrigger,
-.navDropdown:focus-within .navDropdownTrigger {
+.navDropdownOpen .navDropdownTrigger {
   color: #185fa5;
+  background: #e6f1fb;
 }
 
 .navDropdownChevron {
   width: 12px;
   height: 12px;
   opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .navDropdownMenu {
   position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
-  min-width: 240px;
+  top: calc(100% + 6px);
+  min-width: 220px;
+  max-width: 280px;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -99,19 +115,31 @@
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.12s ease, visibility 0.12s ease;
-  z-index: 20;
+  z-index: 1;
+  overflow: hidden;
 }
 
-.navDropdown:hover .navDropdownMenu,
-.navDropdown:focus-within .navDropdownMenu {
+/* Templates: grow left so the panel does not cover Calculators */
+.navDropdownTemplates .navDropdownMenu {
+  right: 0;
+  left: auto;
+}
+
+/* Calculators: grow right so the panel does not cover Templates */
+.navDropdownCalculators .navDropdownMenu {
+  left: 0;
+  right: auto;
+}
+
+.navDropdownOpen .navDropdownMenu {
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
   transition-delay: 0s;
 }
 
-.navDropdown:not(:hover):not(:focus-within) .navDropdownMenu {
-  transition-delay: 0.08s;
+.navDropdown:not(.navDropdownOpen) .navDropdownMenu {
+  transition-delay: 0.12s;
 }
 
 .navDropdownItem {
@@ -122,12 +150,21 @@
   text-decoration: none;
   border-radius: 6px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
   transition: background 0.15s, color 0.15s;
 }
 
 .navDropdownItem:hover {
   background: #e6f1fb;
   color: #0c447c;
+}
+
+.navDropdownDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 6px;
 }
 
 .navRight {
@@ -164,18 +201,33 @@
 }
 
 .navCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: #185fa5;
   color: #e6f1fb;
   border: none;
-  padding: 8px 18px;
+  padding: 8px 16px;
   border-radius: 8px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
   cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
 }
 
 .navCta:hover {
   background: #0c447c;
+}
+
+.navCtaAccent {
+  background: #3b6d11;
+}
+
+.navCtaAccent:hover {
+  background: #2d520d;
 }
 
 .calculatorPage {
@@ -802,6 +854,9 @@
   overflow: hidden;
   cursor: pointer;
   transition: border-color 0.2s;
+  text-decoration: none;
+  color: inherit;
+  display: block;
 }
 
 .tmplCard:hover {
@@ -867,6 +922,140 @@
 
 .btnCopy:hover {
   background: #f9fafb;
+}
+
+.templatePage {
+  padding: 3rem 2rem 4rem;
+  background: linear-gradient(180deg, #f9fafb 0%, #fff 100%);
+  min-height: calc(100vh - 56px - 120px);
+}
+
+.templatePageInner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.templatePageInnerWide {
+  max-width: 920px;
+}
+
+.templateDocumentWrap {
+  margin-bottom: 1.5rem;
+}
+
+.templateFillHint {
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+@media print {
+  .templateActions,
+  .templateFillHint,
+  .templateHomeLink,
+  .calculatorBack,
+  .templateLead,
+  .templatePageInner > h1 {
+    display: none !important;
+  }
+
+  .templatePage {
+    padding: 0;
+    background: #fff;
+  }
+
+  .templatePageInner,
+  .templatePageInnerWide {
+    max-width: none;
+  }
+}
+
+.templatePageInner h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #042c53;
+  margin-bottom: 0.5rem;
+}
+
+.templateHero {
+  height: 120px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.templateHeroEmoji {
+  font-size: 48px;
+}
+
+.templateLead {
+  font-size: 15px;
+  color: #4b5563;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.templateMeta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 1.5rem;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.templateMeta dt {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.templateMeta dd {
+  font-size: 14px;
+  color: #042c53;
+  font-weight: 500;
+}
+
+.templateActions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 0.75rem;
+}
+
+.templateActions .btnDl,
+.templateActions .btnCopy {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.templateActions .btnDl:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.templateHint {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.templateHomeLink {
+  font-size: 13px;
+  color: #185fa5;
+  text-decoration: none;
+}
+
+.templateHomeLink:hover {
+  text-decoration: underline;
 }
 
 .footer {

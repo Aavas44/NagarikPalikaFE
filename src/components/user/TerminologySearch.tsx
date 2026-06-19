@@ -144,6 +144,10 @@ export function TerminologySearch() {
             {results.map((result, index) => {
               const isExpanded = expandedIndex === index;
               const isActive = activeIndex === index;
+              const meaning =
+                result.source === "saralsewa"
+                  ? (result.meaningNe ?? result.meaning)
+                  : result.meaning;
 
               return (
                 <li key={`${result.term}-${index}`}>
@@ -172,7 +176,7 @@ export function TerminologySearch() {
                     {isExpanded && (
                       <div className={styles.terminologyDetailInline} aria-live="polite">
                         <h3>{locale === "ne" ? t.meaningLabelNe : t.meaningLabelEn}</h3>
-                        <p>{result.meaning}</p>
+                        <p>{meaning}</p>
                       </div>
                     )}
                   </div>
