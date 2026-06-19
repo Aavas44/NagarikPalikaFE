@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
+import { GoogleAdSense } from "@/components/GoogleAdSense";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
+        <GoogleAdSense />
         <Analytics />
       </body>
     </html>
