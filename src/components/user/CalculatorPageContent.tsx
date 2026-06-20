@@ -9,6 +9,7 @@ import {
 import { EmiCalculator } from "./EmiCalculator";
 import { SalaryTaxCalculator } from "./SalaryTaxCalculator";
 import { LandConverterCalculator } from "./LandConverterCalculator";
+import { VehicleTaxCalculator } from "./VehicleTaxCalculator";
 import styles from "@/app/user.module.css";
 
 interface CalculatorPageContentProps {
@@ -41,6 +42,9 @@ export function CalculatorPageContent({ slug }: CalculatorPageContentProps) {
   }
   if (slug === "land-converter") {
     return <LandConverterCalculator />;
+  }
+  if (slug === "vehicle-tax") {
+    return <VehicleTaxCalculator />;
   }
   return <PlaceholderCalculator slug={slug} />;
 }

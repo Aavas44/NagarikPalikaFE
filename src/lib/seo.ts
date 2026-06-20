@@ -145,9 +145,16 @@ export const CALCULATOR_SEO: Record<
     keywords: ["capital gains tax Nepal", "property sale tax Nepal"],
   },
   "vehicle-tax": {
-    title: "Vehicle Tax Calculator Nepal",
-    description: "Estimate annual vehicle tax in Nepal by type and engine capacity.",
-    keywords: ["vehicle tax Nepal", "road tax calculator Nepal"],
+    title: "Vehicle Tax Calculator Nepal FY 2083/84 — Bluebook Renewal",
+    description:
+      "Calculate Nepal vehicle tax, third-party insurance, renewal fee, and late fines for motorcycles, cars, and EVs (FY 2083/84 Bagmati rates). Enter last BS renewal date to estimate cost as of today.",
+    keywords: [
+      "vehicle tax calculator Nepal",
+      "bluebook renewal cost Nepal",
+      "motorcycle tax Nepal 2083",
+      "road tax calculator Nepal",
+      "EV tax Nepal",
+    ],
   },
 };
 

@@ -13,6 +13,12 @@
   align-items: start;
 }
 
+.vehicleTaxLeftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
 .emiPanel {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -181,6 +187,16 @@
 .emiUnitActive:hover {
   color: #0c447c;
   background: linear-gradient(180deg, #ffffff 0%, #e6f1fb 100%);
+}
+
+.emiUnitToggleWrap {
+  flex-wrap: wrap;
+}
+
+.emiUnitToggleWrap .emiUnitBtn,
+.emiUnitToggleWrap .emiUnitActive {
+  flex: 1 1 calc(50% - 3px);
+  min-width: calc(50% - 3px);
 }
 
 .emiEmiHero {
@@ -893,6 +909,15 @@
   background: #f9fafb;
 }
 
+.emiTableRowHighlight {
+  background: rgba(34, 139, 87, 0.12);
+  font-weight: 600;
+}
+
+.emiTableRowHighlight td {
+  color: #1a7f4b;
+}
+
 .emiTable td:last-child,
 .emiTable th:last-child {
   text-align: right;
@@ -943,6 +968,55 @@
   color: #9ca3af;
   line-height: 1.5;
   text-align: center;
+}
+
+.emiCheckboxRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+}
+
+.emiCheckboxRow input {
+  accent-color: #185fa5;
+  width: 16px;
+  height: 16px;
+}
+
+.bsDateRow {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 0.7fr;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.emiSummaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.emiSummaryItem {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  font-size: 12px;
+}
+
+.emiSummaryItem span {
+  display: block;
+  color: #9ca3af;
+  margin-bottom: 0.2rem;
+}
+
+.emiSummaryItem strong {
+  color: #042c53;
+  font-size: 13px;
 }
 
 @media (max-width: 768px) {

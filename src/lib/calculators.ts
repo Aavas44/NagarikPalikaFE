@@ -47,7 +47,7 @@ export const CALCULATOR_ITEMS = [
     descriptionKey: "vehicleTaxDesc",
     icon: "🚗",
     iconColor: "amber",
-    available: false,
+    available: true,
   },
 ] as const;
 
