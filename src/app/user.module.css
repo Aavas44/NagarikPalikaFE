@@ -167,6 +167,11 @@
   margin: 4px 6px;
 }
 
+.navDropdownConsiderations .navDropdownMenu {
+  left: 0;
+  right: auto;
+}
+
 .navRight {
   display: flex;
   align-items: center;
@@ -750,11 +755,14 @@
 }
 
 .terminologyResultCard {
-  background: #fff;
-  border: 1px solid #e5e7eb;
   border-radius: 12px;
   overflow: hidden;
   transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.terminologyResultCard:not(.terminologyResultCardFade) {
+  background: #fff;
+  border: 1px solid #e5e7eb;
 }
 
 .terminologyResultCard:hover {
@@ -833,11 +841,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  justify-content: center;
   margin: 1.25rem 0 1.5rem;
-  max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 100%;
 }
 
 .terminologyIndexBtn {
@@ -1230,103 +1235,6 @@
   margin: 0 0.5rem;
 }
 
-.sectionSub {
-  font-size: 13px;
-  color: #6b7280;
-  margin-top: 4px;
-}
-
-.lawyerGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
-}
-
-.lawyerCard {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.25rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.lawyerCard:hover {
-  border-color: #378add;
-  box-shadow: 0 4px 12px rgba(24, 95, 165, 0.08);
-}
-
-.lawyerAvatar {
-  width: 44px;
-  height: 44px;
-  background: #e6f1fb;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  margin-bottom: 12px;
-}
-
-.lawyerCard h3 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #042c53;
-  margin-bottom: 6px;
-}
-
-.lawyerFirm {
-  font-size: 13px;
-  color: #185fa5;
-  margin-bottom: 4px;
-}
-
-.lawyerLocation {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 10px;
-}
-
-.lawyerRating {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.stars {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-}
-
-.starFull {
-  color: #ef9f27;
-  font-size: 14px;
-}
-
-.starHalf {
-  color: #ef9f27;
-  font-size: 14px;
-  opacity: 0.5;
-}
-
-.starEmpty {
-  color: #d1d5db;
-  font-size: 14px;
-}
-
-.ratingNum {
-  font-size: 13px;
-  font-weight: 600;
-  color: #042c53;
-  margin-left: 4px;
-}
-
-.reviewCount {
-  font-size: 11px;
-  color: #9ca3af;
-}
-
 .faqList {
   display: flex;
   flex-direction: column;
@@ -1372,6 +1280,81 @@
   font-size: 13px;
   color: #6b7280;
   line-height: 1.6;
+}
+
+.contactSubtitle {
+  font-size: 15px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: -0.5rem 0 1.25rem;
+}
+
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.contactField label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.4rem;
+}
+
+.contactTextarea {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #042c53;
+  background: #f9fafb;
+  resize: vertical;
+  min-height: 120px;
+}
+
+.contactTextarea:focus {
+  outline: none;
+  border-color: #185fa5;
+  background: #fff;
+}
+
+.contactError {
+  margin: 0;
+  font-size: 13px;
+  color: #b42318;
+}
+
+.contactSubmit {
+  align-self: flex-start;
+  background: #185fa5;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.contactSubmit:hover:not(:disabled) {
+  background: #0c447c;
+}
+
+.contactSubmit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.contactSuccess p {
+  margin: 0;
+  font-size: 14px;
+  color: #3b6d11;
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {

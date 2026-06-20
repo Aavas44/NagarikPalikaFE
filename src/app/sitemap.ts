@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { CALCULATOR_ITEMS } from "@/lib/calculators";
+import { CONSIDERATION_CATEGORIES } from "@/lib/considerations";
 import { getKanuniIndexCounts } from "@/lib/glossaryBrowse";
 import { NEPALI_INDEX_LETTERS } from "@/lib/glossaryIndex";
 import { getSaralSewaCategories } from "@/lib/saralsewa-glossary";
@@ -43,8 +44,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/", { changeFrequency: "daily", priority: 1 }),
     entry("/terminology", { changeFrequency: "daily", priority: 0.9 }),
     entry("/calculators", { changeFrequency: "weekly", priority: 0.85 }),
+    entry("/considerations", { changeFrequency: "weekly", priority: 0.85 }),
     entry("/templates", { changeFrequency: "weekly", priority: 0.85 }),
-    entry("/consult", { changeFrequency: "monthly", priority: 0.6 }),
   ];
 
   const terminologyLetters: MetadataRoute.Sitemap = NEPALI_INDEX_LETTERS.filter(
@@ -60,6 +61,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry(`/calculators/${item.slug}`, { priority: 0.8 })
   );
 
+  const considerationPages = CONSIDERATION_CATEGORIES.flatMap((category) => [
+    entry(`/considerations/${category.slug}`, { priority: 0.75 }),
+    ...category.topics.map((topic) =>
+      entry(`/considerations/${category.slug}/${topic.slug}`, { priority: 0.7 })
+    ),
+  ]);
+
   const categoryPages = categories.map((cat) =>
     entry(`/categories/${cat.slug}`, { priority: 0.75 })
   );
@@ -72,6 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticPages,
     ...terminologyLetters,
     ...calculatorPages,
+    ...considerationPages,
     ...categoryPages,
     ...templatePages,
   ];

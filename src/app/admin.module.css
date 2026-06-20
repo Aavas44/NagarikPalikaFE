@@ -640,6 +640,79 @@
   color: #6b7280;
 }
 
+.panelHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panelEmpty {
+  padding: 1.25rem;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.feedbackPreviewBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: #374151;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
+  max-width: 320px;
+  white-space: pre-wrap;
+}
+
+.feedbackPreviewBtn:hover {
+  color: #185fa5;
+}
+
+.statusNew {
+  display: inline-block;
+  background: #fef3c7;
+  color: #854f0b;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.statusReviewed {
+  display: inline-block;
+  background: #e1f5ee;
+  color: #0d5c45;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.actionBtn {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: #185fa5;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: #e6f1fb;
+  border-color: #b5d4f4;
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 1024px) {
   .metrics {
     grid-template-columns: repeat(2, 1fr);

@@ -1,22 +1,17 @@
 import { LanguageProvider } from "@/context/LanguageContext";
-import {
-  getLawyers,
-  getQuickTags,
-  getStats,
-  getTemplates,
-  getTerms,
-} from "@/lib/api";
+import { getQuickTags, getStats, getTemplates } from "@/lib/api";
 import { getCombinedGlossaryTermCount } from "@/lib/glossary";
 import { getSaralSewaCategories } from "@/lib/saralsewa-glossary";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { UserNav } from "@/components/user/UserNav";
 import { Hero } from "@/components/user/Hero";
 import { UserHome } from "@/components/user/UserHome";
-import { LawyerSection } from "@/components/user/LawyerSection";
 import { FaqSection } from "@/components/user/FaqSection";
 import { UserFooter } from "@/components/user/UserFooter";
 import { messages } from "@/i18n/messages";
 import { buildPageMetadata, faqJsonLd } from "@/lib/seo";
+import pageStyles from "@/app/user.module.css";
+import emiStyles from "@/components/user/emi.module.css";
 
 export const dynamic = "force-dynamic";
 
@@ -36,14 +31,12 @@ export const metadata = buildPageMetadata({
 });
 
 export default async function HomePage() {
-  const [stats, categories, terms, templates, quickTags, lawyers, glossaryTermsCount] =
+  const [stats, categories, templates, quickTags, glossaryTermsCount] =
     await Promise.all([
     getStats(),
     getSaralSewaCategories(),
-    getTerms({ status: "published" }),
     getTemplates({ status: "published" }),
     getQuickTags(),
-    getLawyers({ status: "published" }),
     getCombinedGlossaryTermCount(),
   ]);
 
@@ -51,15 +44,17 @@ export default async function HomePage() {
     <LanguageProvider>
       <JsonLd data={faqJsonLd(messages.en.faqItems)} />
       <UserNav />
-      <Hero quickTags={quickTags} />
-      <UserHome
-        stats={stats}
-        glossaryTermsCount={glossaryTermsCount}
-        categories={categories}
-        terms={terms}
-        templates={templates}
-      />
-      <LawyerSection lawyers={lawyers} />
+      <section className={pageStyles.calculatorPage}>
+        <div className={`${pageStyles.calculatorPageInner} ${emiStyles.emiPageInner}`}>
+          <Hero quickTags={quickTags} />
+          <UserHome
+            stats={stats}
+            glossaryTermsCount={glossaryTermsCount}
+            categories={categories}
+            templates={templates}
+          />
+        </div>
+      </section>
       <FaqSection />
       <UserFooter />
     </LanguageProvider>

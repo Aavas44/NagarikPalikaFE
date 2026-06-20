@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { CalculatorsNavDropdown } from "./CalculatorsNavDropdown";
+import { ConsiderationsNavDropdown } from "./ConsiderationsNavDropdown";
 import { TemplatesNavDropdown } from "./TemplatesNavDropdown";
 import styles from "@/app/user.module.css";
 
@@ -27,15 +28,13 @@ export function UserNav() {
           {msg.nav.terminology}
         </Link>
         <TemplatesNavDropdown />
+        <ConsiderationsNavDropdown />
         <CalculatorsNavDropdown />
-        <Link href="/consult" className={styles.navLink}>
-          {msg.nav.consultLawyer}
-        </Link>
         <a href="#faq" className={styles.navLink}>
           {msg.nav.faq}
         </a>
-        <a href="#help" className={styles.navLink}>
-          {msg.nav.help}
+        <a href="#contact" className={styles.navLink}>
+          {msg.nav.contactUs}
         </a>
       </div>
       <div className={styles.navRight}>
@@ -57,9 +56,6 @@ export function UserNav() {
         </div>
         <Link href="/login" className={styles.navCta}>
           {msg.nav.signIn}
-        </Link>
-        <Link href="/login?intent=user" className={`${styles.navCta} ${styles.navCtaAccent}`}>
-          Book consult
         </Link>
       </div>
     </nav>

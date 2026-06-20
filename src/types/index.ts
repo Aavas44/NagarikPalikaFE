@@ -60,6 +60,20 @@ export interface QuickTag {
   ne: string;
 }
 
+export type FeedbackStatus = "new" | "reviewed";
+
+export interface Feedback {
+  id: string;
+  sessionId: string;
+  name: string;
+  email: string;
+  message: string;
+  locale: Locale;
+  status: FeedbackStatus;
+  reviewedAt: string | null;
+  createdAt: string;
+}
+
 export type UserType = "user" | "advocate" | "admin";
 
 export type ConsultationStatus =

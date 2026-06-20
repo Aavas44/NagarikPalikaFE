@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import type { Stats, Template, Term, Lawyer } from "@/types";
+import type { Stats, Template, Term } from "@/types";
 import { AdminSidebarFooter } from "./AdminSidebarFooter";
 import { AdminTermPanel } from "./AdminTermPanel";
 import { AdminTemplatePanel } from "./AdminTemplatePanel";
-import { AdminLawyerPanel } from "./AdminLawyerPanel";
-import { AdminAdvocatePanel } from "./AdminAdvocatePanel";
-import { AdminConsultationPanel } from "./AdminConsultationPanel";
+import { AdminFeedbackPanel } from "./AdminFeedbackPanel";
 import styles from "@/app/admin.module.css";
 
 function formatNumber(n: number) {
@@ -19,10 +17,9 @@ interface AdminDashboardProps {
   stats: Stats;
   terms: Term[];
   templates: Template[];
-  lawyers: Lawyer[];
 }
 
-export function AdminDashboard({ stats, terms, templates, lawyers }: AdminDashboardProps) {
+export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps) {
   return (
     <div className={styles.adminWrap}>
       <aside className={styles.sidebar}>
@@ -40,16 +37,6 @@ export function AdminDashboard({ stats, terms, templates, lawyers }: AdminDashbo
         </div>
 
         <div className={styles.navGroup}>
-          <div className={styles.navLabel}>Consultations</div>
-          <a href="#advocate-approvals" className={styles.navItemLink}>
-            <span className="icon">👤</span> Advocate approvals
-          </a>
-          <a href="#consultations" className={styles.navItemLink}>
-            <span className="icon">📋</span> Consultations
-          </a>
-        </div>
-
-        <div className={styles.navGroup}>
           <div className={styles.navLabel}>Content</div>
           <a href="#terminology" className={styles.navItemLink}>
             <span className="icon">📖</span> Terminology{" "}
@@ -59,9 +46,12 @@ export function AdminDashboard({ stats, terms, templates, lawyers }: AdminDashbo
             <span className="icon">📄</span> Templates{" "}
             <span className={styles.countBadge}>{templates.length}</span>
           </a>
-          <a href="#lawyers" className={styles.navItemLink}>
-            <span className="icon">⚖️</span> Lawyers{" "}
-            <span className={styles.countBadge}>{lawyers.length}</span>
+        </div>
+
+        <div className={styles.navGroup}>
+          <div className={styles.navLabel}>Community</div>
+          <a href="#feedback" className={styles.navItemLink}>
+            <span className="icon">💬</span> Feedback
           </a>
         </div>
 
@@ -93,19 +83,11 @@ export function AdminDashboard({ stats, terms, templates, lawyers }: AdminDashbo
               </div>
               <div className={styles.metricLabel}>Monthly searches</div>
             </div>
-            <div className={styles.metric}>
-              <div className={styles.metricVal} style={{ color: "#0F6E56" }}>
-                {lawyers.length}
-              </div>
-              <div className={styles.metricLabel}>Lawyers listed</div>
-            </div>
           </div>
 
           <AdminTermPanel initialTerms={terms} />
           <AdminTemplatePanel initialTemplates={templates} />
-          <AdminLawyerPanel initialLawyers={lawyers} />
-          <AdminAdvocatePanel />
-          <AdminConsultationPanel />
+          <AdminFeedbackPanel />
         </div>
       </div>
     </div>

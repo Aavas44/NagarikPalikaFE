@@ -13,12 +13,6 @@
   align-items: start;
 }
 
-.vehicleTaxLeftColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
 .emiPanel {
   background: #fff;
   border: 1px solid #e5e7eb;
@@ -1038,5 +1032,450 @@
 
   .emiCompoundRow {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+.considerationsHubList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.considerationsHubCard {
+  margin-bottom: 0;
+}
+
+.considerationsHubCardHeading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 0.85rem;
+}
+
+.considerationsHubCardHeading h2 {
+  font-size: 17px;
+  color: #042c53;
+  margin: 0 0 0.25rem;
+}
+
+.considerationsHubCardHeading p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.considerationsHubCardHeading:hover h2 {
+  color: #185fa5;
+}
+
+.considerationsHubIcon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.considerationsHubIconLarge {
+  display: block;
+  font-size: 36px;
+  margin-bottom: 0.5rem;
+}
+
+.considerationsHubTopics {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.considerationsHubTopics a {
+  display: block;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #374151;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.considerationsHubTopics a:hover {
+  background: #fff;
+  border-color: #b8d4ef;
+  color: #0c447c;
+}
+
+.considerationsTopicGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.considerationsTopicCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.considerationsTopicCard:hover {
+  transform: translateY(-1px);
+}
+
+.considerationsTopicCard h3 {
+  font-size: 15px;
+  color: #042c53;
+  margin: 0 0 0.5rem;
+}
+
+.considerationsTopicCard p {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.considerationsComingSoon {
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.considerationsComingSoon p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+/* Shared hub / glossary page shell (homepage + terminology) */
+.homeHeroHeader {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.homeHeroHeader h1 {
+  font-size: 32px;
+  line-height: 1.25;
+  margin-bottom: 0.75rem;
+}
+
+.homeHeroBadge {
+  display: inline-flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.homeHeroSubtitle {
+  font-size: 16px;
+  color: #185fa5;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.homeSearchPanel {
+  margin-bottom: 2rem;
+}
+
+.homeSearchPanel .siteQuickTags {
+  justify-content: center;
+}
+
+.siteSearchBar {
+  display: flex;
+  background: #fff;
+  border: 1px solid #b5d4f4;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.siteSearchInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 12px 14px;
+  font-size: 15px;
+  background: transparent;
+  font-family: inherit;
+  color: #1f2937;
+}
+
+.siteSearchInput:focus {
+  outline: none;
+}
+
+.siteSearchBtn {
+  background: #185fa5;
+  border: none;
+  padding: 0 18px;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  font-family: inherit;
+}
+
+.siteSearchBtn:hover {
+  background: #0c447c;
+}
+
+.siteQuickTags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.siteQuickTag {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 5px 14px;
+  font-size: 13px;
+  color: #185fa5;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.siteQuickTag:hover {
+  background: #e6f1fb;
+  border-color: #378add;
+}
+
+.siteBody {
+  padding: 2rem 1.5rem 3rem;
+}
+
+.siteBodyInner {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.homeStatGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.homeStatCard {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 1.15rem 1rem;
+  margin-bottom: 0;
+}
+
+.homeStatCard .homeStatValue {
+  display: block;
+  font-size: 28px;
+  font-weight: 600;
+  color: #185fa5;
+  line-height: 1.2;
+}
+
+.homeStatCard .homeStatLabel {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.siteSection {
+  margin-bottom: 2rem;
+}
+
+.siteSection:last-child {
+  margin-bottom: 0;
+}
+
+.siteSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
+}
+
+.siteSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.siteSectionLink {
+  font-size: 13px;
+  font-weight: 500;
+  color: #185fa5;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.siteSectionLink:hover {
+  text-decoration: underline;
+}
+
+.siteHubGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 0.75rem;
+}
+
+.siteHubCard {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  padding: 1rem 1.05rem;
+  margin-bottom: 0;
+  border-radius: 12px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.siteHubCard:hover {
+  transform: translateY(-1px);
+}
+
+.siteHubCard h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #042c53;
+  margin: 0 0 0.35rem;
+}
+
+.siteHubCard p {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.siteHubIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.65rem;
+  font-size: 20px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.siteTermList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.siteTermCard {
+  padding: 1rem 1.1rem;
+  margin-bottom: 0;
+}
+
+.siteTermCard .termItemHeader {
+  margin-bottom: 0.4rem;
+}
+
+.siteTemplateGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 0.75rem;
+}
+
+.siteTemplateCard {
+  overflow: hidden;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.siteTemplatePreview {
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
+
+.siteTemplateBody {
+  padding: 0.9rem 1rem 1rem;
+}
+
+.siteTemplateBody h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #042c53;
+  margin: 0 0 0.35rem;
+}
+
+.siteTemplateBody p {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.terminologyShell {
+  padding: 2.5rem 1.5rem 3.5rem;
+}
+
+.terminologySearchPanel {
+  margin-bottom: 1rem;
+}
+
+.terminologyIndexCard {
+  margin-bottom: 1.25rem;
+}
+
+.terminologyIndexCard .terminologyIndex {
+  margin: 0.75rem 0 0;
+  justify-content: flex-start;
+}
+
+.terminologyResultsPanel {
+  margin-top: 0;
+}
+
+.terminologyResultCardFade {
+  padding: 0;
+  margin-bottom: 0;
+  overflow: hidden;
+  border: none;
+  background: transparent;
+}
+
+.terminologyResultCardFade.terminologyResultExpanded {
+  box-shadow: 0 6px 24px rgba(24, 95, 165, 0.12);
+}
+
+@media (max-width: 768px) {
+  .homeHeroHeader h1 {
+    font-size: 26px;
+  }
+
+  .homeStatGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .siteHubGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

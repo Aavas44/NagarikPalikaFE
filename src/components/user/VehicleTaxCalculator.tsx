@@ -74,6 +74,13 @@ export function VehicleTaxCalculator() {
 
   const rateSlabs = useMemo(() => getTaxSlabsForType(vehicleType), [vehicleType]);
 
+  const capacityLabel =
+    vehicleType === "ev_bike"
+      ? t.capacityWatts
+      : vehicleType === "ev_car"
+        ? t.capacityKw
+        : t.capacityCc;
+
   function getSlabLabel(slabId: string): string {
     const labels = t.slabLabels as Record<string, string>;
     return labels[slabId] ?? slabId;
@@ -145,13 +152,16 @@ export function VehicleTaxCalculator() {
         </header>
 
         <div className={styles.emiLayout}>
-          <div className={styles.vehicleTaxLeftColumn}>
-            <div className={styles.emiPanel}>
-              <h2 className={styles.emiPanelTitle}>{t.vehicleDetails}</h2>
+          <div className={styles.emiPanel}>
+            <h2 className={styles.emiPanelTitle}>{t.vehicleDetails}</h2>
 
+            <div className={`${styles.emiFadeCard} ${styles.emiFormSection}`}>
               <div className={styles.emiField}>
                 <label>{t.vehicleType}</label>
-                <div className={`${styles.emiUnitToggle} ${styles.emiUnitToggleWrap}`} style={{ marginTop: "0.5rem" }}>
+                <div
+                  className={`${styles.emiUnitToggle} ${styles.emiUnitToggleWrap}`}
+                  style={{ marginTop: "0.5rem" }}
+                >
                   {VEHICLE_TYPES.map((type) => (
                     <button
                       key={type}
@@ -164,16 +174,13 @@ export function VehicleTaxCalculator() {
                   ))}
                 </div>
               </div>
+            </div>
 
+            <div className={`${styles.emiFadeCard} ${styles.emiFormSection}`}>
+              <h3 className={styles.emiSubsectionTitle}>{capacityLabel}</h3>
               <div className={styles.emiField}>
                 <div className={styles.emiFieldTop}>
-                  <label htmlFor="vehicle-capacity">
-                    {vehicleType === "ev_bike"
-                      ? t.capacityWatts
-                      : vehicleType === "ev_car"
-                        ? t.capacityKw
-                        : t.capacityCc}
-                  </label>
+                  <label htmlFor="vehicle-capacity">{capacityLabel}</label>
                   <span className={styles.emiFieldValue}>
                     {capacity.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")}
                   </span>
@@ -209,19 +216,15 @@ export function VehicleTaxCalculator() {
                     }
                   }}
                   className={styles.emiNumberInput}
-                  aria-label={
-                    vehicleType === "ev_bike"
-                      ? t.capacityWatts
-                      : vehicleType === "ev_car"
-                        ? t.capacityKw
-                        : t.capacityCc
-                  }
+                  aria-label={capacityLabel}
                 />
                 <p className={styles.emiFieldHint}>{t.capacityInputHint}</p>
               </div>
+            </div>
 
+            <div className={`${styles.emiFadeCard} ${styles.emiFormSection}`}>
+              <h3 className={styles.emiSubsectionTitle}>{t.lastRenewalDate}</h3>
               <div className={styles.emiField}>
-                <label>{t.lastRenewalDate}</label>
                 <p className={styles.emiFieldHint}>{t.lastRenewalHint}</p>
                 <div className={styles.bsDateRow}>
                   <select
@@ -266,12 +269,128 @@ export function VehicleTaxCalculator() {
                 </p>
               </div>
             </div>
+          </div>
 
-            <div className={styles.emiPanel}>
-              <h2 className={styles.emiPanelTitle}>
-                {t.rateReferenceTitle.replace("{fy}", VEHICLE_TAX_FY)}
-              </h2>
-              <p className={styles.emiFieldHint}>{t.rateReferenceHint}</p>
+          <div className={`${styles.emiPanel} ${styles.emiResultsPanel}`}>
+            <h2 className={styles.emiPanelTitle}>{t.results}</h2>
+
+            {result ? (
+              <>
+                <div className={`${styles.emiStat} ${styles.emiFadeCard} ${styles.emiStatAssessable}`}>
+                  <span className={styles.emiStatLabel}>{t.totalCost}</span>
+                  <span className={styles.emiStatValue}>{formatNpr(result.totalCost)}</span>
+                </div>
+                <p className={styles.emiFieldHint} style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
+                  {t.calculatedAsOfToday}
+                </p>
+
+                <div className={styles.emiTaxLiabilitySection}>
+                  <span className={styles.emiTaxLiabilityHeading}>{t.taxSummary}</span>
+                  <div className={styles.emiTaxLiabilityGrid}>
+                    <div className={`${styles.emiTaxLiabilityBox} ${styles.emiFadeCard}`}>
+                      <span className={styles.emiTaxLiabilityPeriod}>{t.annualTaxAmount}</span>
+                      <span className={styles.emiTaxLiabilityAmount}>{formatNpr(result.annualTax)}</span>
+                    </div>
+                    <div className={`${styles.emiTaxLiabilityBox} ${styles.emiFadeCard}`}>
+                      <span className={styles.emiTaxLiabilityPeriod}>{t.lateFine}</span>
+                      <span className={styles.emiTaxLiabilityAmount}>{formatNpr(result.lateFine)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.emiStatGrid}>
+                  <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
+                    <span className={styles.emiStatLabel}>{t.matchedCategory}</span>
+                    <span className={styles.emiStatValue}>{t.types[vehicleType]}</span>
+                  </div>
+                  <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
+                    <span className={styles.emiStatLabel}>{t.taxBracket}</span>
+                    <span className={styles.emiStatValueCompound}>
+                      {getSlabLabel(result.matchedSlab.id)}
+                    </span>
+                  </div>
+                  <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
+                    <span className={styles.emiStatLabel}>{t.paymentStatusLabel}</span>
+                    <span className={styles.emiStatValueCompound}>
+                      {paymentStatusLabel(result.paymentStatusKey)}
+                    </span>
+                  </div>
+                  {result.nextDueBs && (
+                    <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
+                      <span className={styles.emiStatLabel}>{t.nextDueDate}</span>
+                      <span className={styles.emiStatValueCompound}>
+                        {formatBsDate(result.nextDueBs, locale)}
+                      </span>
+                    </div>
+                  )}
+                  {result.daysLate > 0 && (
+                    <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
+                      <span className={styles.emiStatLabel}>{t.daysLate}</span>
+                      <span className={styles.emiStatValue}>
+                        {result.daysLate.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")}
+                      </span>
+                    </div>
+                  )}
+                  {result.taxYears > 1 && (
+                    <div className={`${styles.emiStat} ${styles.emiFadeCard} ${styles.emiStatFull}`}>
+                      <span className={styles.emiStatLabel}>{t.unpaidYears}</span>
+                      <span className={styles.emiStatValue}>{result.taxYears}</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <p className={styles.emiEmpty}>{t.enterValidInputs}</p>
+            )}
+          </div>
+        </div>
+
+        {result && (
+          <>
+            <div className={styles.emiBreakdownSection}>
+              <div className={styles.emiBreakdownSectionHeader}>
+                <h3 className={styles.emiBreakdownSectionTitle}>{t.breakdownTitle}</h3>
+              </div>
+              <div className={styles.emiTableWrap}>
+                <table className={styles.emiTable}>
+                  <tbody>
+                    <tr>
+                      <td>
+                        {t.annualVehicleTax}
+                        {result.taxYears > 1 ? ` (×${result.taxYears})` : ""}
+                      </td>
+                      <td>{formatNpr(result.totalTax)}</td>
+                    </tr>
+                    <tr className={styles.emiTableRowAlt}>
+                      <td>{t.renewalCharge}</td>
+                      <td>{formatNpr(result.renewalCharge)}</td>
+                    </tr>
+                    <tr>
+                      <td>{t.thirdPartyInsurance}</td>
+                      <td>{formatNpr(result.insurance)}</td>
+                    </tr>
+                    <tr className={styles.emiTableRowAlt}>
+                      <td>
+                        {t.lateFine} ({formatFineRate(result.lateFineRate)})
+                      </td>
+                      <td>{formatNpr(result.lateFine)}</td>
+                    </tr>
+                    <tr className={styles.emiTableGrandTotal}>
+                      <td>{t.totalBluebookCost}</td>
+                      <td>{formatNpr(result.totalCost)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className={styles.emiBreakdownSection}>
+              <div className={styles.emiBreakdownSectionHeader}>
+                <h3 className={styles.emiBreakdownSectionTitle}>
+                  {t.rateReferenceTitle.replace("{fy}", VEHICLE_TAX_FY)}
+                </h3>
+                <p className={styles.emiBreakdownSectionSubtitle}>{t.rateReferenceHint}</p>
+              </div>
               <div className={styles.emiTableWrap}>
                 <table className={styles.emiTable}>
                   <thead>
@@ -282,7 +401,7 @@ export function VehicleTaxCalculator() {
                   </thead>
                   <tbody>
                     {rateSlabs.map((slab, index) => {
-                      const isMatched = result?.matchedSlab.id === slab.id;
+                      const isMatched = result.matchedSlab.id === slab.id;
                       return (
                         <tr
                           key={slab.id}
@@ -306,105 +425,10 @@ export function VehicleTaxCalculator() {
                 </table>
               </div>
             </div>
-          </div>
+          </>
+        )}
 
-          <div className={`${styles.emiPanel} ${styles.emiResultsPanel}`}>
-            <h2 className={styles.emiPanelTitle}>{t.results}</h2>
-
-            {result ? (
-              <>
-                <div className={styles.emiSummaryGrid}>
-                  <div className={styles.emiSummaryItem}>
-                    <span>{t.matchedCategory}</span>
-                    <strong>{t.types[vehicleType]}</strong>
-                  </div>
-                  <div className={styles.emiSummaryItem}>
-                    <span>{t.taxBracket}</span>
-                    <strong>{getSlabLabel(result.matchedSlab.id)}</strong>
-                  </div>
-                  <div className={styles.emiSummaryItem}>
-                    <span>{t.annualTaxAmount}</span>
-                    <strong>{formatNpr(result.annualTax)}</strong>
-                  </div>
-                </div>
-
-                <div className={styles.emiEmiHero}>
-                  <span className={styles.emiEmiLabel}>{t.totalCost}</span>
-                  <span className={styles.emiEmiAmount}>{formatNpr(result.totalCost)}</span>
-                  <span className={styles.emiEmiSub}>{t.calculatedAsOfToday}</span>
-                </div>
-
-                <div className={styles.emiSummaryGrid}>
-                  <div className={styles.emiSummaryItem}>
-                    <span>{t.paymentStatusLabel}</span>
-                    <strong>{paymentStatusLabel(result.paymentStatusKey)}</strong>
-                  </div>
-                  {result.nextDueBs && (
-                    <div className={styles.emiSummaryItem}>
-                      <span>{t.nextDueDate}</span>
-                      <strong>{formatBsDate(result.nextDueBs, locale)}</strong>
-                    </div>
-                  )}
-                  {result.daysLate > 0 && (
-                    <div className={styles.emiSummaryItem}>
-                      <span>{t.daysLate}</span>
-                      <strong>
-                        {result.daysLate.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")}
-                      </strong>
-                    </div>
-                  )}
-                  {result.taxYears > 1 && (
-                    <div className={styles.emiSummaryItem}>
-                      <span>{t.unpaidYears}</span>
-                      <strong>{result.taxYears}</strong>
-                    </div>
-                  )}
-                </div>
-
-                <div className={styles.emiBreakdownSection}>
-                  <div className={styles.emiBreakdownSectionHeader}>
-                    <h3 className={styles.emiBreakdownSectionTitle}>{t.breakdownTitle}</h3>
-                  </div>
-                  <div className={styles.emiTableWrap}>
-                    <table className={styles.emiTable}>
-                      <tbody>
-                        <tr>
-                          <td>
-                            {t.annualVehicleTax}
-                            {result.taxYears > 1 ? ` (×${result.taxYears})` : ""}
-                          </td>
-                          <td>{formatNpr(result.totalTax)}</td>
-                        </tr>
-                        <tr className={styles.emiTableRowAlt}>
-                          <td>{t.renewalCharge}</td>
-                          <td>{formatNpr(result.renewalCharge)}</td>
-                        </tr>
-                        <tr>
-                          <td>{t.thirdPartyInsurance}</td>
-                          <td>{formatNpr(result.insurance)}</td>
-                        </tr>
-                        <tr className={styles.emiTableRowAlt}>
-                          <td>
-                            {t.lateFine} ({formatFineRate(result.lateFineRate)})
-                          </td>
-                          <td>{formatNpr(result.lateFine)}</td>
-                        </tr>
-                        <tr className={styles.emiTableGrandTotal}>
-                          <td>{t.totalBluebookCost}</td>
-                          <td>{formatNpr(result.totalCost)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className={styles.emiTableEmpty}>{t.enterValidInputs}</p>
-            )}
-
-            <p className={styles.emiDisclaimer}>{t.disclaimer}</p>
-          </div>
-        </div>
+        <p className={styles.emiDisclaimer}>{t.disclaimer}</p>
       </div>
     </section>
   );

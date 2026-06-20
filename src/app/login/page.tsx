@@ -27,8 +27,7 @@ export default function LoginPage() {
     oauth_failed: "Google sign-in failed. Please try again.",
     use_admin_login: "Admin accounts must use email/password sign-in.",
     admin_only: "Admin access only.",
-    citizen_only:
-      "Booking a consultation requires a citizen account. Sign in with Google below.",
+    citizen_only: "This sign-in option is not available yet.",
   };
 
   const displayError = errorMessages[error] ?? (error || "");
@@ -80,22 +79,16 @@ export default function LoginPage() {
         {mode === "citizen" ? (
           <>
             <h1>Citizen sign in</h1>
-            <p>Book legal consultations with verified advocates</p>
+            <p>Sign in with Google to access your Nagarik Palika account.</p>
 
             <a href="/api/auth/google" className={styles.googleBtn}>
               <span>Continue with Google</span>
             </a>
-
-            <p className={styles.hint}>
-              Are you an advocate?{" "}
-              <Link href="/advocate/signup">Create an account</Link> or{" "}
-              <Link href="/advocate/login">sign in</Link>.
-            </p>
           </>
         ) : (
           <>
             <h1>Admin sign in</h1>
-            <p>Manage content, advocates, and consultations</p>
+            <p>Manage terminology, templates, and site content</p>
 
             <form onSubmit={handleAdminSubmit}>
               <div className={styles.formGroup}>

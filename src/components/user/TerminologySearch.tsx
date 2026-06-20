@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
@@ -9,7 +10,8 @@ import type {
   GlossarySearchResponse,
   GlossarySearchResult,
 } from "@/types/glossary";
-import styles from "@/app/user.module.css";
+import pageStyles from "@/app/user.module.css";
+import emiStyles from "./emi.module.css";
 
 const BROWSE_PAGE_SIZE = 20;
 const PAGE_WINDOW_RADIUS = 2;
@@ -219,7 +221,7 @@ export function TerminologySearch({ glossaryTermsCount }: TerminologySearchProps
   const showBrowseChrome = !isSearchMode && browse;
 
   const renderResults = (results: GlossarySearchResult[]) => (
-    <ul className={styles.terminologyResults} role="listbox" aria-label={t.title}>
+    <ul className={pageStyles.terminologyResults} role="listbox" aria-label={t.title}>
       {results.map((result, index) => {
         const isExpanded = expandedIndex === index;
         const isActive = activeIndex === index;
@@ -231,27 +233,29 @@ export function TerminologySearch({ glossaryTermsCount }: TerminologySearchProps
         return (
           <li key={`${result.term}-${result.romanTransliteration}-${index}`}>
             <div
-              className={`${styles.terminologyResultCard} ${
-                isExpanded ? styles.terminologyResultExpanded : ""
-              } ${isActive && !isExpanded ? styles.terminologyResultActive : ""}`}
+              className={`${pageStyles.terminologyResultCard} ${emiStyles.emiFadeCard} ${emiStyles.terminologyResultCardFade} ${
+                isExpanded ? `${pageStyles.terminologyResultExpanded} ${emiStyles.terminologyResultCardFade}` : ""
+              } ${isActive && !isExpanded ? pageStyles.terminologyResultActive : ""}`}
             >
               <button
                 type="button"
                 role="option"
                 aria-expanded={isExpanded}
                 aria-selected={isExpanded}
-                className={styles.terminologyResultTrigger}
+                className={pageStyles.terminologyResultTrigger}
                 onClick={() => toggleResult(index)}
               >
-                <div className={styles.termItemHeader}>
-                  <span className={styles.termName}>{result.term}</span>
-                  <span className={styles.termCat}>{result.romanTransliteration}</span>
+                <div className={pageStyles.termItemHeader}>
+                  <span className={pageStyles.termName}>{result.term}</span>
+                  <span className={pageStyles.termCat}>{result.romanTransliteration}</span>
                 </div>
-                {result.english && <p className={styles.terminologyEnglish}>{result.english}</p>}
+                {result.english && (
+                  <p className={pageStyles.terminologyEnglish}>{result.english}</p>
+                )}
               </button>
 
               {isExpanded && (
-                <div className={styles.terminologyDetailInline} aria-live="polite">
+                <div className={pageStyles.terminologyDetailInline} aria-live="polite">
                   <h3>{locale === "ne" ? t.meaningLabelNe : t.meaningLabelEn}</h3>
                   <p>{meaning}</p>
                 </div>
@@ -264,145 +268,168 @@ export function TerminologySearch({ glossaryTermsCount }: TerminologySearchProps
   );
 
   return (
-    <div className={styles.terminologyPage}>
-      <header className={styles.terminologyHeader}>
-        <h1>{t.title}</h1>
-        <p>{t.subtitle.replace("{count}", formattedCount)}</p>
-        <form className={styles.searchBar} onSubmit={handleSubmit}>
-          <input
-            ref={inputRef}
-            type="search"
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t.searchPlaceholder}
-            aria-label={t.searchPlaceholder}
-            autoComplete="off"
-            autoFocus
-          />
-          <button type="submit" aria-label={t.search}>
-            →
-          </button>
-        </form>
-        <p className={styles.terminologyHint}>{t.searchHint}</p>
-      </header>
+    <section className={pageStyles.calculatorPage}>
+      <div
+        className={`${pageStyles.calculatorPageInner} ${emiStyles.emiPageInner} ${emiStyles.terminologyShell}`}
+      >
+        <Link href="/" className={pageStyles.calculatorBack}>
+          ← {msg.calculators.back}
+        </Link>
 
-      {showBrowseChrome && (
-        <nav className={styles.terminologyIndex} aria-label={t.indexAll}>
-          <button
-            type="button"
-            className={`${styles.terminologyIndexBtn} ${styles.terminologyIndexAll} ${
-              !browse.letter ? styles.terminologyIndexBtnActive : ""
-            }`}
-            onClick={() => navigateBrowse(null, 1)}
-          >
-            {t.indexAll}
-          </button>
-          {NEPALI_INDEX_LETTERS.map((letter) => {
-            const count = browse.indexCounts[letter] ?? 0;
-            const isActive = browse.letter === letter;
-            return (
-              <button
-                key={letter}
-                type="button"
-                disabled={count === 0}
-                className={`${styles.terminologyIndexBtn} ${
-                  isActive ? styles.terminologyIndexBtnActive : ""
-                } ${count === 0 ? styles.terminologyIndexBtnDisabled : ""}`}
-                onClick={() => navigateBrowse(letter, 1)}
-                aria-label={`${letter} (${count})`}
-                title={count > 0 ? String(count) : undefined}
-              >
-                {letter}
-              </button>
-            );
-          })}
-        </nav>
-      )}
-
-      {loading && (
-        <p className={styles.terminologyStatus}>
-          {isSearchMode ? t.searching : t.loadingBrowse}
-        </p>
-      )}
-
-      {!loading && isSearchMode && query.trim() && searchResults.length === 0 && (
-        <p className={styles.terminologyStatus}>{t.noResults}</p>
-      )}
-
-      {!loading && displayResults.length > 0 && (
-        <div className={styles.terminologyResultsWrap}>
-          <p className={styles.terminologyResultCount}>
-            {isSearchMode
-              ? t.resultsCount
-                  .replace("{total}", String(displayTotal))
-                  .replace("{shown}", String(displayResults.length))
-              : t.browseRange
-                  .replace("{start}", String(browseStart))
-                  .replace("{end}", String(browseEnd))
-                  .replace(
-                    "{total}",
-                    displayTotal.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")
-                  )}
+        <header className={emiStyles.emiHeader}>
+          <h1>{t.title}</h1>
+          <p className={pageStyles.calculatorSubtitle}>
+            {t.subtitle.replace("{count}", formattedCount)}
           </p>
-          {renderResults(displayResults)}
+        </header>
 
-          {showBrowseChrome && browse.totalPages > 1 && (
-            <div className={styles.terminologyPagination}>
-              <button
-                type="button"
-                className={styles.terminologyPageBtn}
-                disabled={browse.page <= 1}
-                onClick={() => navigateBrowse(browse.letter, browse.page - 1)}
-              >
-                {t.prevPage}
-              </button>
-              <div className={styles.terminologyPageJumpGroup}>
-                {getPaginationItems(browse.page, browse.totalPages).map((item, index) =>
-                  item.type === "ellipsis" ? (
-                    <span
-                      key={`ellipsis-${index}`}
-                      className={styles.terminologyPageEllipsis}
-                      aria-hidden
-                    >
-                      …
-                    </span>
-                  ) : (
-                    <button
-                      key={item.page}
-                      type="button"
-                      className={`${styles.terminologyPageBtn} ${
-                        item.page === browse.page ? styles.terminologyPageBtnActive : ""
-                      }`}
-                      onClick={() => navigateBrowse(browse.letter, item.page)}
-                      aria-current={item.page === browse.page ? "page" : undefined}
-                      aria-label={
-                        item.page === 1
-                          ? t.firstPage
-                          : item.page === browse.totalPages
-                            ? t.lastPage
-                            : undefined
-                      }
-                    >
-                      {item.page.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")}
-                    </button>
-                  )
-                )}
-              </div>
-              <button
-                type="button"
-                className={styles.terminologyPageBtn}
-                disabled={browse.page >= browse.totalPages}
-                onClick={() => navigateBrowse(browse.letter, browse.page + 1)}
-              >
-                {t.nextPage}
-              </button>
-            </div>
-          )}
+        <div className={`${emiStyles.emiPanel} ${emiStyles.terminologySearchPanel}`}>
+          <form className={emiStyles.siteSearchBar} onSubmit={handleSubmit}>
+            <input
+              ref={inputRef}
+              type="search"
+              value={query}
+              onChange={(e) => handleQueryChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t.searchPlaceholder}
+              aria-label={t.searchPlaceholder}
+              autoComplete="off"
+              autoFocus
+              className={emiStyles.siteSearchInput}
+            />
+            <button type="submit" className={emiStyles.siteSearchBtn} aria-label={t.search}>
+              →
+            </button>
+          </form>
+          <p className={emiStyles.emiFieldHint} style={{ marginTop: "0.75rem", marginBottom: 0 }}>
+            {t.searchHint}
+          </p>
         </div>
-      )}
 
-      <p className={styles.terminologySource}>{t.source}</p>
-    </div>
+        {showBrowseChrome && (
+          <div
+            className={`${emiStyles.emiFadeCard} ${emiStyles.emiFormSection} ${emiStyles.terminologyIndexCard}`}
+          >
+            <h3 className={emiStyles.emiSubsectionTitle}>{t.indexAll}</h3>
+            <nav className={pageStyles.terminologyIndex} aria-label={t.indexAll}>
+              <button
+                type="button"
+                className={`${pageStyles.terminologyIndexBtn} ${pageStyles.terminologyIndexAll} ${
+                  !browse.letter ? pageStyles.terminologyIndexBtnActive : ""
+                }`}
+                onClick={() => navigateBrowse(null, 1)}
+              >
+                {t.indexAll}
+              </button>
+              {NEPALI_INDEX_LETTERS.map((letter) => {
+                const count = browse.indexCounts[letter] ?? 0;
+                const isActive = browse.letter === letter;
+                return (
+                  <button
+                    key={letter}
+                    type="button"
+                    disabled={count === 0}
+                    className={`${pageStyles.terminologyIndexBtn} ${
+                      isActive ? pageStyles.terminologyIndexBtnActive : ""
+                    } ${count === 0 ? pageStyles.terminologyIndexBtnDisabled : ""}`}
+                    onClick={() => navigateBrowse(letter, 1)}
+                    aria-label={`${letter} (${count})`}
+                    title={count > 0 ? String(count) : undefined}
+                  >
+                    {letter}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        )}
+
+        {loading && (
+          <p className={pageStyles.terminologyStatus}>
+            {isSearchMode ? t.searching : t.loadingBrowse}
+          </p>
+        )}
+
+        {!loading && isSearchMode && query.trim() && searchResults.length === 0 && (
+          <p className={pageStyles.terminologyStatus}>{t.noResults}</p>
+        )}
+
+        {!loading && displayResults.length > 0 && (
+          <div className={`${emiStyles.emiBreakdownSection} ${emiStyles.terminologyResultsPanel}`}>
+            <div className={emiStyles.emiBreakdownSectionHeader}>
+              <p className={emiStyles.emiBreakdownSectionSubtitle}>
+                {isSearchMode
+                  ? t.resultsCount
+                      .replace("{total}", String(displayTotal))
+                      .replace("{shown}", String(displayResults.length))
+                  : t.browseRange
+                      .replace("{start}", String(browseStart))
+                      .replace("{end}", String(browseEnd))
+                      .replace(
+                        "{total}",
+                        displayTotal.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")
+                      )}
+              </p>
+            </div>
+            {renderResults(displayResults)}
+
+            {showBrowseChrome && browse.totalPages > 1 && (
+              <div className={pageStyles.terminologyPagination}>
+                <button
+                  type="button"
+                  className={pageStyles.terminologyPageBtn}
+                  disabled={browse.page <= 1}
+                  onClick={() => navigateBrowse(browse.letter, browse.page - 1)}
+                >
+                  {t.prevPage}
+                </button>
+                <div className={pageStyles.terminologyPageJumpGroup}>
+                  {getPaginationItems(browse.page, browse.totalPages).map((item, index) =>
+                    item.type === "ellipsis" ? (
+                      <span
+                        key={`ellipsis-${index}`}
+                        className={pageStyles.terminologyPageEllipsis}
+                        aria-hidden
+                      >
+                        …
+                      </span>
+                    ) : (
+                      <button
+                        key={item.page}
+                        type="button"
+                        className={`${pageStyles.terminologyPageBtn} ${
+                          item.page === browse.page ? pageStyles.terminologyPageBtnActive : ""
+                        }`}
+                        onClick={() => navigateBrowse(browse.letter, item.page)}
+                        aria-current={item.page === browse.page ? "page" : undefined}
+                        aria-label={
+                          item.page === 1
+                            ? t.firstPage
+                            : item.page === browse.totalPages
+                              ? t.lastPage
+                              : undefined
+                        }
+                      >
+                        {item.page.toLocaleString(locale === "ne" ? "ne-NP" : "en-NP")}
+                      </button>
+                    )
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className={pageStyles.terminologyPageBtn}
+                  disabled={browse.page >= browse.totalPages}
+                  onClick={() => navigateBrowse(browse.letter, browse.page + 1)}
+                >
+                  {t.nextPage}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        <p className={emiStyles.emiDisclaimer}>{t.source}</p>
+      </div>
+    </section>
   );
 }
