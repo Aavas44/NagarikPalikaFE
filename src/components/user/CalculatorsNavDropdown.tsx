@@ -40,9 +40,6 @@ export function CalculatorsNavDropdown() {
         </svg>
       </button>
       <div className={styles.navDropdownMenu} role="menu">
-        <Link href="/calculators" className={styles.navDropdownItem} role="menuitem">
-          {msg.nav.allCalculators}
-        </Link>
         {CALCULATOR_ITEMS.map((item) => {
           const label = msg.calculators[item.labelKey];
           return (
@@ -57,6 +54,15 @@ export function CalculatorsNavDropdown() {
             </Link>
           );
         })}
+        <div className={styles.navDropdownDivider} />
+        <Link
+          href="/calculators"
+          className={styles.navDropdownItem}
+          role="menuitem"
+          title={msg.nav.allCalculators}
+        >
+          {msg.nav.allCalculators}
+        </Link>
       </div>
     </div>
   );
