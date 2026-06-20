@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useLanguage } from "@/context/LanguageContext";
@@ -43,11 +44,18 @@ export function Hero({ quickTags }: HeroProps) {
         </button>
       </form>
       <div className={styles.quickTags}>
-        {quickTags.map((tag) => (
-          <span key={tag.en} className={styles.tag}>
-            {pickLocalized(locale, tag)}
-          </span>
-        ))}
+        {quickTags.map((tag) => {
+          const label = pickLocalized(locale, tag);
+          return (
+            <Link
+              key={tag.ne}
+              href={`/terminology?q=${encodeURIComponent(label)}`}
+              className={styles.tag}
+            >
+              {label}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

@@ -28,3 +28,14 @@ export interface GlossarySearchResponse {
   total: number;
   results: GlossarySearchResult[];
 }
+
+export interface GlossaryBrowseResponse {
+  mode: "browse";
+  letter: string | null;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  results: GlossarySearchResult[];
+  indexCounts: Record<string, number>;
+}
