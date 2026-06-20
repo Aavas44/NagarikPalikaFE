@@ -64,10 +64,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <GoogleAdSense />
+      </head>
       <body>
         <JsonLd data={[websiteJsonLd(), organizationJsonLd()]} />
         {children}
-        <GoogleAdSense />
         <Analytics />
       </body>
     </html>
