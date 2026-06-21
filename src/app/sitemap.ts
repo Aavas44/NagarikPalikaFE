@@ -6,6 +6,9 @@ import { NEPALI_INDEX_LETTERS } from "@/lib/glossaryIndex";
 import { getSaralSewaCategories } from "@/lib/saralsewa-glossary";
 import { getSiteUrl } from "@/lib/siteUrl";
 
+/** Cache sitemap for 1 hour — avoids cold-start failures on every Google crawl. */
+export const revalidate = 3600;
+
 async function fetchPublishedTemplateSlugs(): Promise<string[]> {
   try {
     const apiBase = process.env.API_URL ?? "http://127.0.0.1:4000";
@@ -15,7 +18,8 @@ async function fetchPublishedTemplateSlugs(): Promise<string[]> {
     if (!res.ok) return [];
     const templates = (await res.json()) as { id: string }[];
     return templates.map((t) => t.id);
-  } catch {
+  } catch (err) {
+    console.error("sitemap: failed to fetch templates", err);
     return [];
   }
 }
@@ -33,11 +37,29 @@ function entry(
   };
 }
 
+async function loadIndexCounts(): Promise<Record<string, number>> {
+  try {
+    return await getKanuniIndexCounts();
+  } catch (err) {
+    console.error("sitemap: failed to load glossary index counts", err);
+    return {};
+  }
+}
+
+async function loadCategories() {
+  try {
+    return await getSaralSewaCategories();
+  } catch (err) {
+    console.error("sitemap: failed to load categories", err);
+    return [];
+  }
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [categories, templateSlugs, indexCounts] = await Promise.all([
-    getSaralSewaCategories(),
+    loadCategories(),
     fetchPublishedTemplateSlugs(),
-    getKanuniIndexCounts(),
+    loadIndexCounts(),
   ]);
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -57,7 +79,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   );
 
-  const calculatorPages = CALCULATOR_ITEMS.map((item) =>
+  const calculatorPages = CALCULATOR_ITEMS.filter((item) => item.available).map((item) =>
     entry(`/calculators/${item.slug}`, { priority: 0.8 })
   );
 

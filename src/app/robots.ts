@@ -18,8 +18,6 @@ export default function robots(): MetadataRoute.Robots {
         "/advocate/",
         "/auth",
         "/auth/",
-        "/consult/payment",
-        "/consult/payment/",
       ],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
