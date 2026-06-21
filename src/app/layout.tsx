@@ -52,9 +52,11 @@ export const metadata: Metadata = {
     description: DEFAULT_DESCRIPTION,
     images: ["/nagarik-palika-logo.png"],
   },
-  verification: process.env.GOOGLE_SITE_VERIFICATION
-    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
-    : undefined,
+  verification: {
+    google:
+      process.env.GOOGLE_SITE_VERIFICATION ??
+      "wsROS3giJeHPwd_jUiJri2OWjM1fJVkdJA_UUkQu83c",
+  },
 };
 
 export default function RootLayout({
