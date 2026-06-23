@@ -5,12 +5,16 @@ import { useLanguage } from "@/context/LanguageContext";
 import {
   considerationCategoryPath,
   type ConsiderationCategorySlug,
+  type ConsiderationTopicSlug,
 } from "@/lib/considerations";
+import { getConsiderationArticle } from "@/lib/considerationArticles";
+import { ConsiderationArticleView } from "@/components/user/ConsiderationArticleView";
 import pageStyles from "@/app/user.module.css";
 import styles from "./emi.module.css";
 
 interface ConsiderationTopicContentProps {
   categorySlug: ConsiderationCategorySlug;
+  topicSlug: ConsiderationTopicSlug;
   categoryLabelKey: string;
   topicLabelKey: string;
   topicDescriptionKey: string;
@@ -18,13 +22,15 @@ interface ConsiderationTopicContentProps {
 
 export function ConsiderationTopicContent({
   categorySlug,
+  topicSlug,
   categoryLabelKey,
   topicLabelKey,
   topicDescriptionKey,
 }: ConsiderationTopicContentProps) {
-  const { msg } = useLanguage();
+  const { msg, locale } = useLanguage();
   const page = msg.considerationsPage;
   const labels = msg.considerations;
+  const article = getConsiderationArticle(categorySlug, topicSlug, locale);
 
   return (
     <section className={pageStyles.calculatorPage}>
@@ -40,9 +46,15 @@ export function ConsiderationTopicContent({
           </p>
         </header>
 
-        <div className={`${styles.emiFadeCard} ${styles.emiFormSection} ${styles.considerationsComingSoon}`}>
-          <p>{page.contentComingSoon}</p>
-        </div>
+        {article ? (
+          <div className={`${styles.emiFadeCard} ${styles.considerationArticleCard}`}>
+            <ConsiderationArticleView article={article} lang={locale} />
+          </div>
+        ) : (
+          <div className={`${styles.emiFadeCard} ${styles.emiFormSection} ${styles.considerationsComingSoon}`}>
+            <p>{page.contentComingSoon}</p>
+          </div>
+        )}
 
         <Link href="/considerations" className={styles.templateHomeLink}>
           ← {page.allConsiderations}

@@ -10,8 +10,11 @@ import {
   CALCULATOR_SEO,
   breadcrumbJsonLd,
   buildPageMetadata,
+  faqJsonLd,
   webApplicationJsonLd,
 } from "@/lib/seo";
+import { messages } from "@/i18n/messages";
+import { SalaryTaxSeoContent } from "@/components/user/SalaryTaxSeoContent";
 
 interface CalculatorPageProps {
   params: Promise<{ slug: string }>;
@@ -49,26 +52,30 @@ export default async function CalculatorPage({ params }: CalculatorPageProps) {
   }
 
   const seo = CALCULATOR_SEO[slug];
+  const jsonLd: Record<string, unknown>[] = [
+    breadcrumbJsonLd([
+      { name: "Home", path: "/" },
+      { name: "Calculators", path: "/calculators" },
+      { name: seo.title, path: `/calculators/${slug}` },
+    ]),
+    webApplicationJsonLd({
+      name: seo.title,
+      description: seo.description,
+      path: `/calculators/${slug}`,
+    }),
+  ];
+
+  if (slug === "salary-tax") {
+    jsonLd.push(faqJsonLd(messages.en.calculators.salaryTaxSeo.faq));
+  }
 
   return (
     <LanguageProvider>
-      <JsonLd
-        data={[
-          breadcrumbJsonLd([
-            { name: "Home", path: "/" },
-            { name: "Calculators", path: "/calculators" },
-            { name: seo.title, path: `/calculators/${slug}` },
-          ]),
-          webApplicationJsonLd({
-            name: seo.title,
-            description: seo.description,
-            path: `/calculators/${slug}`,
-          }),
-        ]}
-      />
+      <JsonLd data={jsonLd} />
       <UserNav />
       <main>
         <CalculatorPageContent slug={slug} />
+        {slug === "salary-tax" && <SalaryTaxSeoContent />}
       </main>
       <UserFooter />
     </LanguageProvider>

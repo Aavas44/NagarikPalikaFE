@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CALCULATOR_ITEMS } from "@/lib/calculators";
 import { CONSIDERATION_CATEGORIES } from "@/lib/considerations";
+import { hasConsiderationArticle } from "@/lib/considerationArticles";
 import { getKanuniIndexCounts } from "@/lib/glossaryBrowse";
 import { NEPALI_INDEX_LETTERS } from "@/lib/glossaryIndex";
 import { getSaralSewaCategories } from "@/lib/saralsewa-glossary";
@@ -85,9 +86,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const considerationPages = CONSIDERATION_CATEGORIES.flatMap((category) => [
     entry(`/considerations/${category.slug}`, { priority: 0.75 }),
-    ...category.topics.map((topic) =>
-      entry(`/considerations/${category.slug}/${topic.slug}`, { priority: 0.7 })
-    ),
+    ...category.topics.map((topic) => {
+      const hasArticle = hasConsiderationArticle(category.slug, topic.slug);
+      return entry(`/considerations/${category.slug}/${topic.slug}`, {
+        priority: hasArticle ? 0.85 : 0.7,
+        changeFrequency: hasArticle ? "weekly" : "monthly",
+      });
+    }),
   ]);
 
   const categoryPages = categories.map((cat) =>

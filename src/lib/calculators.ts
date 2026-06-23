@@ -52,6 +52,8 @@ export const CALCULATOR_ITEMS = [
 ] as const;
 
 export type CalculatorSlug = (typeof CALCULATOR_ITEMS)[number]["slug"];
+
+export const FEATURED_CALCULATOR_SLUG: CalculatorSlug = "salary-tax";
 export type CalculatorLabelKey = (typeof CALCULATOR_ITEMS)[number]["labelKey"];
 export type CalculatorDescriptionKey = (typeof CALCULATOR_ITEMS)[number]["descriptionKey"];
 

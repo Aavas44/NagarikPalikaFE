@@ -9,7 +9,7 @@ import {
   getConsiderationTopic,
   isConsiderationCategorySlug,
 } from "@/lib/considerations";
-import { breadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
+import { breadcrumbJsonLd, buildPageMetadata, CONSIDERATION_SEO, faqJsonLd } from "@/lib/seo";
 import { messages } from "@/i18n/messages";
 
 type PageProps = {
@@ -32,10 +32,13 @@ export async function generateMetadata({ params }: PageProps) {
 
   const titleEn = messages.en.considerations[match.topic.labelKey];
   const descEn = messages.en.considerations[match.topic.descriptionKey];
+  const seoKey = `${categorySlug}/${topicSlug}`;
+  const seo = CONSIDERATION_SEO[seoKey];
 
   return buildPageMetadata({
-    title: `${titleEn} — Key Considerations Nepal`,
-    description: descEn,
+    title: seo?.title ?? `${titleEn} — Key Considerations Nepal`,
+    description: seo?.description ?? descEn,
+    keywords: seo?.keywords,
     path: `/considerations/${categorySlug}/${topicSlug}`,
   });
 }
@@ -49,21 +52,28 @@ export default async function ConsiderationTopicPage({ params }: PageProps) {
 
   const categoryTitleEn = messages.en.considerations[match.category.labelKey];
   const topicTitleEn = messages.en.considerations[match.topic.labelKey];
+  const seoKey = `${categorySlug}/${topicSlug}`;
+  const seo = CONSIDERATION_SEO[seoKey];
+  const jsonLd: Record<string, unknown>[] = [
+    breadcrumbJsonLd([
+      { name: "Home", path: "/" },
+      { name: "Key Considerations", path: "/considerations" },
+      { name: categoryTitleEn, path: `/considerations/${categorySlug}` },
+      { name: topicTitleEn, path: `/considerations/${categorySlug}/${topicSlug}` },
+    ]),
+  ];
+  if (seo?.faq?.length) {
+    jsonLd.push(faqJsonLd(seo.faq));
+  }
 
   return (
     <LanguageProvider>
-      <JsonLd
-        data={breadcrumbJsonLd([
-          { name: "Home", path: "/" },
-          { name: "Key Considerations", path: "/considerations" },
-          { name: categoryTitleEn, path: `/considerations/${categorySlug}` },
-          { name: topicTitleEn, path: `/considerations/${categorySlug}/${topicSlug}` },
-        ])}
-      />
+      <JsonLd data={jsonLd} />
       <UserNav />
       <main>
         <ConsiderationTopicContent
           categorySlug={match.category.slug}
+          topicSlug={match.topic.slug}
           categoryLabelKey={match.category.labelKey}
           topicLabelKey={match.topic.labelKey}
           topicDescriptionKey={match.topic.descriptionKey}

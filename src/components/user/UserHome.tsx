@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { pickLocalized } from "@/i18n/messages";
-import { getCalculatorCount } from "@/lib/calculators";
+import { getCalculatorCount, FEATURED_CALCULATOR_SLUG } from "@/lib/calculators";
 import type { Stats, Template } from "@/types";
 import type { SaralSewaCategoryCard } from "@/types/saralsewa";
 import pageStyles from "@/app/user.module.css";
@@ -44,6 +44,42 @@ export function UserHome({ stats, glossaryTermsCount, categories, templates }: U
             <span className={emiStyles.homeStatLabel}>{msg.stats.calculators}</span>
           </Link>
         </div>
+
+        <section className={emiStyles.siteSection} id="calculators">
+          <div className={emiStyles.siteSectionHeader}>
+            <h2 className={emiStyles.siteSectionTitle}>{msg.sections.featuredCalculators}</h2>
+            <Link href="/calculators" className={emiStyles.siteSectionLink}>
+              {msg.calculators.back}
+            </Link>
+          </div>
+          <div className={emiStyles.siteHubGrid}>
+            <Link
+              href={`/calculators/${FEATURED_CALCULATOR_SLUG}`}
+              className={`${emiStyles.emiFadeCard} ${emiStyles.siteHubCard} ${emiStyles.siteHubCardFeatured}`}
+            >
+              <span className={emiStyles.siteFeaturedBadge}>{msg.sections.featuredBadge}</span>
+              <div className={`${emiStyles.siteHubIcon} ${iconColorClass.blue}`}>💰</div>
+              <h3>{msg.calculators.salaryTax}</h3>
+              <p>{msg.calculators.salaryTaxDesc}</p>
+            </Link>
+            <Link
+              href="/calculators/vehicle-tax"
+              className={`${emiStyles.emiFadeCard} ${emiStyles.siteHubCard}`}
+            >
+              <div className={`${emiStyles.siteHubIcon} ${iconColorClass.amber}`}>🚗</div>
+              <h3>{msg.calculators.vehicleTax}</h3>
+              <p>{msg.calculators.vehicleTaxDesc}</p>
+            </Link>
+            <Link
+              href="/calculators/emi"
+              className={`${emiStyles.emiFadeCard} ${emiStyles.siteHubCard}`}
+            >
+              <div className={`${emiStyles.siteHubIcon} ${iconColorClass.teal}`}>🏦</div>
+              <h3>{msg.calculators.emi}</h3>
+              <p>{msg.calculators.emiDesc}</p>
+            </Link>
+          </div>
+        </section>
 
         <section className={emiStyles.siteSection} id="categories">
           <div className={emiStyles.siteSectionHeader}>

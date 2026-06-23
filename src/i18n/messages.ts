@@ -13,6 +13,9 @@ export const messages = {
       faq: "FAQ",
       contactUs: "Contact us",
       signIn: "Sign in",
+      menuOpen: "Open menu",
+      menuClose: "Close menu",
+      navigation: "Navigation",
     },
     hero: {
       badge: "Guide to government processes — free to use",
@@ -38,6 +41,8 @@ export const messages = {
       browseAllTemplates: "Browse all templates →",
       faq: "Frequently asked questions",
       reviews: "reviews",
+      featuredCalculators: "Popular calculators",
+      featuredBadge: "Popular",
     },
     faqItems: [
       {
@@ -87,7 +92,8 @@ export const messages = {
       propertyConstruction: "Property & Construction",
       propertyConstructionDesc: "Land, housing, and rental agreements.",
       buyingLand: "Buying land",
-      buyingLandDesc: "Things to check before purchasing land in Nepal.",
+      buyingLandDesc:
+        "Verify Lalpurja, land record at Malpot, road access, and land measurement before you buy जग्गा in Nepal.",
       buildingHouse: "Building a house",
       buildingHouseDesc: "Permits, contracts, and construction considerations.",
       rentLease: "Rent & lease",
@@ -163,7 +169,7 @@ export const messages = {
     },
     calculators: {
       salaryTax: "Salary Tax Calculator",
-      salaryTaxDesc: "Estimate annual income tax under Nepal salary rules (FY 2083/84).",
+      salaryTaxDesc: "Estimate annual income tax for FY 2083/84 or FY 2082/83 under Nepal salary rules.",
       capitalGains: "Capital Gains Calculator",
       capitalGainsDesc: "Estimate tax on property and investment gains.",
       vehicleTax: "Vehicle Tax Calculator",
@@ -204,7 +210,7 @@ export const messages = {
         month: "Month",
       },
       salaryTaxForm: {
-        subtitle: "Estimate your annual income tax under Nepal salary tax rules (FY 2083/84).",
+        subtitle: "Estimate annual income tax for FY 2083/84 or FY 2082/83 under Nepal salary tax rules.",
         yourDetails: "Your details",
         fiscalYear: "Fiscal year",
         maritalStatus: "Nature of employee",
@@ -258,7 +264,61 @@ export const messages = {
         waived: "Waived",
         grossTax: "Gross tax",
         disclaimer:
-          "Rough estimation based on FY 2083/84 proposed rules. Consult a tax professional for filing.",
+          "Rough estimation based on FY 2083/84 proposed rules or FY 2082/83 enacted rules. Consult a tax professional for filing.",
+      },
+      salaryTaxSeo: {
+        h1: "Salary Tax Calculator Nepal — Income Tax FY 2083/84 & 2082/83",
+        intro:
+          "Use this free income tax calculator Nepal for FY 2083/84 or FY 2082/83. Select your fiscal year and marital status, enter salary, allowances, SSF, EPF, CIT, and insurance deductions, and see your income tax slab, monthly TDS, and net tax liability.",
+        howTitle: "How salary tax is calculated in Nepal",
+        howBody:
+          "Employers withhold tax (TDS) on salary based on your annual income tax slab for the selected fiscal year. Taxable income is gross salary and benefits minus allowable deductions (retirement contributions up to the legal cap, life insurance up to Rs. 40,000, medical insurance up to Rs. 20,000). Progressive rates apply on net assessable income. SSF contributors may waive the 1% social security tax on the first slab. Unmarried female employees may receive a 10% rebate on gross tax.",
+        slabsTitle208384: "Income tax slab — FY 2083/84 (proposed)",
+        slabsTitle208283Individual: "Income tax slab — FY 2082/83 (unmarried / individual)",
+        slabsTitle208283Couple: "Income tax slab — FY 2082/83 (married couple)",
+        slabsNote:
+          "* SST (social security tax) at 1% on the first slab may be waived for SSF contributors. Slabs apply on net assessable income after deductions. FY 2082/83 uses separate schedules for unmarried and married taxpayers.",
+        slabRange: "Income slab (annual)",
+        slabRate: "Tax rate",
+        deductionsTitle: "Common salary deductions",
+        deductions: [
+          "SSF, EPF, and CIT — capped at Rs. 500,000 for SSF contributors or Rs. 300,000 otherwise, or one-third of income (whichever is lower).",
+          "Life insurance premium — up to Rs. 40,000 per year.",
+          "Medical insurance premium — up to Rs. 20,000 per year.",
+          "Female employee rebate — 10% off gross tax when unmarried.",
+        ],
+        faqTitle: "Income tax calculator Nepal — common questions",
+        nepaliHeading: "नेपालीमा",
+        faq: [
+          {
+            q: "What is the income tax slab in Nepal for FY 2083/84?",
+            a: "For FY 2083/84, progressive slabs start at 1% (SST) on income up to Rs. 1,000,000, then 10% up to Rs. 1,500,000, 20% up to Rs. 2,500,000, 27% up to Rs. 4,000,000, and 29% above Rs. 4,000,000 on net assessable income after deductions.",
+          },
+          {
+            q: "What is the income tax slab in Nepal for FY 2082/83?",
+            a: "For FY 2082/83, unmarried individuals pay 1% (SST) up to Rs. 500,000, then 10%, 20%, 30%, 36%, and 39% on higher bands. Married couples have higher thresholds starting at Rs. 600,000 for the first slab. Select your fiscal year and marital status in the calculator above.",
+          },
+          {
+            q: "How do I use a salary tax calculator Nepal?",
+            a: "Choose FY 2083/84 or FY 2082/83, set marital status, enter monthly or variable salary, allowances, bonus, and deductions (SSF, EPF, CIT, insurance). The tool applies the correct income tax rate in Nepal and shows annual tax, monthly TDS, and slab-wise breakdown.",
+          },
+          {
+            q: "What is the difference between income tax calculator Nepal and tax calculator Nepal?",
+            a: "Both terms refer to tools that estimate tax on employment income. This page focuses on salary and payroll tax under Nepal's Income Tax Act, including TDS rules used by employers.",
+          },
+          {
+            q: "Are these the new income tax slabs in Nepal?",
+            a: "FY 2083/84 uses proposed slab rates; FY 2082/83 uses the prior enacted schedule with separate slabs for married and unmarried taxpayers. Always confirm with the Inland Revenue Department (IRD) before filing.",
+          },
+          {
+            q: "Does SSF reduce my income tax in Nepal?",
+            a: "SSF contributions count toward your retirement deduction cap. SSF contributors may also waive the 1% social security tax on the first slab in both FY 2083/84 and FY 2082/83, lowering overall tax.",
+          },
+          {
+            q: "Is this income tax calculator Nepal free?",
+            a: "Yes. Nagarik Palika's salary tax calculator is free to use in English and Nepali. It is an independent tool — not affiliated with the Government of Nepal or IRD.",
+          },
+        ],
       },
       landConverterForm: {
         subtitle:
@@ -430,6 +490,9 @@ export const messages = {
       faq: "बारम्बार सोधिने प्रश्न",
       contactUs: "सम्पर्क गर्नुहोस्",
       signIn: "साइन इन",
+      menuOpen: "मेनु खोल्नुहोस्",
+      menuClose: "मेनु बन्द गर्नुहोस्",
+      navigation: "नेभिगेसन",
     },
     hero: {
       badge: "सरकारी प्रक्रिया बुझ्ने मार्गदर्शन — निःशुल्क प्रयोग गर्नुहोस्",
@@ -455,6 +518,8 @@ export const messages = {
       browseAllTemplates: "सबै टेम्प्लेटहरू ब्राउज गर्नुहोस् →",
       faq: "बारम्बार सोधिने प्रश्नहरू",
       reviews: "समीक्षाहरू",
+      featuredCalculators: "लोकप्रिय क्याल्कुलेटरहरू",
+      featuredBadge: "लोकप्रिय",
     },
     faqItems: [
       {
@@ -504,7 +569,8 @@ export const messages = {
       propertyConstruction: "घर-जग्गा र निर्माण",
       propertyConstructionDesc: "जग्गा, घर निर्माण र भाडा सम्झौता।",
       buyingLand: "जग्गा किन्दा ध्यान दिनुपर्ने कुराहरू",
-      buyingLandDesc: "नेपालमा जग्गा किन्नुअघि जाँच गर्नुपर्ने कुराहरू।",
+      buyingLandDesc:
+        "जग्गा किन्नुअघि लालपुर्जा, मालपोत अभिलेख, बाटो पहुँच र जग्गा नाप जाँच गर्नुहोस्।",
       buildingHouse: "घर बनाउँदा ध्यान दिनुपर्ने कुराहरू",
       buildingHouseDesc: "अनुमति, ठेक्का र निर्माण सम्बन्धी विचार।",
       rentLease: "घर-जग्गा भाडामा दिँदा/लिँदा ध्यान दिनुपर्ने कुराहरू",
@@ -580,7 +646,7 @@ export const messages = {
     },
     calculators: {
       salaryTax: "तलब कर क्याल्कुलेटर",
-      salaryTaxDesc: "नेपालको तलब कर नियम (आ.व. २०८३/८४) अनुसार वार्षिक आयकर अनुमान।",
+      salaryTaxDesc: "आ.व. २०८३/८४ वा २०८२/८३ अनुसार नेपालको तलब कर नियममा वार्षिक आयकर अनुमान।",
       capitalGains: "पूँजीगत लाभ कर क्याल्कुलेटर",
       capitalGainsDesc: "सम्पत्ति र लगानीबाट भएको लाभमा कर अनुमान।",
       vehicleTax: "सवारी कर क्याल्कुलेटर",
@@ -621,7 +687,7 @@ export const messages = {
         month: "महिना",
       },
       salaryTaxForm: {
-        subtitle: "नेपालको तलब कर नियम (आ.व. २०८३/८४) अनुसार वार्षिक आयकर अनुमान गर्नुहोस्।",
+        subtitle: "आ.व. २०८३/८४ वा २०८२/८३ अनुसार नेपालको तलब कर नियममा वार्षिक आयकर अनुमान गर्नुहोस्।",
         yourDetails: "तपाईंको विवरण",
         fiscalYear: "आर्थिक वर्ष",
         maritalStatus: "कर्मचारीको प्रकृति",
@@ -675,7 +741,61 @@ export const messages = {
         waived: "मुक्त",
         grossTax: "कुल कर",
         disclaimer:
-          "आ.व. २०८३/८४ प्रस्तावित नियममा आधारित अनुमान। दर्ताका लागि कर विशेषज्ञसँग सल्लाह लिनुहोस्।",
+          "आ.व. २०८३/८४ प्रस्तावित वा २०८२/८३ लागू नियममा आधारित अनुमान। दर्ताका लागि कर विशेषज्ञसँग सल्लाह लिनुहोस्।",
+      },
+      salaryTaxSeo: {
+        h1: "तलब कर क्याल्कुलेटर नेपाल — आयकर आ.व. २०८३/८४ र २०८२/८३",
+        intro:
+          "यो निःशुल्क आयकर क्याल्कुलेटर नेपालले आ.व. २०८३/८४ वा २०८२/८३ का लागि वार्षिक र मासिक तलब कर अनुमान गर्छ। आर्थिक वर्ष र वैवाहिक स्थिति छान्नुहोस्, तलब, भत्ता, SSF, EPF, CIT र बीमा कटौती हालेर आयकर स्ल्याब, मासिक TDS र खुद कर दायित्व हेर्नुहोस्।",
+        howTitle: "नेपालमा तलब कर कसरी गणना हुन्छ",
+        howBody:
+          "Employer ले तलबमा TDS काट्छ — छानिएको आर्थिक वर्षको वार्षिक आयकर स्ल्याब अनुसार। कर योग्य आय भनेको कुल तलब र भत्ता minus कानूनी कटौती (सञ्चय कोष सीमा भित्रको SSF/EPF/CIT, जीवन बीमा अधिकतम रु. ४०,०००, स्वास्थ्य बीमा अधिकतम रु. २०,०००) हो। बाँकी खुद कर योग्य आयमा प्रगतिशील दर लाग्छ। SSF योगदानकर्ताले पहिलो slab को १% सामाजिक सुरक्षा कर मुक्त पाउन सक्छन्। अविवाहित महिलालाई १०% कर छुट हुन सक्छ।",
+        slabsTitle208384: "आयकर स्ल्याब — आ.व. २०८३/८४ (प्रस्तावित)",
+        slabsTitle208283Individual: "आयकर स्ल्याब — आ.व. २०८२/८३ (अविवाहित / व्यक्तिगत)",
+        slabsTitle208283Couple: "आयकर स्ल्याब — आ.व. २०८२/८३ (विवाहित जोडी)",
+        slabsNote:
+          "* SSF योगदानकर्ताले पहिलो slab मा १% सामाजिक सुरक्षा कर मुक्त हुन सक्छ। स्ल्याब कटौती पछिको खुद कर योग्य आयमा लाग्छ। आ.व. २०८२/८३ मा अविवाहित र विवाहितका लागि छुट्टै तालिका छ।",
+        slabRange: "आय slab (वार्षिक)",
+        slabRate: "कर दर",
+        deductionsTitle: "सामान्य तलब कटौती",
+        deductions: [
+          "SSF, EPF र CIT — SSF योगदानकर्ताका लागि रु. ५,००,००० वा अन्यका लागि रु. ३,००,०००, वा आयको एक तिहाई (जुन कम हुन्छ) सम्म।",
+          "जीवन बीमा प्रिमियम — वार्षिक अधिकतम रु. ४०,०००।",
+          "स्वास्थ्य बीमा प्रिमियम — वार्षिक अधिकतम रु. २०,०००।",
+          "महिला कर्मचारी छुट — अविवाहित भए कुल करमा १०% छुट।",
+        ],
+        faqTitle: "आयकर क्याल्कुलेटर नेपाल — सामान्य प्रश्न",
+        nepaliHeading: "नेपालीमा",
+        faq: [
+          {
+            q: "आ.व. २०८३/८४ का लागि नेपालमा आयकर स्ल्याब के हो?",
+            a: "आ.व. २०८३/८४ मा रु. १०,००,००० सम्म १% (SST), रु. १५,००,००० सम्म १०%, रु. २५,००,००० सम्म २०%, रु. ४०,००,००० सम्म २७%, र सोभन्दा माथि २९% खुद कर योग्य आयमा लाग्छ।",
+          },
+          {
+            q: "आ.व. २०८२/८३ का लागि नेपालमा आयकर स्ल्याब के हो?",
+            a: "आ.व. २०८२/८३ मा अविवाहित व्यक्तिले रु. ५,००,००० सम्म १% (SST), त्यसपछि १०%, २०%, ३०%, ३६% र ३९% दर लाग्छ। विवाहित जोडीका लागि पहिलो slab रु. ६,००,००० सम्म सुरु हुन्छ। माथिको क्याल्कुलेटरमा आर्थिक वर्ष र वैवाहिक स्थिति छान्नुहोस्।",
+          },
+          {
+            q: "तलब कर क्याल्कुलेटर नेपाल कसरी प्रयोग गर्ने?",
+            a: "आ.व. २०८३/८४ वा २०८२/८३ छान्नुहोस्, वैवाहिक स्थिति सेट गर्नुहोस्, मासिक वा परिवर्तनशील तलब, भत्ता, बोनस र कटौती (SSF, EPF, CIT, बीमा) हाल्नुहोस्। उपकरणले सही आयकर दर र slab विवरण देखाउँछ।",
+          },
+          {
+            q: "income tax calculator Nepal र tax calculator Nepal मा के फरक छ?",
+            a: "दुवै शब्द रोजगारी आयको कर अनुमान गर्ने उपकरणलाई जनाउँछन्। यो पृष्ठ नेपालको आयकर ऐन अनुसार तलब र payroll TDS मा केन्द्रित छ।",
+          },
+          {
+            q: "के यो नेपालको नयाँ आयकर स्ल्याब हो?",
+            a: "आ.व. २०८३/८४ प्रस्तावित दर प्रयोग हुन्छ; आ.व. २०८२/८३ लागू तालिका अविवाहित र विवाहितका लागि छुट्टै छ। दर्ता अघि आन्तरिक राजस्व विभाग (IRD) मा पुष्टि गर्नुहोस्।",
+          },
+          {
+            q: "SSF ले मेरो आयकर घटाउँछ?",
+            a: "SSF योगदान सञ्चय कटौती सीमामा गणना हुन्छ। SSF योगदानकर्ताले आ.व. २०८३/८४ र २०८२/८३ दुवैमा पहिलो slab को १% SST मुक्त पाउन सक्छन्, जसले कुल कर घटाउँछ।",
+          },
+          {
+            q: "के यो आयकर क्याल्कुलेटर नेपाल निःशुल्क हो?",
+            a: "हो। नागरिक पालिकाको तलब कर क्याल्कुलेटर नेपाली र अङ्ग्रेजीमा निःशुल्क छ। यो स्वतन्त्र उपकरण हो — नेपाल सरकार वा IRD सँग सम्बद्ध छैन।",
+          },
+        ],
       },
       landConverterForm: {
         subtitle:

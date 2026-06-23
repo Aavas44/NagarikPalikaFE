@@ -95,6 +95,48 @@ const SLABS_2083_84 = [
   { upTo: Infinity, rate: 0.29 },
 ];
 
+export interface SalaryTaxSlabRow {
+  rangeLabel: string;
+  rateLabel: string;
+  note?: string;
+}
+
+function formatSlabRangeEn(from: number, to: number): string {
+  const fmt = (n: number) =>
+    new Intl.NumberFormat("en-NP", { maximumFractionDigits: 0 }).format(Math.round(n));
+  if (from === 0) return `Up to Rs. ${fmt(to)}`;
+  if (!Number.isFinite(to)) return `Above Rs. ${fmt(from)}`;
+  return `Rs. ${fmt(from + 1)} – ${fmt(to)}`;
+}
+
+/** Build display rows for a progressive tax slab schedule. */
+function buildSalaryTaxSlabRows(
+  slabs: { upTo: number; rate: number; isSst?: boolean }[]
+): SalaryTaxSlabRow[] {
+  let prev = 0;
+  return slabs.map((slab) => {
+    const row: SalaryTaxSlabRow = {
+      rangeLabel: formatSlabRangeEn(prev, slab.upTo),
+      rateLabel: formatRate(slab.rate),
+      note: slab.isSst ? "SST" : undefined,
+    };
+    prev = slab.upTo;
+    return row;
+  });
+}
+
+export function getSalaryTaxSlabRows208384(): SalaryTaxSlabRow[] {
+  return buildSalaryTaxSlabRows(SLABS_2083_84);
+}
+
+export function getSalaryTaxSlabRows208283Individual(): SalaryTaxSlabRow[] {
+  return buildSalaryTaxSlabRows(SLABS_2082_83_INDIVIDUAL);
+}
+
+export function getSalaryTaxSlabRows208283Couple(): SalaryTaxSlabRow[] {
+  return buildSalaryTaxSlabRows(SLABS_2082_83_COUPLE);
+}
+
 const SLABS_2082_83_INDIVIDUAL = [
   { upTo: 500_000, rate: 0.01, isSst: true },
   { upTo: 700_000, rate: 0.1 },

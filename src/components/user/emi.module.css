@@ -1153,6 +1153,134 @@
   line-height: 1.6;
 }
 
+.considerationArticleCard {
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.considerationArticle {
+  max-width: 720px;
+}
+
+.considerationArticleLead {
+  font-size: 16px;
+  color: #374151;
+  line-height: 1.7;
+  margin: 0 0 1.25rem;
+}
+
+.considerationArticleSection {
+  margin-bottom: 1.5rem;
+}
+
+.considerationArticleHeading {
+  font-size: 18px;
+  font-weight: 600;
+  color: #042c53;
+  margin: 0 0 0.65rem;
+  line-height: 1.35;
+}
+
+.considerationArticleText {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.7;
+  margin: 0 0 0.85rem;
+}
+
+.considerationArticleList {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.considerationArticleList li + li {
+  margin-top: 0.35rem;
+}
+
+.considerationArticleQuickList {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.considerationArticleQuickList li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.55;
+}
+
+.considerationArticleQuickList li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #185fa5;
+  font-weight: 600;
+}
+
+.considerationArticleDisclaimer {
+  font-size: 13px;
+  color: #9ca3af;
+  line-height: 1.6;
+  margin: 1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.considerationExampleLoss,
+.considerationExampleSaved {
+  margin: 1rem 0;
+  padding: 1rem 1.15rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+}
+
+.considerationExampleLoss {
+  background: #fef2f2;
+  border-left-color: #dc2626;
+}
+
+.considerationExampleSaved {
+  background: #f0fdf4;
+  border-left-color: #16a34a;
+}
+
+.considerationExampleTag {
+  margin: 0 0 0.35rem;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.considerationExampleLoss .considerationExampleTag {
+  color: #b91c1c;
+}
+
+.considerationExampleSaved .considerationExampleTag {
+  color: #15803d;
+}
+
+.considerationExampleTitle {
+  margin: 0 0 0.4rem;
+  font-size: 15px;
+  font-weight: 600;
+  color: #042c53;
+}
+
+.considerationExampleBody {
+  margin: 0;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.65;
+}
+
 /* Shared hub / glossary page shell (homepage + terminology) */
 .homeHeroHeader {
   text-align: center;
@@ -1464,6 +1592,115 @@
 
 .terminologyResultCardFade.terminologyResultExpanded {
   box-shadow: 0 6px 24px rgba(24, 95, 165, 0.12);
+}
+
+.salaryTaxSeo {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 2rem 3rem;
+}
+
+.salaryTaxSeoArticle {
+  margin-bottom: 1.5rem;
+}
+
+.salaryTaxSeoLangLabel {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9ca3af;
+  margin: 0 0 0.5rem;
+}
+
+.salaryTaxSeoTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: #042c53;
+  margin: 0 0 0.75rem;
+  line-height: 1.35;
+}
+
+.salaryTaxSeoIntro,
+.salaryTaxSeoText {
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.65;
+  margin: 0 0 1rem;
+}
+
+.salaryTaxSeoHeading {
+  font-size: 17px;
+  font-weight: 600;
+  color: #042c53;
+  margin: 1.5rem 0 0.65rem;
+}
+
+.salaryTaxSeoList {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.salaryTaxSeoList li + li {
+  margin-top: 0.35rem;
+}
+
+.salaryTaxSeoFaq {
+  margin: 0;
+}
+
+.salaryTaxSeoFaqItem {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.salaryTaxSeoFaqItem:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.salaryTaxSeoFaqItem dt {
+  font-size: 15px;
+  font-weight: 600;
+  color: #042c53;
+  margin-bottom: 0.35rem;
+}
+
+.salaryTaxSeoFaqItem dd {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.salaryTaxSeoDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 2rem 0;
+}
+
+.siteHubCardFeatured {
+  position: relative;
+  border-color: #b5d4f4;
+}
+
+.siteFeaturedBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #0c447c;
+  background: #e6f1fb;
+  border-radius: 999px;
+  padding: 3px 8px;
 }
 
 @media (max-width: 768px) {

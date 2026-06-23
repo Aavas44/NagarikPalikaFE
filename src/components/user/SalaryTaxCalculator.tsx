@@ -145,7 +145,7 @@ export function SalaryTaxCalculator() {
           ← {msg.calculators.back}
         </Link>
         <header className={styles.emiHeader}>
-          <h1>{msg.calculators.salaryTax}</h1>
+          <h1>{msg.calculators.salaryTaxSeo.h1}</h1>
           <p className={pageStyles.calculatorSubtitle}>{t.subtitle}</p>
         </header>
 

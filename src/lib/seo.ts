@@ -105,15 +105,21 @@ export const CALCULATOR_SEO: Record<
   { title: string; description: string; keywords: string[] }
 > = {
   "salary-tax": {
-    title: "Salary Tax Calculator Nepal FY 2083/84",
+    title: "Salary Tax Calculator Nepal FY 2083/84 & 2082/83 — Income Tax Slab",
     description:
-      "Estimate annual and monthly income tax under Nepal salary rules (FY 2083/84). SSF, EPF, variable salary, female rebate, and progressive tax slabs.",
+      "Free income tax calculator Nepal for FY 2083/84 and FY 2082/83. Estimate salary tax, monthly TDS, income tax slabs (married & unmarried), SSF/EPF deductions, and female rebate.",
     keywords: [
       "salary tax calculator Nepal",
-      "income tax Nepal 2083",
-      "Nepal tax calculator",
+      "income tax calculator Nepal",
+      "tax calculator Nepal",
+      "income tax slab in Nepal",
+      "income tax rate in Nepal 2083/84",
+      "income tax rate in Nepal 2082/83",
+      "new income tax slab in Nepal",
+      "income tax in Nepal",
+      "Nepal tax calculator FY 2083/84",
+      "Nepal tax calculator FY 2082/83",
       "SSF tax waiver",
-      "FY 2083/84 tax slabs",
     ],
   },
   emi: {
@@ -123,14 +129,18 @@ export const CALCULATOR_SEO: Record<
     keywords: ["EMI calculator Nepal", "loan calculator Nepal", "home loan EMI", "monthly installment calculator"],
   },
   "land-converter": {
-    title: "Land Unit Converter Nepal — Ropani, Bigha, Sq Meter",
+    title: "Land Unit Converter Nepal — Bigha to Ropani, Sq Meter",
     description:
-      "Convert Lalpurja land area between Hill (Ropani) and Terai (Bigha) systems and metric units (sq m, sq ft) using national standards.",
+      "Free land unit converter Nepal: convert Bigha to Ropani, Aana, Dhur, and metric units (sq m, sq ft) from Lalpurja measurements using national standards.",
     keywords: [
+      "land unit converter Nepal",
+      "bigha to ropani",
       "Ropani to square meter",
       "Bigha converter Nepal",
       "land area converter Nepal",
+      "land measurement Nepal",
       "Lalpurja land units",
+      "area of land converter",
     ],
   },
   "land-registration-tax": {
@@ -154,6 +164,64 @@ export const CALCULATOR_SEO: Record<
       "motorcycle tax Nepal 2083",
       "road tax calculator Nepal",
       "EV tax Nepal",
+    ],
+  },
+};
+
+export const CONSIDERATION_SEO: Record<
+  string,
+  {
+    title: string;
+    description: string;
+    keywords: string[];
+    faq?: ReadonlyArray<{ q: string; a: string }>;
+  }
+> = {
+  "property-construction/buying-land": {
+    title: "Buying Land in Nepal — जग्गा किन्दा Lalpurja, Land Record & Checklist",
+    description:
+      "Guide to buying land in Nepal: verify Lalpurja and land record at Malpot, check tiro, rokka, road access, land measurement (Bigha, Ropani), ailani jagga risks, and land act rules — with real loss and savings examples.",
+    keywords: [
+      "buying land Nepal",
+      "land for sale Nepal checklist",
+      "जग्गा किन्दा ध्यान दिनुपर्ने कुराहरू",
+      "jagga kinnda Nepal",
+      "land record Nepal",
+      "Malpot land record",
+      "land revenue department Nepal",
+      "Lalpurja verification",
+      "land measurement Nepal",
+      "bigha to ropani",
+      "land unit converter Nepal",
+      "area of land Lalpurja",
+      "ailani jagga Nepal",
+      "land act Nepal",
+      "bhumi kharid Nepal",
+      "जग्गा किन्ने",
+      "Napinaksha land survey",
+      "rokka fukua land Nepal",
+    ],
+    faq: [
+      {
+        q: "What should I check before buying land in Nepal?",
+        a: "Verify Lalpurja at the land revenue office (Malpot), confirm land record and Tres Naksha for rokka or court disputes, check tiro and Ghar Jagga Kar receipts, match land measurement on the deed with Napinaksha, confirm legal road access, and review land classification before paying token money.",
+      },
+      {
+        q: "How do I verify land record and Lalpurja in Nepal?",
+        a: "Visit the Malpot (land revenue) office with the seller's Lalpurja and request verification against the government land record (khataiyan). Ask for Tres Naksha and Bhumi Sudhar records to see mortgages, rokka, or disputes. Do not rely on photocopies alone.",
+      },
+      {
+        q: "What is ailani jagga and why does it matter when buying land?",
+        a: "Ailani jagga refers to government or unregistered land that may be cultivated or occupied without formal title. Buying land without confirming it is not ailani or under acquisition can lead to invalid sales and loss of your payment. Always verify classification and ownership at Malpot and the local ward.",
+      },
+      {
+        q: "How do Bigha and Ropani relate when checking land area?",
+        a: "Nepal uses Hill units (Ropani, Aana, Paisa) and Terai units (Bigha, Kattha, Dhur) on Lalpurja. Compare deed figures with Napinaksha survey and use a land unit converter to cross-check area before you agree on price.",
+      },
+      {
+        q: "Should I worry about badar and badel when buying farming land in Nepal?",
+        a: "Yes, if the plot is khet, bari, or pakho near forest. Badar (monkeys) and badel (wild boar) can destroy crops even when papers are clean. Visit at dawn or dusk, ask neighbouring farmers, and budget for fencing or crop choices before you buy.",
+      },
     ],
   },
 };

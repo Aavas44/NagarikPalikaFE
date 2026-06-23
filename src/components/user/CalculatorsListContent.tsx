@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
-import { CALCULATOR_ITEMS } from "@/lib/calculators";
+import { CALCULATOR_ITEMS, FEATURED_CALCULATOR_SLUG } from "@/lib/calculators";
 import styles from "@/app/user.module.css";
 
 const iconColorClass = {
@@ -11,6 +11,13 @@ const iconColorClass = {
   amber: styles.cardIconAmber,
   teal: styles.cardIconTeal,
 } as const;
+
+const ORDERED_CALCULATORS = [...CALCULATOR_ITEMS].sort((a, b) => {
+  if (a.slug === FEATURED_CALCULATOR_SLUG) return -1;
+  if (b.slug === FEATURED_CALCULATOR_SLUG) return 1;
+  if (a.available !== b.available) return a.available ? -1 : 1;
+  return 0;
+});
 
 export function CalculatorsListContent() {
   const { msg } = useLanguage();
@@ -27,16 +34,20 @@ export function CalculatorsListContent() {
           <p>{t.subtitle.replace("{count}", String(CALCULATOR_ITEMS.length))}</p>
         </header>
         <div className={styles.cards}>
-          {CALCULATOR_ITEMS.map((item) => {
+          {ORDERED_CALCULATORS.map((item) => {
             const label = msg.calculators[item.labelKey];
             const description = msg.calculators[item.descriptionKey];
+            const isFeatured = item.slug === FEATURED_CALCULATOR_SLUG;
 
             return (
               <Link
                 key={item.slug}
                 href={`/calculators/${item.slug}`}
-                className={styles.card}
+                className={`${styles.card} ${isFeatured ? styles.cardFeatured : ""}`}
               >
+                {isFeatured && (
+                  <span className={styles.calcFeaturedBadge}>{msg.sections.featuredBadge}</span>
+                )}
                 <div className={`${styles.cardIcon} ${iconColorClass[item.iconColor]}`}>
                   {item.icon}
                 </div>
