@@ -246,12 +246,14 @@ export function TerminologySearch({ glossaryTermsCount }: TerminologySearchProps
                 onClick={() => toggleResult(index)}
               >
                 <div className={pageStyles.termItemHeader}>
-                  <span className={pageStyles.termName}>{result.term}</span>
+                  <div className={pageStyles.termTitleBlock}>
+                    <span className={pageStyles.termName}>{result.term}</span>
+                    {result.english ? (
+                      <span className={pageStyles.termEnglishInline}> · {result.english}</span>
+                    ) : null}
+                  </div>
                   <span className={pageStyles.termCat}>{result.romanTransliteration}</span>
                 </div>
-                {result.english && (
-                  <p className={pageStyles.terminologyEnglish}>{result.english}</p>
-                )}
               </button>
 
               {isExpanded && (
@@ -278,6 +280,7 @@ export function TerminologySearch({ glossaryTermsCount }: TerminologySearchProps
 
         <header className={emiStyles.emiHeader}>
           <h1>{t.title}</h1>
+          <p className={pageStyles.languageFriendlyBadge}>{t.languageFriendly}</p>
           <p className={pageStyles.calculatorSubtitle}>
             {t.subtitle.replace("{count}", formattedCount)}
           </p>

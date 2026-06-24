@@ -16,7 +16,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: `${SITE_NAME} — Nepal Government Glossary, Forms & Calculators`,
+    default: `${SITE_NAME} — नेपाल सरकारी शब्दकोश | Government Glossary & Calculators`,
     template: `%s | ${SITE_NAME}`,
   },
   description: DEFAULT_DESCRIPTION,
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     alternateLocale: ["ne_NP"],
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Nepal Government Glossary, Forms & Calculators`,
+    title: `${SITE_NAME} — नेपाल सरकारी शब्दकोश | Government Glossary & Calculators`,
     description: DEFAULT_DESCRIPTION,
     url: getSiteUrl(),
     images: [
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE_NAME} — Nepal Government Glossary, Forms & Calculators`,
+    title: `${SITE_NAME} — नेपाल सरकारी शब्दकोश | Government Glossary & Calculators`,
     description: DEFAULT_DESCRIPTION,
     images: ["/nagarik-palika-logo.png"],
   },

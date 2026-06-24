@@ -16,16 +16,20 @@ import emiStyles from "@/components/user/emi.module.css";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildPageMetadata({
-  title: "Nepal Government Glossary, Forms & Calculators",
+  title: "नेपाल सरकारी शब्दकोश — Nepal Government Glossary, Forms & Calculators",
   description:
-    "Navigate Nepal government processes with confidence — 6,400+ legal terms, Sifaris guides, application templates, salary tax & EMI calculators. Free in English and Nepali.",
+    "६,४००+ कानूनी शब्द, फारम र क्याल्कुलेटर — अंग्रेजी र नेपालीमा। Navigate Nepal government processes: Kanuni Shabdakosh, Sifaris, templates, salary tax & EMI — free.",
   path: "/",
   keywords: [
+    "नागरिक पालिका",
     "Nagarik Palika",
+    "कानूनी शब्दकोश",
     "Nepal government guide",
+    "सिफारिस नेपाल",
     "Sifaris Nepal",
     "Kanuni Shabdakosh online",
     "Nepal application forms",
+    "तलब कर क्याल्कुलेटर",
     "salary tax calculator Nepal",
   ],
 });

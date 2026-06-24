@@ -6,6 +6,7 @@ import { UserFooter } from "@/components/user/UserFooter";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { getCombinedGlossaryTermCount } from "@/lib/glossary";
 import { TerminologySearch } from "@/components/user/TerminologySearch";
+import { TerminologySeoIntro } from "@/components/user/TerminologySeoIntro";
 import {
   breadcrumbJsonLd,
   buildPageMetadata,
@@ -33,31 +34,37 @@ export async function generateMetadata({
   }
 
   if (letter?.trim()) {
+    const letterChar = letter.trim();
     return buildPageMetadata({
-      title: `Nepali Legal Terms — ${letter.trim()}`,
-      description: `Browse Nepal legal and government terms starting with "${letter.trim()}" from Kanuni Shabdakosh and SaralSewa glossary.`,
-      path: `/terminology?letter=${encodeURIComponent(letter.trim())}`,
+      title: `${letterChar} — नेपाली कानूनी शब्द | Nepali Legal Terms`,
+      description: `कानूनी शब्दकोश र सरल सेवाबाट "${letterChar}" बाट सुरु हुने शब्दहरू। Browse Nepal legal and government terms starting with ${letterChar} — Devanagari, Roman, and English.`,
+      path: `/terminology?letter=${encodeURIComponent(letterChar)}`,
       keywords: [
+        "कानूनी शब्दकोश",
         "Kanuni Shabdakosh",
+        `${letterChar} shabdakosh`,
         "Nepali legal terms",
-        `${letter} shabdakosh`,
-        "Nepal government terminology",
+        "नेपाल सरकारी शब्दावली",
       ],
     });
   }
 
   return buildPageMetadata({
-    title: "Nepal Legal Glossary — Kanuni Shabdakosh & SaralSewa",
+    title: "कानूनी शब्दकोश — Nepal Legal Glossary | Kanuni Shabdakosh & SaralSewa",
     description:
-      "Search 6,400+ Nepali legal and government terms with English meanings. Kanuni Shabdakosh dictionary plus SaralSewa ward office glossary — Sifaris, Likhat, Malpot, and more.",
+      "६,४००+ सरकारी र कानूनी शब्द खोज्नुहोस् — देवनागरी, रोमन र अंग्रेजीमा। Search Kanuni Shabdakosh & SaralSewa: Sifaris, Lalpurja, Malpot, ward office terms in English and Nepali.",
     path: "/terminology",
     keywords: [
+      "कानूनी शब्दकोश",
       "Kanuni Shabdakosh",
       "Nepal legal dictionary",
-      "Nepali government glossary",
+      "नेपाली कानूनी शब्द",
+      "सरल सेवा शब्दकोश",
       "Sifaris meaning",
+      "लालपुर्जा अर्थ",
       "legal terms Nepal",
       "SaralSewa glossary",
+      "नगरपालिका शब्दकोश",
     ],
   });
 }
@@ -91,6 +98,7 @@ export default async function TerminologyPage({ searchParams }: TerminologyPageP
       <JsonLd data={[breadcrumb, termSet]} />
       <UserNav />
       <main>
+        <TerminologySeoIntro />
         <Suspense fallback={null}>
           <TerminologySearch glossaryTermsCount={glossaryTermsCount} />
         </Suspense>

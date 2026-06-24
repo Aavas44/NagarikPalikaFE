@@ -8,10 +8,11 @@ import { CalculatorsNavDropdown } from "./CalculatorsNavDropdown";
 import { ConsiderationsNavDropdown } from "./ConsiderationsNavDropdown";
 import { TemplatesNavDropdown } from "./TemplatesNavDropdown";
 import { UserMobileMenu } from "./UserMobileMenu";
+import { LanguageToggle } from "./LanguageToggle";
 import styles from "@/app/user.module.css";
 
 export function UserNav() {
-  const { locale, setLocale, msg } = useLanguage();
+  const { msg } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -41,21 +42,8 @@ export function UserNav() {
         </Link>
       </div>
       <div className={styles.navRight}>
-        <div className={styles.langToggle} role="group" aria-label={msg.language.toggle}>
-          <button
-            type="button"
-            className={`${styles.langBtn} ${locale === "en" ? styles.langBtnActive : ""}`}
-            onClick={() => setLocale("en")}
-          >
-            EN
-          </button>
-          <button
-            type="button"
-            className={`${styles.langBtn} ${locale === "ne" ? styles.langBtnActive : ""}`}
-            onClick={() => setLocale("ne")}
-          >
-            ने
-          </button>
+        <div className={styles.navLangDesktop}>
+          <LanguageToggle />
         </div>
         <button
           type="button"

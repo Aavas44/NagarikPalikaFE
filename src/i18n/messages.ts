@@ -23,6 +23,7 @@ export const messages = {
       titleLine1: "Navigate Nepal's government",
       titleLine2: "processes with confidence",
       subtitle: "Understand terms, find the right form, get it done.",
+      languageFriendly: "English & Nepali — switch language in the menu",
       searchPlaceholder: 'Search a term or form, e.g. "citizenship application"',
     },
     stats: {
@@ -449,6 +450,7 @@ export const messages = {
     terminology: {
       title: "Legal terminology glossary",
       subtitle: "Search {count} terms from the Kanuni Shabdakosh and SaralSewa government glossary.",
+      languageFriendly: "English & Nepali · Devanagari, Roman, or English search",
       searchPlaceholder: "Search by Nepali term or Roman transliteration, e.g. Bharti",
       searchHint: "Matches Nepali script, Roman transliteration, and English where available.",
       search: "Search",
@@ -500,6 +502,7 @@ export const messages = {
       titleLine1: "आत्मविश्वासका साथ नेपालको",
       titleLine2: "सरकारी प्रक्रिया नेभिगेट गर्नुहोस्",
       subtitle: "शब्दहरू बुझ्नुहोस्, सही फारम फेला पार्नुहोस्, काम पूरा गर्नुहोस्।",
+      languageFriendly: "अंग्रेजी र नेपालीमा — मेनुबाट भाषा छान्नुहोस्",
       searchPlaceholder: 'शब्द वा फारम खोज्नुहोस्, जस्तै "नागरिकता आवेदन"',
     },
     stats: {
@@ -926,6 +929,7 @@ export const messages = {
     terminology: {
       title: "कानूनी शब्दावली शब्दकोश",
       subtitle: "कानूनी शब्दकोश र सरल सेवा सरकारी शब्दकोशबाट {count} शब्दहरू खोज्नुहोस्।",
+      languageFriendly: "अंग्रेजी र नेपाली · देवनागरी, रोमन वा अंग्रेजीमा खोज्नुहोस्",
       searchPlaceholder: "नेपाली शब्द वा रोमन लिप्यन्तरण खोज्नुहोस्, जस्तै Bharti",
       searchHint: "देवनागरी, रोमन लिप्यन्तरण र उपलब्ध अङ्ग्रेजी अर्थसँग मिल्दछ।",
       search: "खोज",

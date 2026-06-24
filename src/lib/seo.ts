@@ -4,21 +4,29 @@ import { getSiteUrl } from "@/lib/siteUrl";
 export const SITE_NAME = "Nagarik Palika";
 
 export const DEFAULT_DESCRIPTION =
-  "Free Nepal government guide: 6,400+ legal terms (Kanuni Shabdakosh & SaralSewa), application templates, salary tax & EMI calculators, Sifaris help, and ward office terminology in English and Nepali.";
+  "नागरिक पालिका — ६,४००+ कानूनी शब्द (कानूनी शब्दकोश र सरल सेवा), फारम, क्याल्कुलेटर। Free Nepal guide in English and Nepali: Kanuni Shabdakosh, Sifaris, Lalpurja, salary tax & EMI tools.";
 
 export const DEFAULT_KEYWORDS = [
   "Nagarik Palika",
+  "नागरिक पालिका",
   "Nepal government glossary",
+  "कानूनी शब्दकोश",
   "Kanuni Shabdakosh",
   "Nepali legal dictionary",
+  "सरल सेवा शब्दकोश",
   "Sifaris Nepal",
+  "सिफारिस अर्थ",
   "ward office Nepal",
   "government application forms Nepal",
   "salary tax calculator Nepal",
+  "तलब कर क्याल्कुलेटर",
   "EMI calculator Nepal",
   "land converter Ropani Bigha",
+  "बिघा रोपनी रूपान्तरण",
   "nagarikta citizenship Nepal",
+  "नागरिकता नेपाल",
   "Malpot Lalpurja",
+  "लालपुर्जा मालपोत",
   "Saral Sewa glossary",
   "Nepal government processes",
 ];
@@ -105,7 +113,7 @@ export const CALCULATOR_SEO: Record<
   { title: string; description: string; keywords: string[] }
 > = {
   "salary-tax": {
-    title: "Salary Tax Calculator Nepal FY 2083/84 & 2082/83 — Income Tax Slab",
+    title: "Salary Tax Calculator Nepal — तलब कर FY 2083/84 & 2082/83",
     description:
       "Free income tax calculator Nepal for FY 2083/84 and FY 2082/83. Estimate salary tax, monthly TDS, income tax slabs (married & unmarried), SSF/EPF deductions, and female rebate.",
     keywords: [
@@ -129,7 +137,7 @@ export const CALCULATOR_SEO: Record<
     keywords: ["EMI calculator Nepal", "loan calculator Nepal", "home loan EMI", "monthly installment calculator"],
   },
   "land-converter": {
-    title: "Land Unit Converter Nepal — Bigha to Ropani, Sq Meter",
+    title: "Land Unit Converter Nepal — बिघा रोपनी Bigha to Ropani",
     description:
       "Free land unit converter Nepal: convert Bigha to Ropani, Aana, Dhur, and metric units (sq m, sq ft) from Lalpurja measurements using national standards.",
     keywords: [

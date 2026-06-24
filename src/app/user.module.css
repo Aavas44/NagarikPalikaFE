@@ -178,31 +178,87 @@
   gap: 12px;
 }
 
-.langToggle {
+.langToggleWrap {
   display: flex;
   align-items: center;
-  background: #f3f4f6;
-  border-radius: 8px;
-  padding: 2px;
-  border: 1px solid #e5e7eb;
+  gap: 8px;
+}
+
+.langToggleStacked {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+
+.langToggleLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.01em;
+}
+
+.langToggleStacked .langToggleLabel {
+  font-size: 13px;
+}
+
+.langToggle {
+  display: flex;
+  align-items: stretch;
+  background: #e5e7eb;
+  border-radius: 10px;
+  padding: 3px;
+  border: 1px solid #d1d5db;
+}
+
+.langToggleStacked .langToggle {
+  width: 100%;
 }
 
 .langBtn {
-  background: none;
+  flex: 1;
+  background: transparent;
   border: none;
-  padding: 5px 10px;
-  font-size: 12px;
+  padding: 7px 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.15s;
+  border-radius: 7px;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.langBtn:hover:not(.langBtnActive) {
+  color: #374151;
+  background: rgba(255, 255, 255, 0.55);
 }
 
 .langBtnActive {
-  background: #fff;
-  color: #185fa5;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  background: #185fa5;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(24, 95, 165, 0.35);
+}
+
+.langBtn:focus-visible {
+  outline: 2px solid #185fa5;
+  outline-offset: 2px;
+}
+
+.navMobileLang {
+  padding: 0 1.25rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0.25rem;
+}
+
+.navLangDesktop {
+  display: flex;
 }
 
 .navCta {
@@ -861,6 +917,34 @@
   font-size: 15px;
   font-weight: 600;
   color: #042c53;
+}
+
+.termTitleBlock {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.termEnglishInline {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.languageFriendlyBadge {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #c5dff5;
+  background: #f0f7fd;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0c447c;
+  line-height: 1.4;
 }
 
 .termCat {
@@ -1562,9 +1646,26 @@
     display: none;
   }
 
+  .navLangDesktop {
+    display: none;
+  }
+
   .navRight {
     gap: 8px;
     margin-left: auto;
+  }
+
+  .langToggleLabelText {
+    display: none;
+  }
+
+  .langToggleWrap {
+    gap: 4px;
+  }
+
+  .langBtn {
+    padding: 7px 10px;
+    font-size: 12px;
   }
 
   .navLogoImage {

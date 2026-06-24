@@ -1308,8 +1308,67 @@
 .homeHeroSubtitle {
   font-size: 16px;
   color: #185fa5;
-  margin: 0 0 1.5rem;
+  margin: 0 0 0.75rem;
   line-height: 1.5;
+}
+
+.homeHeroLanguageBadge {
+  margin-bottom: 1.5rem;
+}
+
+.languageFriendlyBadge {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #c5dff5;
+  background: #f0f7fd;
+  font-size: 12px;
+  font-weight: 500;
+  color: #0c447c;
+  line-height: 1.4;
+}
+
+.bilingualSeoIntroWrap {
+  padding: 2.5rem 2rem 0;
+  background: linear-gradient(180deg, #f9fafb 0%, #fff 100%);
+}
+
+.bilingualSeoIntro {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.bilingualBadge {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid #c5dff5;
+  background: #f0f7fd;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0c447c;
+}
+
+.bilingualBadgeSep {
+  color: #9ca3af;
+}
+
+.bilingualSeoText {
+  margin: 0 0 0.65rem;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #4b5563;
+}
+
+.bilingualSeoText:last-child {
+  margin-bottom: 0;
 }
 
 .homeSearchPanel {
@@ -1562,7 +1621,7 @@
 }
 
 .terminologyShell {
-  padding: 2.5rem 1.5rem 3.5rem;
+  padding: 1.25rem 1.5rem 3.5rem;
 }
 
 .terminologySearchPanel {

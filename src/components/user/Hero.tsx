@@ -33,6 +33,9 @@ export function Hero({ quickTags }: HeroProps) {
           {msg.hero.titleLine2}
         </h1>
         <p className={styles.homeHeroSubtitle}>{msg.hero.subtitle}</p>
+        <p className={`${styles.languageFriendlyBadge} ${styles.homeHeroLanguageBadge}`}>
+          {msg.hero.languageFriendly}
+        </p>
       </header>
 
       <div className={`${styles.emiPanel} ${styles.homeSearchPanel}`}>

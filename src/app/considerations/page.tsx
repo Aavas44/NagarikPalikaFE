@@ -6,14 +6,17 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "Key Legal Considerations in Nepal — Property, Business, Loans & More",
+  title: "ध्यान दिनुपर्ने कुराहरू — Key Legal Considerations Nepal",
   description:
-    "Practical checklists for buying land, building a house, company registration, bank loans, property partition, foreign employment, and study abroad in Nepal.",
+    "जग्गा किन्दा, घर बनाउँदा, कम्पनी दर्ता, बैंक ऋण — व्यावहारिक जाँचसूची। Practical checklists in English and Nepali: buying land, business, loans, property partition, foreign employment.",
   path: "/considerations",
   keywords: [
+    "जग्गा किन्दा ध्यान दिनुपर्ने कुराहरू",
     "buying land Nepal checklist",
     "company registration Nepal",
+    "कम्पनी दर्ता नेपाल",
     "bank loan Nepal",
+    "बैंक ऋण नेपाल",
     "property partition Nepal",
     "foreign employment Nepal",
   ],

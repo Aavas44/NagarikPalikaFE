@@ -6,15 +6,18 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "Free Calculators for Tax, Loans & Land in Nepal",
+  title: "Free Calculators Nepal — कर, ऋण र जग्गा | Tax, Loans & Land",
   description:
-    "Free online calculators for Nepal: salary income tax (FY 2083/84), EMI loan payments, land unit converter (Ropani/Bigha), and more government-related tools.",
+    "निःशुल्क क्याल्कुलेटर — तलब कर (२०८३/८४, २०८२/८३), EMI, बिघा–रोपनी। Free calculators: salary tax, loan EMI, land unit converter — English and Nepali.",
   path: "/calculators",
   keywords: [
     "Nepal calculators",
+    "क्याल्कुलेटर नेपाल",
     "salary tax calculator Nepal",
+    "तलब कर क्याल्कुलेटर",
     "EMI calculator Nepal",
     "land converter Ropani",
+    "बिघा रोपनी",
     "free tax tools Nepal",
   ],
 });

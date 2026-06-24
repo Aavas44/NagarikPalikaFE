@@ -12,6 +12,7 @@ import { pickLocalized } from "@/i18n/messages";
 import { getTemplates } from "@/lib/api";
 import type { Template } from "@/types";
 import styles from "@/app/user.module.css";
+import { LanguageToggle } from "./LanguageToggle";
 
 interface UserMobileMenuProps {
   open: boolean;
@@ -83,6 +84,10 @@ export function UserMobileMenu({ open, onClose }: UserMobileMenuProps) {
               />
             </svg>
           </button>
+        </div>
+
+        <div className={styles.navMobileLang}>
+          <LanguageToggle layout="stacked" />
         </div>
 
         <nav className={styles.navMobileLinks} onClick={onClose}>
