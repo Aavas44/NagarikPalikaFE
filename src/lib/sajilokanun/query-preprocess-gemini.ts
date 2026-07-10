@@ -1,4 +1,5 @@
 import { getGemini, extractGeminiResponseText } from "./gemini";
+import { getOpenAI } from "./openai";
 import { bookScopeToNormalizeAct, bookTitleForScope, type BookScope } from "./lawbooks";
 import {
   buildNormalizeSystemInstruction,
@@ -13,7 +14,7 @@ const NON_GEMINI_MODEL = /^(gpt-|o[0-9](?:-|$)|claude-|text-davinci)/i;
 const QUERY_NORMALIZE_DEFAULT = "gemini-2.5-flash-lite";
 
 /** Fallback when primary normalize model returns 503 / UNAVAILABLE. */
-const QUERY_NORMALIZE_FALLBACK_DEFAULT = "gemini-2.5-flash";
+const QUERY_NORMALIZE_FALLBACK_DEFAULT = "gpt-5-nano";
 
 /** Gemini model for query preprocessing — never pass OpenAI model names to Gemini API. */
 export function resolveQueryNormalizeModel(): string {
@@ -36,10 +37,14 @@ export function resolveQueryNormalizeModel(): string {
 
 export function resolveQueryNormalizeFallbackModel(): string {
   const configured = process.env.QUERY_NORMALIZE_FALLBACK_MODEL?.trim();
-  if (configured && !NON_GEMINI_MODEL.test(configured)) {
+  if (configured) {
     return configured;
   }
   return QUERY_NORMALIZE_FALLBACK_DEFAULT;
+}
+
+export function isOpenAiNormalizeModel(model: string): boolean {
+  return NON_GEMINI_MODEL.test(model);
 }
 
 export const QUERY_NORMALIZE_MODEL = resolveQueryNormalizeModel();
@@ -222,6 +227,44 @@ async function generateNormalizeWithModel(
   return text;
 }
 
+async function generateNormalizeWithOpenAI(
+  params: Omit<NormalizeGenerateParams, "cachedContent" | "thinkingBudget">
+): Promise<string> {
+  const { model, userPrompt, systemPrompt, bookScope, needsTranslation, usedFallback } = params;
+
+  if (!process.env.OPENAI_API_KEY?.trim()) {
+    throw new Error("OPENAI_API_KEY is required for OpenAI query normalization fallback.");
+  }
+
+  const response = await getOpenAI().chat.completions.create({
+    model,
+    temperature: 0,
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ],
+  });
+
+  const text = response.choices[0]?.message?.content?.trim();
+  if (!text) {
+    throw new Error("Empty OpenAI query preprocess response");
+  }
+
+  console.log(
+    "[HandyLaw query preprocess openai]",
+    JSON.stringify({
+      model,
+      bookScope: bookScope ?? "auto",
+      needsTranslation,
+      fallback: usedFallback ?? false,
+      raw: text.slice(0, 400),
+    })
+  );
+
+  return text;
+}
+
 /** Normalize user input via Gemini with optional book lock and context caching. */
 export async function preprocessLegalQueryWithGemini(
   options: PreprocessLegalQueryOptions
@@ -271,6 +314,14 @@ export async function preprocessLegalQueryWithGemini(
         reason: error instanceof Error ? error.message : String(error),
       })
     );
+
+    if (isOpenAiNormalizeModel(fallbackModel)) {
+      return await generateNormalizeWithOpenAI({
+        ...generateParams,
+        model: fallbackModel,
+        usedFallback: true,
+      });
+    }
 
     return await generateNormalizeWithModel({
       ...generateParams,
