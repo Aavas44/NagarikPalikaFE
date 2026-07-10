@@ -5,8 +5,8 @@ import pageStyles from "@/app/user.module.css";
 import emiStyles from "@/components/user/emi.module.css";
 
 export type StaticInfoSection = {
-  heading: string;
-  paragraphs: string[];
+  readonly heading: string;
+  readonly paragraphs: readonly string[];
 };
 
 type StaticInfoPageProps = {
@@ -14,7 +14,7 @@ type StaticInfoPageProps = {
   title: string;
   subtitle?: string;
   lastUpdated?: string;
-  sections: StaticInfoSection[];
+  sections: readonly StaticInfoSection[];
 };
 
 export function StaticInfoPage({

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { LanguageToggle } from "@/components/user/LanguageToggle";
+import { logoutSajiloKanun } from "@/lib/sajilokanun-access";
 
 type AppHeaderProps = {
   actions?: ReactNode;
@@ -15,7 +16,14 @@ const UNICODE_BASE = "/sajilokanun/unicode-converter";
 
 export function AppHeader({ actions }: AppHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { msg } = useLanguage();
+
+  function handleLogout() {
+    logoutSajiloKanun();
+    router.push("/sajilokanun");
+    router.refresh();
+  }
 
   const navItems = [
     { href: CHAT_BASE, label: msg.sajilokanun.chat, shortLabel: msg.sajilokanun.chat },
@@ -67,6 +75,13 @@ export function AppHeader({ actions }: AppHeaderProps) {
             })}
           </nav>
           <LanguageToggle />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="hidden rounded-lg px-2.5 py-1.5 text-xs font-medium text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--primary)] sm:inline-flex"
+          >
+            {msg.sajilokanun.logout}
+          </button>
           {actions}
         </div>
       </div>
@@ -90,6 +105,13 @@ export function AppHeader({ actions }: AppHeaderProps) {
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="rounded-lg px-3 py-2.5 text-sm font-medium text-[var(--muted)] transition-colors hover:bg-[var(--surface-muted)] hover:text-[var(--primary)]"
+        >
+          {msg.sajilokanun.logout}
+        </button>
       </nav>
     </header>
   );

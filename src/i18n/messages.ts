@@ -58,6 +58,7 @@ export const messages = {
       demoErrorQueriesShort: "Please describe your use case in at least 10 characters.",
       openDemoForm: "Request a demo",
       closeDemoForm: "Close",
+      logout: "Log out",
     },
     hero: {
       badge: "Guide to government processes — free to use",
@@ -723,6 +724,7 @@ export const messages = {
       demoErrorQueriesShort: "कृपया कम्तीमा १० अक्षरको प्रयोग विवरण लेख्नुहोस्।",
       openDemoForm: "डेमो अनुरोध गर्नुहोस्",
       closeDemoForm: "बन्द गर्नुहोस्",
+      logout: "साइन आउट",
     },
     hero: {
       badge: "सरकारी प्रक्रिया बुझ्ने मार्गदर्शन — निःशुल्क प्रयोग गर्नुहोस्",

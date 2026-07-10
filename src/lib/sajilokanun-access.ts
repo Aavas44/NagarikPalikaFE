@@ -20,6 +20,10 @@ export function clearSajiloKanunToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+export function logoutSajiloKanun(): void {
+  clearSajiloKanunToken();
+}
+
 export function getSajiloKanunToken(): string | null {
   if (typeof window === "undefined") return null;
   const fromStorage = localStorage.getItem(TOKEN_KEY);
