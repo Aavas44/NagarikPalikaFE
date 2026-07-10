@@ -62,6 +62,8 @@ export interface QuickTag {
 
 export type FeedbackStatus = "new" | "reviewed";
 
+export type DemoRequestStatus = "new" | "reviewed" | "approved" | "rejected";
+
 export interface Feedback {
   id: string;
   sessionId: string;

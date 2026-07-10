@@ -6,6 +6,7 @@ import { AdminSidebarFooter } from "./AdminSidebarFooter";
 import { AdminTermPanel } from "./AdminTermPanel";
 import { AdminTemplatePanel } from "./AdminTemplatePanel";
 import { AdminFeedbackPanel } from "./AdminFeedbackPanel";
+import { AdminDemoRequestsPanel } from "./AdminDemoRequestsPanel";
 import styles from "@/app/admin.module.css";
 
 function formatNumber(n: number) {
@@ -53,6 +54,9 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
           <a href="#feedback" className={styles.navItemLink}>
             <span className="icon">💬</span> Feedback
           </a>
+          <a href="#demo-requests" className={styles.navItemLink}>
+            <span className="icon">⚖️</span> Sajilo Kanun demos
+          </a>
         </div>
 
         <AdminSidebarFooter />
@@ -88,6 +92,7 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
           <AdminTermPanel initialTerms={terms} />
           <AdminTemplatePanel initialTemplates={templates} />
           <AdminFeedbackPanel />
+          <AdminDemoRequestsPanel />
         </div>
       </div>
     </div>

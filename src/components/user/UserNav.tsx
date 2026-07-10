@@ -34,6 +34,9 @@ export function UserNav() {
         <TemplatesNavDropdown />
         <ConsiderationsNavDropdown />
         <CalculatorsNavDropdown />
+        <Link href="/sajilokanun" className={styles.navLink}>
+          {msg.nav.sajiloKanun}
+        </Link>
         <Link href="/#faq" className={styles.navLink}>
           {msg.nav.faq}
         </Link>

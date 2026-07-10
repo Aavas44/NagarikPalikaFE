@@ -10,12 +10,54 @@ export const messages = {
       allCalculators: "All calculators →",
       considerations: "Key considerations",
       allConsiderations: "All considerations →",
+      sajiloKanun: "Sajilo Kanun",
       faq: "FAQ",
       contactUs: "Contact us",
       signIn: "Sign in",
       menuOpen: "Open menu",
       menuClose: "Close menu",
       navigation: "Navigation",
+    },
+    sajilokanun: {
+      subtitle: "Nepali legal assistant · Muluki Ain 2074",
+      chat: "Chat",
+      unicodeConverter: "Unicode Converter",
+      converterShort: "Converter",
+      gateTitle: "AI-powered Nepali legal research",
+      gateSubtitle:
+        "Search Muluki Ain 2074 in Nepali or English. Get cited दफा text, advocate-style analysis, and PDF source links.",
+      featureQuote: "Quote mode — verbatim दफा with citations",
+      featureAdvocate: "Advocate mode — scenario analysis with applicable provisions",
+      featureSearch: "Semantic + keyword search across civil & criminal codes",
+      featureBilingual: "Roman Nepali, English, or Devanagari queries",
+      loginTitle: "Sign in",
+      usernameLabel: "Username",
+      usernamePlaceholder: "Your username",
+      passwordLabel: "Password",
+      passwordPlaceholder: "Your password",
+      loginSubmit: "Enter Sajilo Kanun",
+      loginSubmitting: "Signing in…",
+      loginError: "Invalid username or password",
+      demoTitle: "Request a demo",
+      demoSubtitle: "No account yet? Tell us about yourself and we will set up access.",
+      demoNameLabel: "Full name",
+      demoNamePlaceholder: "Your name",
+      demoEmailLabel: "Email",
+      demoEmailPlaceholder: "you@example.com",
+      demoContactLabel: "Contact number",
+      demoContactPlaceholder: "98XXXXXXXX",
+      demoProfessionLabel: "Existing profession",
+      demoProfessionPlaceholder: "e.g. Lawyer, law student, journalist",
+      demoQueriesLabel: "Your queries / use case",
+      demoQueriesPlaceholder: "What legal topics do you want to research? How will you use Sajilo Kanun?",
+      demoSubmit: "Request demo",
+      demoSubmitting: "Sending…",
+      demoSuccess: "Thank you. We received your demo request and will contact you soon.",
+      demoAlready: "You already submitted a demo request in this browser session.",
+      demoErrorGeneric: "Could not submit. Please try again.",
+      demoErrorQueriesShort: "Please describe your use case in at least 10 characters.",
+      openDemoForm: "Request a demo",
+      closeDemoForm: "Close",
     },
     hero: {
       badge: "Guide to government processes — free to use",
@@ -128,10 +170,153 @@ export const messages = {
     },
     footer: {
       disclaimer: "Nagarik Palika — not affiliated with the Government of Nepal",
+      about: "About us",
       privacy: "Privacy",
       terms: "Terms",
       contact: "Contact",
       accessibility: "Accessibility",
+    },
+    aboutPage: {
+      back: "Home",
+      title: "About Nagarik Palika",
+      subtitle:
+        "An independent guide to help Nepali citizens understand government language, forms, and everyday legal processes.",
+      sections: [
+        {
+          heading: "Our mission",
+          paragraphs: [
+            "Government offices in Nepal often use formal Nepali and legal terms that are hard to follow. Nagarik Palika exists to close that gap — by explaining words clearly, pointing you to the right forms, and offering practical tools so you can prepare with more confidence.",
+            "We believe citizens should not need a lawyer or well-connected intermediary just to understand what a form asks for or what a common government term means.",
+          ],
+        },
+        {
+          heading: "What we offer",
+          paragraphs: [
+            "Kanuni Shabdakosh and Saral Sewa glossary — thousands of legal and administrative terms in Nepali and English.",
+            "Application templates and key considerations — practical checklists for land, business, loans, citizenship, and other common situations.",
+            "Calculators — salary tax, EMI, and land-area converters tuned for Nepal.",
+            "Sajilo Kanun — an AI-assisted research tool for Muluki Civil Code, Civil Procedure, Criminal Code, and Criminal Procedure (मुलुकी देवानी संहिता, देवानी कार्यविधि, अपराध संहिता, and फौजदारी कार्यविधि संहिता — २०७४), with cited provisions and source links. Access is provided by invitation or approved demo request.",
+          ],
+        },
+        {
+          heading: "What we are not",
+          paragraphs: [
+            "Nagarik Palika is not a government website and is not affiliated with the Government of Nepal, any ministry, ward office, or court.",
+            "We do not issue official documents, accept applications on behalf of government bodies, or guarantee that any office will accept a particular form or interpretation.",
+            "Content on this site is for general information only. It is not a substitute for advice from a qualified lawyer about your specific situation.",
+          ],
+        },
+        {
+          heading: "How we build content",
+          paragraphs: [
+            "Glossary entries draw on public legal dictionaries and Saral Sewa materials. Templates and checklists are written for clarity and updated when rules change, but you should always confirm current requirements with the relevant office.",
+            "Sajilo Kanun answers are generated with retrieval over published law texts and should be verified against the official PDF before reliance in any formal matter.",
+          ],
+        },
+        {
+          heading: "Who we serve",
+          paragraphs: [
+            "Citizens navigating ward, DAO, Malpot, tax, and other administrative processes.",
+            "Students, journalists, and small-business owners who need quick, bilingual explanations.",
+            "Legal professionals who want faster reference lookup — with the understanding that Nagarik Palika does not replace professional judgment.",
+          ],
+        },
+        {
+          heading: "Contact us",
+          paragraphs: [
+            "Questions, corrections, or partnership ideas are welcome. Use the contact form on our homepage or write through the channels listed there. We read every message and use feedback to improve the site.",
+          ],
+        },
+      ],
+    },
+    termsPage: {
+      back: "Home",
+      title: "Terms & Conditions",
+      subtitle: "Please read these terms before using Nagarik Palika, Sajilo Kanun, or related services.",
+      lastUpdated: "Last updated: June 2026",
+      sections: [
+        {
+          heading: "1. Acceptance",
+          paragraphs: [
+            "By accessing or using nagarikpalika.com (or related subdomains), you agree to these Terms & Conditions. If you do not agree, please do not use the site.",
+            "We may update these terms from time to time. Continued use after changes are posted constitutes acceptance of the revised terms.",
+          ],
+        },
+        {
+          heading: "2. Nature of the service",
+          paragraphs: [
+            "Nagarik Palika provides educational and informational resources about Nepal government processes, terminology, forms, and published law. We are an independent private platform, not a government agency.",
+            "Nothing on this site creates a lawyer–client relationship unless you separately engage an advocate through our consultation service under that advocate's own terms.",
+          ],
+        },
+        {
+          heading: "3. No legal advice",
+          paragraphs: [
+            "Glossary definitions, templates, calculators, checklists, and AI-generated answers from Sajilo Kanun are general information only. Laws, circulars, and local practice change; offices may apply rules differently.",
+            "You are responsible for verifying information with official sources and qualified professionals before making decisions that affect your rights, property, taxes, or legal status.",
+          ],
+        },
+        {
+          heading: "4. Accuracy and availability",
+          paragraphs: [
+            "We work to keep content accurate and current but do not warrant that any page, translation, calculation, or AI response is complete, error-free, or up to date.",
+            "The site may be unavailable temporarily for maintenance or technical reasons. We are not liable for losses arising from downtime or outdated content.",
+          ],
+        },
+        {
+          heading: "5. Accounts and Sajilo Kanun access",
+          paragraphs: [
+            "Some features require sign-in. You must provide accurate information and keep credentials confidential. You are responsible for activity under your account.",
+            "Sajilo Kanun access is limited to approved users. Demo requests are reviewed manually; approval is at our discretion. We may suspend or revoke access for misuse, sharing credentials, or automated scraping.",
+          ],
+        },
+        {
+          heading: "6. Acceptable use",
+          paragraphs: [
+            "You may not use the site to break the law, harass others, upload malware, attempt unauthorized access, or overload our systems.",
+            "You may not copy, resell, or republish bulk content or AI outputs for commercial redistribution without written permission.",
+            "Feedback and demo-request information you submit must be truthful and must not include others' personal data without consent.",
+          ],
+        },
+        {
+          heading: "7. Intellectual property",
+          paragraphs: [
+            "Nagarik Palika branding, original writing, and site design are owned by us or our licensors. Official government forms and statutes remain in the public domain or under their respective owners; we provide links and excerpts for reference.",
+            "You may share links to our pages and quote brief excerpts with attribution. Systematic reproduction of the glossary or law corpus is not permitted without permission.",
+          ],
+        },
+        {
+          heading: "8. Paid services",
+          paragraphs: [
+            "Lawyer consultations and any future paid features are subject to separate pricing, payment, and cancellation terms shown at checkout. Fees paid for consultations are governed by the arrangement between you and the advocate unless otherwise stated.",
+          ],
+        },
+        {
+          heading: "9. Limitation of liability",
+          paragraphs: [
+            "To the fullest extent permitted by applicable law, Nagarik Palika and its operators are not liable for indirect, incidental, or consequential damages arising from your use of the site, including reliance on calculators, templates, or AI answers.",
+            "Our total liability for any claim relating to the free informational services shall not exceed the amount you paid us for that specific service in the twelve months before the claim, or NPR 1,000 if no payment was made.",
+          ],
+        },
+        {
+          heading: "10. Privacy",
+          paragraphs: [
+            "We collect limited data needed to operate the site — for example account details, consultation bookings, feedback, and demo requests. We do not sell personal information. Contact and session data are used to respond to you and improve the service.",
+          ],
+        },
+        {
+          heading: "11. Governing law",
+          paragraphs: [
+            "These terms are governed by the laws of Nepal. Disputes shall be subject to the exclusive jurisdiction of the courts of Nepal, unless mandatory consumer protection rules provide otherwise.",
+          ],
+        },
+        {
+          heading: "12. Contact",
+          paragraphs: [
+            "For questions about these terms, use the contact form on our homepage. We will respond as soon as practicable.",
+          ],
+        },
+      ],
     },
     contact: {
       title: "Contact us",
@@ -489,12 +674,55 @@ export const messages = {
       allCalculators: "सबै क्याल्कुलेटरहरू →",
       considerations: "ध्यान दिनुपर्ने कुराहरू",
       allConsiderations: "सबै ध्यान दिनुपर्ने कुराहरू →",
+      sajiloKanun: "सजिलो कानुन",
       faq: "बारम्बार सोधिने प्रश्न",
       contactUs: "सम्पर्क गर्नुहोस्",
       signIn: "साइन इन",
       menuOpen: "मेनु खोल्नुहोस्",
       menuClose: "मेनु बन्द गर्नुहोस्",
       navigation: "नेभिगेसन",
+    },
+    sajilokanun: {
+      subtitle: "नेपाली कानूनी सहायक · मुलुकी ऐनका ४ पुस्तक, २०७४",
+      chat: "कुराकानी",
+      unicodeConverter: "युनिकोड रूपान्तरण",
+      converterShort: "रूपान्तरण",
+      gateTitle: "एआई सहितको नेपाली कानूनी अनुसन्धान",
+      gateSubtitle:
+        "मुलुकी देवानी संहिता, देवानी कार्यविधि, अपराध संहिता र फौजदारी कार्यविधि संहिता (२०७४) नेपाली वा अंग्रेजीमा खोज्नुहोस्। दफा उद्धरण, वकिल शैलीको विश्लेषण र PDF स्रोत लिंक पाउनुहोस्।",
+      featureQuote: "उद्धरण मोड — दफा मूल पाठसहित",
+      featureAdvocate: "वकिल मोड — परिदृश्य विश्लेषण र लागू प्रावधान",
+      featureSearch:
+        "मुलुकी देवानी संहिता, देवानी कार्यविधि, अपराध संहिता र फौजदारी कार्यविधि संहितामा अर्थ र कीवर्ड खोज",
+      featureBilingual: "रोमन नेपाली, अंग्रेजी वा देवनागरी प्रश्न",
+      loginTitle: "साइन इन",
+      usernameLabel: "प्रयोगकर्ता नाम",
+      usernamePlaceholder: "तपाईंको प्रयोगकर्ता नाम",
+      passwordLabel: "पासवर्ड",
+      passwordPlaceholder: "तपाईंको पासवर्ड",
+      loginSubmit: "सजिलो कानुनमा प्रवेश",
+      loginSubmitting: "साइन इन हुँदैछ…",
+      loginError: "प्रयोगकर्ता नाम वा पासवर्ड गलत छ",
+      demoTitle: "डेमो अनुरोध",
+      demoSubtitle: "खाता छैन? आफ्नो विवरण पठाउनुहोस्, हामी पहुँच व्यवस्था गर्छौं।",
+      demoNameLabel: "पूरा नाम",
+      demoNamePlaceholder: "तपाईंको नाम",
+      demoEmailLabel: "इमेल",
+      demoEmailPlaceholder: "you@example.com",
+      demoContactLabel: "सम्पर्क नम्बर",
+      demoContactPlaceholder: "98XXXXXXXX",
+      demoProfessionLabel: "वर्तमान पेशा",
+      demoProfessionPlaceholder: "जस्तै वकिल, कानून विद्यार्थी, पत्रकार",
+      demoQueriesLabel: "तपाईंका प्रश्न / प्रयोग",
+      demoQueriesPlaceholder: "कुन कानूनी विषय खोज्न चाहनुहुन्छ? सजिलो कानुन कसरी प्रयोग गर्ने?",
+      demoSubmit: "डेमो अनुरोध पठाउनुहोस्",
+      demoSubmitting: "पठाउँदै…",
+      demoSuccess: "धन्यवाद। तपाईंको डेमो अनुरोध प्राप्त भयो। हामी चाँडै सम्पर्क गर्छौं।",
+      demoAlready: "यो ब्राउजर सत्रमा पहिले नै डेमो अनुरोध पठाइसक्नुभएको छ।",
+      demoErrorGeneric: "पठाउन सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
+      demoErrorQueriesShort: "कृपया कम्तीमा १० अक्षरको प्रयोग विवरण लेख्नुहोस्।",
+      openDemoForm: "डेमो अनुरोध गर्नुहोस्",
+      closeDemoForm: "बन्द गर्नुहोस्",
     },
     hero: {
       badge: "सरकारी प्रक्रिया बुझ्ने मार्गदर्शन — निःशुल्क प्रयोग गर्नुहोस्",
@@ -607,10 +835,154 @@ export const messages = {
     },
     footer: {
       disclaimer: "नागरिक पालिका — नेपाल सरकारसँग सम्बद्ध छैन",
+      about: "हाम्रो बारेमा",
       privacy: "गोपनीयता",
       terms: "सर्तहरू",
       contact: "सम्पर्क",
       accessibility: "पहुँचयोग्यता",
+    },
+    aboutPage: {
+      back: "गृहपृष्ठ",
+      title: "नागरिक पालिका बारे",
+      subtitle:
+        "नेपाली नागरिकलाई सरकारी भाषा, फारम र दैनिक प्रशासनिक प्रक्रिया बुझ्न मद्दत गर्ने स्वतन्त्र मार्गदर्शन।",
+      sections: [
+        {
+          heading: "हाम्रो उद्देश्य",
+          paragraphs: [
+            "नेपालका सरकारी कार्यालयहरूले प्रायः औपचारिक नेपाली र कानूनी शब्द प्रयोग गर्छन् जुन बुझ्न गाह्रो हुन्छ। नागरिक पालिका यही खाडल पुराउन बनेको हो — शब्दहरू स्पष्ट व्याख्या गरेर, सही फारमतर्फ लगेर, र व्यावहारिक उपकरण दिएर तपाईं अझ आत्मविश्वासका साथ तयारी गर्न सक्नुहोस्।",
+            "हाम्रो विश्वास छ — सामान्य सरकारी शब्द वा फारम बुझ्न वकिल वा चिनजान भएको मान्छे चाहिनु हुँदैन।",
+          ],
+        },
+        {
+          heading: "हामी के प्रदान गर्छौं",
+          paragraphs: [
+            "कानूनी शब्दकोश र सरल सेवा शब्दावली — हजारौं कानूनी र प्रशासनिक शब्द नेपाली र अंग्रेजीमा।",
+            "आवेदन टेम्प्लेट र ध्यान दिनुपर्ने कुराहरू — जग्गा, व्यवसाय, ऋण, नागरिकता लगायत सामान्य अवस्थाका व्यावहारिक जाँचसूची।",
+            "क्याल्कुलेटर — नेपालका लागि तलब कर, EMI र जग्गा क्षेत्रफल रूपान्तरण।",
+            "सजिलो कानुन — मुलुकी देवानी संहिता, २०७४; मुलुकी देवानी कार्यविधि, २०७४; मुलुकी अपराध संहिता, २०७४; र मुलुकी फौजदारी कार्यविधि संहिता, २०७४ मा एआई सहायता अनुसन्धान, दफा उद्धरण र PDF स्रोत लिंकसहित। पहुँच निमन्त्रणा वा स्वीकृत डेमो अनुरोधमार्फत मात्र।",
+          ],
+        },
+        {
+          heading: "हामी के होइनौं",
+          paragraphs: [
+            "नागरिक पालिका सरकारी वेबसाइट होइन र नेपाल सरकार, कुनै मन्त्रालय, वडा कार्यालय वा अदालतसँग सम्बद्ध छैन।",
+            "हामी आधिकारिक कागजात जारी गर्दैनौं, सरकारी निकायको तर्फबाट आवेदन स्वीकार गर्दैनौं, वा कुनै कार्यालयले विशेष फारम वा व्याख्या स्वीकार गर्छ भन्ने ग्यारेन्टी दिँदैनौं।",
+            "यस साइटको सामग्री सामान्य जानकारीका लागि मात्र हो। तपाईंको विशेष अवस्थाका लागि योग्य वकिलको सल्लाहको विकल्प होइन।",
+          ],
+        },
+        {
+          heading: "सामग्री कसरी बनाउँछौं",
+          paragraphs: [
+            "शब्दकोश सार्वजनिक कानूनी शब्दकोश र सरल सेवा सामग्रीमा आधारित छ। टेम्प्लेट र जाँचसूची स्पष्टताका लागि लेखिएका छन् र नियम परिवर्तन हुँदा अद्यावधिक गरिन्छ, तर हालको आवश्यकता सम्बन्धित कार्यालयसँग अनिवार्य रूपमा पुष्टि गर्नुहोस्।",
+            "सजिलो कानुनका उत्तर मुलुकी देवानी संहिता, २०७४; मुलुकी देवानी कार्यविधि, २०७४; मुलुकी अपराध संहिता, २०७४; र मुलुकी फौजदारी कार्यविधि संहिता, २०७४ का प्रकाशित पाठबाट प्राप्त गरिएका हुन्छन्। औपचारिक काममा भर पर्नुअघि आधिकारिक PDF सँग जाँच गर्नुहोस्।",
+          ],
+        },
+        {
+          heading: "हामी कसलाई सेवा दिन्छौं",
+          paragraphs: [
+            "वडा, जिल्ला प्रशासन, मालपोत, कर लगायतका प्रक्रिया नेभिगेट गर्ने नागरिक।",
+            "छिटो द्विभाषी व्याख्या चाहने विद्यार्थी, पत्रकार र साना व्यवसायी।",
+            "छिटो सन्दर्भ खोज चाहने कानूनी पेशेवर — तर नागरिक पालिकाले व्यावसायिक निर्णयको स्थान लिँदैन।",
+          ],
+        },
+        {
+          heading: "सम्पर्क",
+          paragraphs: [
+            "प्रश्न, सुधार वा साझेदारीका लागि गृहपृष्ठको सम्पर्क फारम प्रयोग गर्नुहोस्। हामी प्रत्येक सन्देश पढ्छौं र साइट सुधार्न प्रतिक्रिया प्रयोग गर्छौं।",
+          ],
+        },
+      ],
+    },
+    termsPage: {
+      back: "गृहपृष्ठ",
+      title: "प्रयोगका सर्तहरू",
+      subtitle:
+        "नागरिक पालिका, सजिलो कानुन वा सम्बन्धित सेवा प्रयोग गर्नुअघि कृपया यी सर्तहरू पढ्नुहोस्।",
+      lastUpdated: "अन्तिम अद्यावधिक: असार २०८३",
+      sections: [
+        {
+          heading: "१. स्वीकृति",
+          paragraphs: [
+            "nagarikpalika.com (वा सम्बन्धित उपडोमेन) पहुँच वा प्रयोग गरेर तपाईं यी सर्तहरूमा सहमत हुनुहुन्छ। सहमत हुनुहुन्न भने साइट प्रयोग नगर्नुहोस्।",
+            "हामी समय–समयमा सर्तहरू अद्यावधिक गर्न सक्छौं। परिवर्तन पोस्ट भएपछि निरन्तर प्रयोगले संशोधित सर्तहरू स्वीकार गरेको मानिन्छ।",
+          ],
+        },
+        {
+          heading: "२. सेवाको प्रकृति",
+          paragraphs: [
+            "नागरिक पालिकाले नेपाल सरकारी प्रक्रिया, शब्दावली, फारम र प्रकाशित कानूनबारे शैक्षिक र सूचनात्मक स्रोत प्रदान गर्छ। हामी स्वतन्त्र निजी प्लेटफर्म हौं, सरकारी निकाय होइनौं।",
+            "वकिल परामर्च सेवामार्फत छुट्टै सम्झौता नगरेसम्म यस साइटले वकिल–ग्राहक सम्बन्ध सिर्जना गर्दैन।",
+          ],
+        },
+        {
+          heading: "३. कानूनी सल्लाह होइन",
+          paragraphs: [
+            "शब्दकोश, टेम्प्लेट, क्याल्कुलेटर, जाँचसूची र सजिलो कानुनका एआई उत्तर सामान्य जानकारी मात्र हुन्। कानून, परिपत्र र स्थानीय अभ्यास परिवर्तन हुन सक्छ।",
+            "तपाईंको अधिकार, सम्पत्ति, कर वा कानूनी स्थितिमा असर पार्ने निर्णय गर्नुअघि आधिकारिक स्रोत र योग्य पेशेवरसँग जानकारी पुष्टि गर्नु तपाईंको जिम्मेवारी हो।",
+          ],
+        },
+        {
+          heading: "४. शुद्धता र उपलब्धता",
+          paragraphs: [
+            "सामग्री शुद्ध र हालको राख्न प्रयास गर्छौं, तर कुनै पनि पृष्ठ, अनुवाद, गणना वा एआई उत्तर पूर्ण, त्रुटिरहित वा अद्यावधिक छ भन्ने वारेन्टी दिँदैनौं।",
+            "मर्मत वा प्राविधिक कारणले साइट अस्थायी रूपमा उपलब्ध नहुन सक्छ। डाउनटाइम वा पुरानो सामग्रीबाट हुने हानिका लागि हामी जिम्मेवार छैनौं।",
+          ],
+        },
+        {
+          heading: "५. खाता र सजिलो कानुन पहुँच",
+          paragraphs: [
+            "केही सुविधालाई साइन इन चाहिन्छ। सही जानकारी दिनुहोस् र प्रमाणपत्र गोप्य राख्नुहोस्। तपाईंको खाताअन्तर्गतको गतिविधिका लागि तपाईं जिम्मेवार हुनुहुन्छ।",
+            "सजिलो कानुन पहुँच स्वीकृत प्रयोगकर्तालाई मात्र। डेमो अनुरोध म्यानुअल रूपमा समीक्षा हुन्छ; स्वीकृति हाम्रो विवेकमा छ। दुरुपयोग, प्रमाणपत्र साझेदारी वा स्वचालित स्क्र्यापिङमा पहुँच निलम्बन वा रद्द गर्न सक्छौं।",
+          ],
+        },
+        {
+          heading: "६. स्वीकार्य प्रयोग",
+          paragraphs: [
+            "कानून उल्लङ्घन, उत्पीडन, मालवेयर अपलोड, अनधिकृत पहुँच प्रयास वा प्रणाली अधिभार गर्न साइट प्रयोग गर्न मिल्दैन।",
+            "लिखित अनुमति बिना थोक सामग्री वा एआई आउटपुट व्यावसायिक पुनर्वितरण गर्न मिल्दैन।",
+            "पठाउने प्रतिक्रिया र डेमो अनुरोध सत्य हुनुपर्छ र अरूको व्यक्तिगत डाटा सहमति बिना समावेश गर्न मिल्दैन।",
+          ],
+        },
+        {
+          heading: "७. बौद्धिक सम्पत्ति",
+          paragraphs: [
+            "नागरिक पालिका ब्रान्डिङ, मौलिक लेख र साइट डिजाइन हाम्रो वा इजाजतदाताको हो। आधिकारिक सरकारी फारम र ऐन सार्वजनिक वा सम्बन्धित मालिकको अधीनमा रहन्छन्; हामी सन्दर्भका लागि लिंक र अंश प्रदान गर्छौं।",
+            "हाम्रो पृष्ठको लिंक साझा गर्न र संक्षिप्त उद्धरण स्रोत उल्लेख गरेर प्रयोग गर्न सकिन्छ। शब्दकोश वा कानून कोर्पसको व्यवस्थित प्रतिलिपि अनुमति बिना मिल्दैन।",
+          ],
+        },
+        {
+          heading: "८. सशुल्क सेवा",
+          paragraphs: [
+            "वकिल परामर्श र भविष्यका सशुल्क सुविधा चेकआउटमा देखाइएको छुट्टै मूल्य, भुक्तानी र रद्द सर्तअन्तर्गत छन्।",
+          ],
+        },
+        {
+          heading: "९. दायित्व सीमा",
+          paragraphs: [
+            "लागू कानूनले अनुमति दिएसम्म, नागरिक पालिका र सञ्चालकहरू साइट प्रयोगबाट हुने अप्रत्यक्ष वा परिणामी हानिका लागि जिम्मेवार छैनन्, जसमा क्याल्कुलेटर, टेम्प्लेट वा एआई उत्तरमा भर पर्नु पनि समावेश छ।",
+            "निःशुल्क सूचनात्मक सेवासँग सम्बन्धित कुनै पनि दाबीको कुल दायित्व बारह महिनाभित्र त्यो सेवाका लागि तिरेको रकम वा भुक्तानी नभएमा रु. १,००० भन्दा बढी हुँदैन।",
+          ],
+        },
+        {
+          heading: "१०. गोपनीयता",
+          paragraphs: [
+            "साइट सञ्चालनका लागि आवश्यक सीमित डाटा संकलन गर्छौं — जस्तै खाता, परामर्श बुकिङ, प्रतिक्रिया र डेमो अनुरोध। व्यक्तिगत जानकारी बेच्दैनौं।",
+          ],
+        },
+        {
+          heading: "११. लागू कानून",
+          paragraphs: [
+            "यी सर्तहरू नेपालको कानूनअन्तर्गत छन्। विवाद नेपालका अदालतको अधिकार क्षेत्रमा पर्छ, जबसम्म उपभोक्ता संरक्षण नियमले अर्को व्यवस्था नगरेसम्म।",
+          ],
+        },
+        {
+          heading: "१२. सम्पर्क",
+          paragraphs: [
+            "यी सर्तबारे प्रश्नका लागि गृहपृष्ठको सम्पर्क फारम प्रयोग गर्नुहोस्।",
+          ],
+        },
+      ],
     },
     contact: {
       title: "सम्पर्क गर्नुहोस्",

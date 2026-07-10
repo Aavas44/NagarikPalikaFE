@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const TOKEN_COOKIE = "nagarik_palika_token";
+const SAJILO_KANUN_TOKEN_COOKIE = "sajilo_kanun_token";
 
 function getUserType(token: string): string | null {
   try {
@@ -105,9 +106,30 @@ export function middleware(request: NextRequest) {
     return redirectForUserType(userType, request);
   }
 
+  const isProtectedSajiloKanun =
+    pathname.startsWith("/sajilokanun/chat") ||
+    pathname.startsWith("/sajilokanun/unicode-converter");
+
+  if (isProtectedSajiloKanun) {
+    const skToken = request.cookies.get(SAJILO_KANUN_TOKEN_COOKIE)?.value;
+    if (!skToken || getUserType(skToken) !== "sajilo_kanun") {
+      return NextResponse.redirect(new URL("/sajilokanun", request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login", "/account/:path*", "/consult/:path*", "/advocate/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/login",
+    "/account/:path*",
+    "/consult/:path*",
+    "/advocate/:path*",
+    "/sajilokanun/chat",
+    "/sajilokanun/chat/:path*",
+    "/sajilokanun/unicode-converter",
+    "/sajilokanun/unicode-converter/:path*",
+  ],
 };

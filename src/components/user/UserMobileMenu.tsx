@@ -146,6 +146,10 @@ export function UserMobileMenu({ open, onClose }: UserMobileMenuProps) {
             </Link>
           </div>
 
+          <Link href="/sajilokanun" className={styles.navMobileLink}>
+            {msg.nav.sajiloKanun}
+          </Link>
+
           <Link href="/#faq" className={styles.navMobileLink}>
             {msg.nav.faq}
           </Link>
