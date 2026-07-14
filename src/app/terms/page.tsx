@@ -6,9 +6,9 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "प्रयोगका सर्तहरू — Terms & Conditions | Nagarik Palika",
+  title: "प्रयोगका सर्तहरू — Terms of use | Nagarik Palika",
   description:
-    "नागरिक पालिका प्रयोग गर्दा लाग्ने सर्तहरू, अस्वीकरण, र जिम्मेवारी सीमा। Terms of use, disclaimers, and limitations for Nagarik Palika and Sajilo Kanun.",
+    "नागरिक पालिका र सजिलो कानुन प्रयोगका सर्त, अस्वीकरण र दायित्व सीमा। Plain terms of use for Nagarik Palika and Sajilo Kanun.",
   path: "/terms",
   keywords: [
     "Nagarik Palika terms",
@@ -24,7 +24,7 @@ export default function TermsPage() {
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Home", path: "/" },
-          { name: "Terms & Conditions", path: "/terms" },
+          { name: "Terms of use", path: "/terms" },
         ])}
       />
       <UserNav />

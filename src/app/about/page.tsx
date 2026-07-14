@@ -6,9 +6,9 @@ import { JsonLd } from "@/components/seo/JsonLd";
 import { breadcrumbJsonLd, buildPageMetadata } from "@/lib/seo";
 
 export const metadata = buildPageMetadata({
-  title: "हाम्रो बारेमा — About Nagarik Palika",
+  title: "नागरिक पालिका बारे — About Nagarik Palika",
   description:
-    "नागरिक पालिका के हो, किन बनाइयो, र नेपाली नागरिकलाई सरकारी प्रक्रिया बुझ्न कसरी मद्दत गर्छ। Independent guide to Nepal government processes, glossary, forms, and legal tools.",
+    "नागरिक पालिका किन बनाइयो, साइटमा के छ, र हामी के होइनौं। A plain-language companion for Nepal’s government offices, forms, and everyday law questions.",
   path: "/about",
   keywords: [
     "About Nagarik Palika",
