@@ -1,4 +1,7 @@
 import { streamLlmChat, isQuotaError } from "./ai";
+import { CHAT_MODEL as OPENAI_CHAT_MODEL } from "./openai";
+import { CHAT_MODEL as GEMINI_CHAT_MODEL } from "./gemini";
+import { fromGeminiUsage, fromOpenAiUsage, getOpenAiCachedTokens } from "./token-usage";
 import {
   citationFromChunk,
   formatCitationBlock,
@@ -118,10 +121,70 @@ async function* streamOllamaResponse(
   }
 }
 
+async function streamLlm(
+  systemPrompt: string,
+  userPrompt: string,
+  promptCacheKey?: string
+): Promise<TextStream> {
+  const stream = await streamLlmChat(
+    systemPrompt,
+    userPrompt,
+    promptCacheKey ? { promptCacheKey } : undefined
+  );
+  return normalizeLlmStream(stream, promptCacheKey);
+}
+
 async function* normalizeLlmStream(
-  stream: AsyncIterable<unknown>
+  stream: AsyncIterable<unknown>,
+  promptCacheKey?: string
 ): TextStream {
   for await (const chunk of stream) {
+    if (
+      chunk &&
+      typeof chunk === "object" &&
+      "usage" in chunk &&
+      (chunk as { usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } } }).usage
+    ) {
+      const usage = (chunk as {
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          total_tokens?: number;
+          prompt_tokens_details?: { cached_tokens?: number };
+        };
+      }).usage;
+      fromOpenAiUsage(usage, {
+        operation: "chat",
+        provider: "openai",
+        model: OPENAI_CHAT_MODEL,
+      });
+      if (promptCacheKey) {
+        const { cachedTokens } = getOpenAiCachedTokens(usage);
+        console.log(
+          "[HandyLaw chat openai]",
+          JSON.stringify({
+            operation: "chat",
+            promptCacheKey,
+            openAiCachedTokens: cachedTokens,
+          })
+        );
+      }
+    } else if (
+      chunk &&
+      typeof chunk === "object" &&
+      "usageMetadata" in chunk &&
+      (chunk as { usageMetadata?: Record<string, number> }).usageMetadata
+    ) {
+      fromGeminiUsage(
+        (chunk as { usageMetadata?: Record<string, number> }).usageMetadata,
+        {
+          operation: "chat",
+          provider: "gemini",
+          model: GEMINI_CHAT_MODEL,
+        }
+      );
+    }
+
     if (
       chunk &&
       typeof chunk === "object" &&
@@ -142,19 +205,12 @@ async function* normalizeLlmStream(
   }
 }
 
-async function streamLlm(
-  systemPrompt: string,
-  userPrompt: string
-): Promise<TextStream> {
-  const stream = await streamLlmChat(systemPrompt, userPrompt);
-  return normalizeLlmStream(stream);
-}
-
 export async function streamChat(options: {
   question: string;
   systemPrompt: string;
   userPrompt: string;
   chunks: MatchedChunk[];
+  promptCacheKey?: string;
 }): Promise<{ stream: TextStream; chatMode: string }> {
   const provider = getChatProvider();
   const llmMode =
@@ -177,7 +233,11 @@ export async function streamChat(options: {
 
   if (provider === "openai" || provider === "gemini") {
     return {
-      stream: await streamLlm(options.systemPrompt, options.userPrompt),
+      stream: await streamLlm(
+        options.systemPrompt,
+        options.userPrompt,
+        options.promptCacheKey
+      ),
       chatMode: provider,
     };
   }
@@ -185,7 +245,11 @@ export async function streamChat(options: {
   // auto: try LLM, fall back to extractive on quota errors
   try {
     return {
-      stream: await streamLlm(options.systemPrompt, options.userPrompt),
+      stream: await streamLlm(
+        options.systemPrompt,
+        options.userPrompt,
+        options.promptCacheKey
+      ),
       chatMode: llmMode,
     };
   } catch (error) {

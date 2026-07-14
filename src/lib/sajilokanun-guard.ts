@@ -29,14 +29,7 @@ export async function requireSajiloKanunAccess(): Promise<Response | null> {
 }
 
 export function requireSajiloKanunAccessFromRequest(request: Request): Response | null {
-  const cookieHeader = request.headers.get("cookie") ?? "";
-  const match = cookieHeader.match(/(?:^|;\s*)sajilo_kanun_token=([^;]+)/);
-  const cookieToken = match ? decodeURIComponent(match[1]) : null;
-
-  const auth = request.headers.get("authorization");
-  const bearerToken = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
-
-  const token = bearerToken ?? cookieToken;
+  const token = getSajiloKanunTokenFromRequest(request);
   if (!isSajiloKanunToken(token)) {
     return Response.json(
       { error: "Sajilo Kanun access required. Please sign in at /sajilokanun." },
@@ -44,4 +37,15 @@ export function requireSajiloKanunAccessFromRequest(request: Request): Response 
     );
   }
   return null;
+}
+
+export function getSajiloKanunTokenFromRequest(request: Request): string | null {
+  const cookieHeader = request.headers.get("cookie") ?? "";
+  const match = cookieHeader.match(/(?:^|;\s*)sajilo_kanun_token=([^;]+)/);
+  const cookieToken = match ? decodeURIComponent(match[1]) : null;
+
+  const auth = request.headers.get("authorization");
+  const bearerToken = auth?.startsWith("Bearer ") ? auth.slice(7) : null;
+
+  return bearerToken ?? cookieToken;
 }

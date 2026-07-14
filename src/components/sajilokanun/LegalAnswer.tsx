@@ -6,6 +6,7 @@ import {
   type AnswerListItem,
 } from "@/lib/sajilokanun/format-legal-answer";
 import { cleanAnswerDisplay } from "@/lib/sajilokanun/text-clean";
+import styles from "./LegalAnswer.module.css";
 
 function parseMetaLine(line: string): { label: string; value: string } | null {
   const match = line.match(/^(.+?)\s*:\s*(.+)$/);
@@ -24,17 +25,10 @@ function ListItems({
 }) {
   const Tag = ordered ? "ol" : "ul";
   return (
-    <Tag
-      className={
-        nested
-          ? "mt-1 list-none space-y-1 border-l-2 border-[var(--border)] pl-4"
-          : "mt-2 list-none space-y-2"
-      }
-    >
+    <Tag className={`${styles.list} ${nested ? styles.listNested : ""}`}>
       {items.map((item, index) => (
-        <li key={`${item.marker}-${index}`} className="leading-relaxed">
-          <span className="font-semibold text-[var(--primary)]">{item.marker}</span>{" "}
-          {item.text}
+        <li key={`${item.marker}-${index}`} className={styles.listItem}>
+          <span className={styles.marker}>{item.marker}</span> {item.text}
           {item.subitems && item.subitems.length > 0 && (
             <ListItems items={item.subitems} ordered={false} nested />
           )}
@@ -67,22 +61,19 @@ function LegalAnswerBody({ content }: { content: string }) {
   const segments = parseLegalAnswer(content);
 
   if (segments.length === 0) {
-    return <p className="whitespace-pre-wrap leading-relaxed">{content}</p>;
+    return <p className={styles.paragraph}>{content}</p>;
   }
 
   return (
-    <div className="space-y-4 leading-relaxed">
+    <div className={styles.answer}>
       {segments.map((segment, index) => {
         if (segment.type === "source") {
           return (
-            <div
-              key={index}
-              className="flex items-start gap-2 rounded-lg border border-[var(--border)] bg-[var(--primary-soft)]/40 px-3 py-2 text-sm"
-            >
+            <div key={index} className={styles.sourceCallout}>
               <span className="shrink-0 text-[var(--accent)]" aria-hidden>
                 📚
               </span>
-              <p className="leading-snug">
+              <p>
                 <span className="font-semibold text-[var(--primary)]">स्रोत:</span>{" "}
                 {renderInlineBold(segment.text)}
               </p>
@@ -97,32 +88,22 @@ function LegalAnswerBody({ content }: { content: string }) {
             .filter(Boolean);
 
           return (
-            <div
-              key={index}
-              className="rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] px-3.5 py-3"
-            >
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--accent)]">
-                स्रोत विवरण
-              </p>
-              <dl className="space-y-1.5">
+            <div key={index} className={styles.metaBox}>
+              <p className={styles.metaLabel}>स्रोत विवरण</p>
+              <dl className={styles.metaList}>
                 {metaLines.map((line, lineIndex) => {
                   const parsed = parseMetaLine(line);
                   if (!parsed) {
                     return (
-                      <div key={`${index}-${lineIndex}`} className="text-sm">
+                      <div key={`${index}-${lineIndex}`} className={styles.metaValue}>
                         {line}
                       </div>
                     );
                   }
                   return (
-                    <div
-                      key={`${index}-${lineIndex}`}
-                      className="grid gap-0.5 text-sm sm:grid-cols-[9rem_1fr]"
-                    >
-                      <dt className="font-medium text-[var(--muted)]">
-                        {parsed.label}
-                      </dt>
-                      <dd className="text-[var(--foreground)]">{parsed.value}</dd>
+                    <div key={`${index}-${lineIndex}`} className={styles.metaRow}>
+                      <dt className={styles.metaKey}>{parsed.label}</dt>
+                      <dd className={styles.metaValue}>{parsed.value}</dd>
                     </div>
                   );
                 })}
@@ -133,7 +114,7 @@ function LegalAnswerBody({ content }: { content: string }) {
 
         if (segment.type === "paragraph") {
           return (
-            <p key={index} className="whitespace-pre-wrap text-[15px]">
+            <p key={index} className={styles.paragraph}>
               {renderInlineBold(segment.text)}
             </p>
           );
@@ -152,17 +133,14 @@ function LegalAnswerBody({ content }: { content: string }) {
 }
 
 export function LegalAnswer({ content }: { content: string }) {
-  // Split advocate sections on raw markdown BEFORE global clean (which can reorder lines).
   const advocateSections = parseAdvocateSections(content);
 
   if (advocateSections) {
     return (
-      <div className="space-y-6">
+      <div className={styles.advocate}>
         {advocateSections.map((section) => (
           <section key={section.heading}>
-            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-[var(--primary)]">
-              {section.heading}
-            </h3>
+            <h3 className={styles.sectionHeading}>{section.heading}</h3>
             <LegalAnswerBody
               content={cleanSectionBody(section.heading, section.body)}
             />

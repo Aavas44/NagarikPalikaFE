@@ -2,74 +2,68 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Match Nagarik Palika dashboard palette (light-first). */
 :root,
 .sajilokanun-root {
-  --background: #f1f5f9;
-  --foreground: #0f172a;
-  --muted: #64748b;
-  --border: #e2e8f0;
-  --primary: #1e3a8a;
-  --primary-hover: #1d4ed8;
-  --primary-soft: #dbeafe;
-  --accent: #b45309;
-  --accent-soft: #fef3c7;
-  --user-bg: #eff6ff;
-  --assistant-bg: #ffffff;
+  --background: #f5f5f5;
+  --foreground: #1a1a1a;
+  --heading: #042c53;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --primary: #185fa5;
+  --primary-hover: #0c447c;
+  --primary-soft: #e6f1fb;
+  --primary-border: #b5d4f4;
+  --accent: #3b6d11;
+  --accent-soft: #eaf3de;
+  --amber: #854f0b;
+  --amber-soft: #faeeda;
+  --user-bg: linear-gradient(145deg, #e6f1fb 0%, #eaf3de 100%);
+  --assistant-bg: linear-gradient(160deg, #ffffff 0%, #f3f8fc 48%, #eef6ea 100%);
+  --fade-start: #e6f1fb;
+  --fade-end: #eaf3de;
+  --fade-border: #b5d4f4;
+  --fade-accent: linear-gradient(90deg, #60a5fa, #34d399, #86efac);
   --surface: #ffffff;
-  --surface-muted: #f8fafc;
-  --shadow: 0 1px 3px rgb(15 23 42 / 6%), 0 4px 16px rgb(15 23 42 / 4%);
-  --shadow-lg: 0 4px 24px rgb(15 23 42 / 8%);
-  --ring: rgb(30 58 138 / 25%);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root,
-.sajilokanun-root {
-    --background: #0b1120;
-    --foreground: #f1f5f9;
-    --muted: #94a3b8;
-    --border: #1e293b;
-    --primary: #60a5fa;
-    --primary-hover: #93c5fd;
-    --primary-soft: #1e3a5f;
-    --accent: #fbbf24;
-    --accent-soft: #422006;
-    --user-bg: #172554;
-    --assistant-bg: #111827;
-    --surface: #111827;
-    --surface-muted: #0f172a;
-    --shadow: 0 1px 3px rgb(0 0 0 / 30%), 0 4px 16px rgb(0 0 0 / 20%);
-    --shadow-lg: 0 4px 24px rgb(0 0 0 / 35%);
-    --ring: rgb(96 165 250 / 30%);
-  }
+  --surface-muted: #f9fafb;
+  --shadow: 0 1px 3px rgba(24, 95, 165, 0.07), 0 4px 16px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 4px 24px rgba(24, 95, 165, 0.1);
+  --ring: rgba(24, 95, 165, 0.2);
+  --radius-card: 14px;
+  --radius-btn: 8px;
+  --content-max: 960px;
+  --chat-max: 720px;
 }
 
 .sajilokanun-root {
-  min-height: 100dvh;
-  background: linear-gradient(
-    180deg,
-    var(--background) 0%,
-    color-mix(in srgb, var(--background) 92%, var(--primary-soft)) 100%
-  );
-  background-attachment: fixed;
   color: var(--foreground);
-  font-family: var(--font-kalimati), "Kalimati", var(--font-devanagari),
-    "Noto Sans Devanagari", system-ui, sans-serif;
-  line-height: 1.65;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+    var(--font-kalimati), "Kalimati", var(--font-devanagari),
+    "Noto Sans Devanagari", sans-serif;
+  line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+}
+
+.sajilokanun-root h1,
+.sajilokanun-root h2,
+.sajilokanun-root h3 {
+  color: var(--heading);
+  font-weight: 600;
 }
 
 @layer components {
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 0.875rem;
+    border-radius: var(--radius-card);
     box-shadow: var(--shadow);
   }
 
   .input-field {
-    @apply w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] outline-none transition-shadow placeholder:text-[var(--muted)];
+    @apply w-full border bg-[var(--surface)] px-4 py-3 text-[var(--foreground)] outline-none transition-shadow placeholder:text-[var(--muted)];
+    border-color: var(--border);
+    border-radius: var(--radius-btn);
   }
 
   .input-field:focus {
@@ -78,7 +72,9 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--primary)] px-5 py-3 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    background: var(--primary);
+    border-radius: var(--radius-btn);
   }
 
   .btn-primary:hover:not(:disabled) {
@@ -86,11 +82,17 @@
   }
 
   .chip {
-    @apply rounded-full border border-[var(--border)] bg-[var(--surface)] px-3.5 py-1.5 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--primary-soft)];
+    @apply border bg-[var(--surface)] px-3.5 py-1.5 text-sm text-[var(--foreground)] transition-colors;
+    border-color: var(--border);
+    border-radius: 999px;
+  }
+
+  .chip:hover {
+    border-color: var(--primary);
+    background: var(--primary-soft);
   }
 }
 
-/* Custom scrollbar */
 .chat-scroll::-webkit-scrollbar {
   width: 6px;
 }

@@ -5,12 +5,17 @@ import { useLanguage } from "@/context/LanguageContext";
 import { ContactSection } from "./ContactSection";
 import styles from "@/app/user.module.css";
 
-export function UserFooter() {
+type UserFooterProps = {
+  /** When false, omit the contact form (e.g. Sajilo Kanun app pages). */
+  showContact?: boolean;
+};
+
+export function UserFooter({ showContact = true }: UserFooterProps) {
   const { msg } = useLanguage();
 
   return (
     <>
-      <ContactSection />
+      {showContact ? <ContactSection /> : null}
       <footer className={styles.footer}>
         <nav className={styles.footerLinks} aria-label="Site links">
           <Link href="/about">{msg.footer.about}</Link>

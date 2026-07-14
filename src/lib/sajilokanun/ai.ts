@@ -1,9 +1,13 @@
 import * as gemini from "./gemini";
 import * as openai from "./openai";
+import type { OpenAiChatCacheOptions } from "./openai";
 import {
   embeddingTextChanged,
   normalizeForEmbedding,
 } from "./embedding-text";
+import type { UsageOperation } from "./token-usage";
+
+export type { OpenAiChatCacheOptions } from "./openai";
 
 export type LlmProvider = "openai" | "gemini";
 
@@ -44,9 +48,13 @@ export function isQuotaError(error: unknown): boolean {
     : gemini.isQuotaError(error);
 }
 
-export async function streamLlmChat(systemPrompt: string, userPrompt: string) {
+export async function streamLlmChat(
+  systemPrompt: string,
+  userPrompt: string,
+  cacheOptions?: OpenAiChatCacheOptions
+) {
   if (getLlmProvider() === "openai") {
-    return openai.streamChatCompletion(systemPrompt, userPrompt);
+    return openai.streamChatCompletion(systemPrompt, userPrompt, cacheOptions);
   }
   return gemini.getGemini().models.generateContentStream({
     model: gemini.CHAT_MODEL,
@@ -58,9 +66,11 @@ export async function streamLlmChat(systemPrompt: string, userPrompt: string) {
 export async function completeChat(
   systemPrompt: string,
   userPrompt: string,
-  model?: string
+  model?: string,
+  operation: UsageOperation = "chat",
+  cacheOptions?: OpenAiChatCacheOptions
 ): Promise<string> {
   return getLlmProvider() === "openai"
-    ? openai.completeChat(systemPrompt, userPrompt, model)
-    : gemini.completeChat(systemPrompt, userPrompt, model);
+    ? openai.completeChat(systemPrompt, userPrompt, model, operation, cacheOptions)
+    : gemini.completeChat(systemPrompt, userPrompt, model, operation);
 }

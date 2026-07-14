@@ -1,14 +1,25 @@
 import { streamAnswer } from "@/lib/sajilokanun/rag";
-import { requireSajiloKanunAccessFromRequest } from "@/lib/sajilokanun-guard";
+import {
+  getSajiloKanunTokenFromRequest,
+  requireSajiloKanunAccessFromRequest,
+} from "@/lib/sajilokanun-guard";
 import type { AnswerMode } from "@/lib/sajilokanun/answer-mode";
-import { parseBookScope, validateBooksRequest } from "@/lib/sajilokanun/book-scope";
+import { parseBookScope, primaryBookId, validateBooksRequest } from "@/lib/sajilokanun/book-scope";
 import {
   normalizeQueryForRetrieval,
   QueryNormalizeError,
   type QueryMetadataHint,
 } from "@/lib/sajilokanun/query-translate";
+import { reconcileMetadataHint } from "@/lib/sajilokanun/dafa-taxonomy-reconcile";
 import { needsGeminiPreprocess } from "@/lib/sajilokanun/query-latin-detect";
 import { parseExcludeDafaList } from "@/lib/sajilokanun/retrieve";
+import {
+  createUsageRequestId,
+  persistSajiloKanunUsage,
+  setActiveUsageCollector,
+  truncateUsageLabel,
+  UsageCollector,
+} from "@/lib/sajilokanun/token-usage";
 
 export const runtime = "nodejs";
 
@@ -43,9 +54,14 @@ export async function POST(request: Request) {
       typeof body.originalQuestion === "string"
         ? body.originalQuestion.trim()
         : message;
+    const bookScope = parseBookScope(body.book, body.books);
+
     const metadataHint: QueryMetadataHint | undefined =
       body.metadataHint && typeof body.metadataHint === "object"
-        ? body.metadataHint
+        ? reconcileMetadataHint(
+            body.metadataHint as QueryMetadataHint,
+            primaryBookId(bookScope)
+          )
         : undefined;
     const searchKeywords = Array.isArray(body.searchKeywords)
       ? body.searchKeywords
@@ -78,8 +94,6 @@ export async function POST(request: Request) {
       }
     }
 
-    const bookScope = parseBookScope(body.book, body.books);
-
     const normalizedMessage =
       answerMode === "quote" && needsGeminiPreprocess(message)
         ? quickLocalNormalize(message)
@@ -102,16 +116,33 @@ export async function POST(request: Request) {
       excludeDafas: excludeDafas.length > 0 ? excludeDafas : undefined,
     });
 
-    const { stream, sources, retrievalMode, chatMode, analysis } =
-      await streamAnswer(queryUsed, {
-        bookScope,
-        answerMode,
-        originalQuestion: displayOriginal,
-        metadataHint,
-        searchKeywords,
-        excludeDafas,
-      });
+    const collector = new UsageCollector();
+    setActiveUsageCollector(collector);
+    let stream;
+    let sources;
+    let retrievalMode;
+    let chatMode;
+    let analysis;
+    try {
+      ({ stream, sources, retrievalMode, chatMode, analysis } = await streamAnswer(
+        queryUsed,
+        {
+          bookScope,
+          answerMode,
+          originalQuestion: displayOriginal,
+          metadataHint,
+          searchKeywords,
+          excludeDafas,
+        }
+      ));
+    } catch (error) {
+      setActiveUsageCollector(null);
+      throw error;
+    }
 
+    const token = getSajiloKanunTokenFromRequest(request);
+    const chatRequestId = createUsageRequestId();
+    const chatRequestLabel = truncateUsageLabel(displayOriginal);
     const encoder = new TextEncoder();
 
     const readable = new ReadableStream({
@@ -130,15 +161,22 @@ export async function POST(request: Request) {
           );
 
           for await (const chunk of stream) {
-            const token = chunk.text ?? "";
-            if (token) {
+            const tokenText = chunk.text ?? "";
+            if (tokenText) {
               controller.enqueue(
                 encoder.encode(
-                  `data: ${JSON.stringify({ type: "token", token })}\n\n`
+                  `data: ${JSON.stringify({ type: "token", token: tokenText })}\n\n`
                 )
               );
             }
           }
+
+          const usage = await persistSajiloKanunUsage(token, collector.getEntries(), {
+            requestId: chatRequestId,
+            requestType: "chat",
+            label: chatRequestLabel,
+          });
+          setActiveUsageCollector(null);
 
           controller.enqueue(
             encoder.encode(
@@ -156,9 +194,19 @@ export async function POST(request: Request) {
               })}\n\n`
             )
           );
+
+          if (usage) {
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ type: "usage", usage })}\n\n`
+              )
+            );
+          }
+
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
         } catch (error) {
+          setActiveUsageCollector(null);
           const message =
             error instanceof Error ? error.message : "Stream failed";
           controller.enqueue(

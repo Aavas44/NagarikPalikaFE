@@ -2,13 +2,14 @@ import { LegalAnswer } from "@/components/sajilokanun/LegalAnswer";
 import { SourcePanel, type Source } from "@/components/sajilokanun/SourcePanel";
 import { SourceTags } from "@/components/sajilokanun/SourceTags";
 import type { SourcePdfPreview } from "@/lib/sajilokanun/source-pdf-link";
+import styles from "./ChatMessage.module.css";
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 py-1" aria-label="Loading">
-      <span className="typing-dot h-2 w-2 rounded-full bg-[var(--muted)]" />
-      <span className="typing-dot h-2 w-2 rounded-full bg-[var(--muted)]" />
-      <span className="typing-dot h-2 w-2 rounded-full bg-[var(--muted)]" />
+    <div className="flex items-center gap-1.5 py-1" aria-label="Loading">
+      <span className="typing-dot h-2.5 w-2.5 rounded-full bg-[var(--muted)]" />
+      <span className="typing-dot h-2.5 w-2.5 rounded-full bg-[var(--muted)]" />
+      <span className="typing-dot h-2.5 w-2.5 rounded-full bg-[var(--muted)]" />
     </div>
   );
 }
@@ -59,36 +60,32 @@ export function ChatMessage({
     isUser && showRewritten && queryUsed ? queryUsed : content;
 
   return (
-    <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
+    <div className={`${styles.row} ${isUser ? styles.rowUser : ""}`}>
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
-          isUser
-            ? "bg-[var(--primary)] text-white"
-            : "border border-[var(--border)] bg-[var(--surface-muted)] text-[var(--primary)]"
+        className={`${styles.avatar} ${
+          isUser ? styles.avatarUser : styles.avatarAssistant
         }`}
         aria-hidden
       >
         {isUser ? "Y" : "⚖"}
       </div>
 
-      <div className="min-w-0 max-w-[85%] sm:max-w-[78%]">
-        <p className="mb-1.5 text-xs font-medium text-[var(--muted)]">
-          {isUser ? "You" : "HandyLaw"}
-        </p>
+      <div className={styles.column}>
+        <p className={styles.role}>{isUser ? "You" : "HandyLaw"}</p>
         <div
-          className={`rounded-2xl px-4 py-3 ${
+          className={`${styles.bubble} ${
             isUser
-              ? "rounded-tr-md bg-[var(--user-bg)]"
+              ? styles.bubbleUser
               : isError
-                ? "rounded-tl-md border border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
-                : "card rounded-tl-md bg-[var(--assistant-bg)]"
+                ? styles.bubbleError
+                : styles.bubbleAssistant
           }`}
         >
           {isUser ? (
-            <div className="space-y-2">
-              <p className="whitespace-pre-wrap leading-relaxed">{displayText}</p>
+            <div>
+              <p className={styles.queryText}>{displayText}</p>
               {showRewritten && (
-                <p className="border-t border-[var(--border)]/60 pt-2 text-xs leading-relaxed text-[var(--muted)]">
+                <p className={styles.typedNote}>
                   <span className="font-medium">You typed:</span> {typedText}
                 </p>
               )}
@@ -116,7 +113,7 @@ export function ChatMessage({
           <button
             type="button"
             onClick={onRetry}
-            className="mt-3 rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted)] transition-colors hover:border-[var(--primary)] hover:bg-[var(--surface-muted)] hover:text-[var(--primary)]"
+            className={styles.retryBtn}
             title="Fetch other relevant दफा, excluding provisions already shown"
           >
             Try other दफा

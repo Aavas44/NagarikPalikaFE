@@ -92,10 +92,7 @@ ${options.verbatimProvisions}
 `
     : "";
 
-  return `Original question:
-${question}
-
-Internal query analysis (for your reasoning only — do not repeat verbatim; translate any English labels to Nepali if you mention them):
+  const analysisBlock = `Internal query analysis (for your reasoning only — do not repeat verbatim; translate any English labels to Nepali if you mention them):
 ${JSON.stringify(
   {
     intent: analysis.intent,
@@ -105,14 +102,9 @@ ${JSON.stringify(
   },
   null,
   2
-)}
+)}`;
 
-Legal document excerpts (ONLY source of law — cite as [Source N]):
-
-${context}
-${provisionsBlock}
-${options.mandate ? `\n${options.mandate}\n` : ""}
-Provide your structured advocate response based solely on the excerpts above.
+  const taskInstructions = `Provide your structured advocate response based solely on the excerpts above.
 
 Use exactly three Nepali headings: **मुद्दा**, **लागू प्रावधानहरू**, **सारांश**.
 - **मुद्दा**: restate the question in १–२ वाक्य (your words).
@@ -132,6 +124,22 @@ For मिलापत्र + अदालती शुल्क फिर्�
 When excerpts include a परिच्छेद's **हदम्याद** दफा (title हदम्यादः / हदम्याद), quote it in **लागू प्रावधानहरू** and include the applicable limitation period (e.g. छ महिना, तीन महिना, एक वर्ष) in **सारांश** with दफा citation — especially for family, property, contract, or tort questions where नालिस/मुद्दा filing time may apply.
 
 When excerpts contain **उपदफा** or **खण्ड** sub-sections, read the full chunk and cite the exact specific उपदफा that answers the question in both **लागू प्रावधानहरू** and **सारांश** — do not stop at the parent दफा number unless the whole दफा applies.`;
+
+  return `Legal document excerpts (ONLY source of law — cite as [Source N]):
+
+${context}
+${provisionsBlock}
+${options.mandate ? `\n${options.mandate}\n` : ""}
+${analysisBlock}
+
+---
+
+**Task**
+
+Original question:
+${question}
+
+${taskInstructions}`;
 }
 
 export function buildAdvocateNarrativeSystemPrompt(): string {

@@ -1,0 +1,156 @@
+.answer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+
+.advocate {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sectionHeading {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.paragraph {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.list {
+  margin: 0.35rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.listNested {
+  margin-top: 0.45rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--border);
+  gap: 0.45rem;
+}
+
+.listItem {
+  line-height: inherit;
+}
+
+.marker {
+  font-weight: 650;
+  color: var(--primary);
+}
+
+.sourceCallout {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #b5d4f4;
+  border-radius: 0.75rem;
+  background: linear-gradient(145deg, #e6f1fb 0%, #eaf3de 100%);
+  padding: 0.7rem 0.7rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  box-shadow: 0 1px 6px rgba(15, 23, 42, 0.04);
+}
+
+.sourceCallout::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #60a5fa, #34d399, #86efac);
+}
+
+.metaBox {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #b5d4f4;
+  border-radius: 0.85rem;
+  background: linear-gradient(160deg, #ffffff 0%, #f3f8fc 50%, #eef6ea 100%);
+  padding: 0.8rem 0.75rem;
+}
+
+.metaLabel {
+  margin: 0 0 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.metaList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.metaRow {
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.95rem;
+}
+
+.metaKey {
+  font-weight: 550;
+  color: var(--muted);
+}
+
+.metaValue {
+  color: var(--foreground);
+  line-height: 1.55;
+}
+
+@media (min-width: 640px) {
+  .answer {
+    gap: 1rem;
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .advocate {
+    gap: 1.35rem;
+  }
+
+  .sectionHeading {
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .list {
+    gap: 0.5rem;
+  }
+
+  .sourceCallout {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .metaBox {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .metaRow {
+    grid-template-columns: 9rem 1fr;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.875rem;
+    align-items: baseline;
+  }
+}

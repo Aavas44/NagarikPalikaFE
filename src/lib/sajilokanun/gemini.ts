@@ -1,6 +1,12 @@
 import dns from "dns";
 import { GoogleGenAI, type GenerateContentResponse } from "@google/genai";
 import { MinIntervalQueue, rpmToIntervalMs } from "./rate-limit";
+import {
+  estimateTokensFromText,
+  fromGeminiUsage,
+  recordTokenUsage,
+  type UsageOperation,
+} from "./token-usage";
 
 dns.setDefaultResultOrder("ipv4first");
 
@@ -116,6 +122,14 @@ export async function embedText(text: string): Promise<number[]> {
       throw new Error("No embedding returned from Gemini");
     }
 
+    recordTokenUsage({
+      operation: "embedding",
+      provider: "gemini",
+      model: EMBEDDING_MODEL,
+      promptTokens: estimateTokensFromText(text),
+      completionTokens: 0,
+    });
+
     return values;
   }, "embedText");
 }
@@ -137,6 +151,14 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
         `Expected ${texts.length} embeddings, got ${embeddings.length}`
       );
     }
+
+    recordTokenUsage({
+      operation: "embedding",
+      provider: "gemini",
+      model: EMBEDDING_MODEL,
+      promptTokens: texts.reduce((sum, text) => sum + estimateTokensFromText(text), 0),
+      completionTokens: 0,
+    });
 
     return embeddings.map((item) => {
       if (!item.values) {
@@ -163,6 +185,14 @@ export async function embedQuery(text: string): Promise<number[]> {
       throw new Error("No embedding returned from Gemini");
     }
 
+    recordTokenUsage({
+      operation: "embedding",
+      provider: "gemini",
+      model: EMBEDDING_MODEL,
+      promptTokens: estimateTokensFromText(text),
+      completionTokens: 0,
+    });
+
     return values;
   }, "embedQuery");
 }
@@ -170,7 +200,8 @@ export async function embedQuery(text: string): Promise<number[]> {
 export async function completeChat(
   systemPrompt: string,
   userPrompt: string,
-  model = process.env.ADVOCATE_ANALYSIS_MODEL ?? CHAT_MODEL
+  model = process.env.ADVOCATE_ANALYSIS_MODEL ?? CHAT_MODEL,
+  operation: UsageOperation = "chat"
 ): Promise<string> {
   return withRetry(async () => {
     const response = await getGemini().models.generateContent({
@@ -180,6 +211,11 @@ export async function completeChat(
         systemInstruction: systemPrompt,
         temperature: 0,
       },
+    });
+    fromGeminiUsage(response.usageMetadata, {
+      operation,
+      provider: "gemini",
+      model,
     });
     const text = response.text?.trim();
     if (!text) {

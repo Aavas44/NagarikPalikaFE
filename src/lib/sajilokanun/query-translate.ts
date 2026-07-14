@@ -2,8 +2,8 @@ import { normalizeForEmbedding } from "./embedding-text";
 import { finalizeNepaliQuestion, latinCount } from "./devanagari-text";
 import { toArabicDigits } from "./nepali-digits";
 import {
-  geminiQueryPreprocessAvailable,
   preprocessLegalQueryWithGemini,
+  queryNormalizeAvailable,
 } from "./query-preprocess-gemini";
 import { needsGeminiPreprocess } from "./query-latin-detect";
 import { isStructuredLegalQuery } from "./structured-legal-query";
@@ -12,14 +12,18 @@ import type { BookScope } from "./lawbooks";
 import {
   resolveDafaNumbersFromMatchingNames,
 } from "./dafa-name-taxonomy";
+import { reconcileMetadataHint } from "./dafa-taxonomy-reconcile";
+import { useSlimNormalizePrompt } from "./query-normalize-prompt";
 
 export type QueryMetadataHint = {
   act?: string;
-  /** 2–3 verbatim दफा title lines from indexed taxonomy. */
+  /** 1–3 verbatim दफा title lines from indexed taxonomy. */
   matchingDafaNames?: string[];
   /** Root दफा numbers — from matchingDafaNames or Gemini exact_dafa_guess. */
   exactDafaGuess?: number[];
 };
+
+export const MAX_MATCHING_DAFA = 3;
 
 export type NormalizedQuery = {
   originalQuery: string;
@@ -52,6 +56,7 @@ function unwrapJsonPayload(text: string): string {
 
 type GeminiNormalizeResponse = {
   legal_analysis?: string;
+  legal_analysis_workspace?: string;
   optimized_query?: string;
   search_keywords?: string[] | string;
   queries?: string[];
@@ -116,7 +121,7 @@ function parseMatchingDafaNames(value: unknown): string[] {
       .filter((item): item is string => typeof item === "string")
       .map((item) => item.trim())
       .filter(Boolean)
-      .slice(0, 3);
+      .slice(0, MAX_MATCHING_DAFA);
   }
   if (typeof value === "string" && value.trim()) {
     return [value.trim()];
@@ -155,7 +160,7 @@ export function parseExactDafaGuessList(value: unknown): number[] {
     const nums = value
       .map(parseExactDafaGuess)
       .filter((n): n is number => n != null);
-    return [...new Set(nums)].slice(0, 2);
+    return [...new Set(nums)].slice(0, MAX_MATCHING_DAFA);
   }
   const single = parseExactDafaGuess(value);
   return single != null ? [single] : [];
@@ -206,10 +211,10 @@ export function parseGeminiResponse(raw: string): {
       metadata.act
     );
     if (fromNames.length >= 2) {
-      metadata.exactDafaGuess = fromNames.slice(0, 2);
+      metadata.exactDafaGuess = fromNames.slice(0, MAX_MATCHING_DAFA);
     } else {
       const fromGemini = exactDafaGuessFromGemini(parsed);
-      const merged = [...new Set([...fromNames, ...fromGemini])].slice(0, 2);
+      const merged = [...new Set([...fromNames, ...fromGemini])].slice(0, MAX_MATCHING_DAFA);
       if (merged.length > 0) {
         metadata.exactDafaGuess = merged;
       } else if (
@@ -224,7 +229,10 @@ export function parseGeminiResponse(raw: string): {
     }
 
     const legalAnalysis =
-      typeof parsed.legal_analysis === "string" ? parsed.legal_analysis : undefined;
+      (typeof parsed.legal_analysis_workspace === "string" &&
+        parsed.legal_analysis_workspace.trim()) ||
+      (typeof parsed.legal_analysis === "string" && parsed.legal_analysis.trim()) ||
+      undefined;
 
     return { query, searchKeywords, metadata, legalAnalysis };
   } catch {
@@ -303,9 +311,9 @@ export async function normalizeQueryWithGemini(
     };
   }
 
-  if (!geminiQueryPreprocessAvailable()) {
+  if (!queryNormalizeAvailable()) {
     throw new QueryNormalizeError(
-      "GEMINI_API_KEY is required for query normalization.",
+      "Query normalization is unavailable. Set GEMINI_API_KEY or OPENAI_API_KEY.",
       503
     );
   }
@@ -360,13 +368,14 @@ export async function normalizeQueryWithGemini(
     });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Gemini query normalization failed";
-    console.error("[HandyLaw query translate] Gemini normalize failed:", message);
+      error instanceof Error ? error.message : "Query normalization failed";
+    console.error("[HandyLaw query translate] Normalize failed:", message);
     throw new QueryNormalizeError(message, needsTranslation ? 503 : 502);
   }
 
-  const { query: geminiQuery, searchKeywords: geminiKeywords, metadata } =
+  const { query: geminiQuery, searchKeywords: geminiKeywords, metadata: rawMetadata } =
     parseGeminiResponse(raw);
+  const metadata = reconcileMetadataHint(rawMetadata, bookScope);
   const split = splitOptimizedQuery(geminiQuery || originalQuery);
   const questionText = finalizeNepaliQuestion(
     split.keywords.length > 0 ? split.question : geminiQuery || originalQuery
@@ -410,6 +419,9 @@ export async function normalizeQueryWithGemini(
         rewritten: queryUsed !== normalizeForEmbedding(originalQuery),
         provider: "gemini",
         bookScope: bookScope ?? "auto",
+        normalizeMode: useSlimNormalizePrompt()
+          ? "slim-reconcile"
+          : "legacy-taxonomy-reconcile",
         metadataHint: metadata,
       },
       null,

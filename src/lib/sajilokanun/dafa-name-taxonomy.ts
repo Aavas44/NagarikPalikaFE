@@ -35,12 +35,35 @@ const ALL_NORMALIZE_ACTS: NormalizeActId[] = [
   "faujdari_karyavidhi",
 ];
 
-const ACT_ENGLISH_NAMES: Record<NormalizeActId, string> = {
+export const ACT_ENGLISH_NAMES: Record<NormalizeActId, string> = {
   devani: "Muluki Devani Samhita 2074",
   devani_karyavidhi: "Muluki Devani Karyavidhi Samhita 2074",
   aparadh: "Muluki Aparadh Samhita 2074",
   faujdari_karyavidhi: "Muluki Faujdari Karyavidhi Samhita 2074",
 };
+
+export function resolveNormalizeActFromEnglishName(act: string): NormalizeActId | null {
+  const trimmed = act.trim();
+  const fromAct = Object.entries(ACT_ENGLISH_NAMES).find(
+    ([, english]) => english === trimmed
+  )?.[0] as NormalizeActId | undefined;
+  return fromAct ?? null;
+}
+
+/** Which indexed act owns a verbatim taxonomy displayLine (after reconcile). */
+export function resolveActFromDisplayLine(displayLine: string): NormalizeActId | null {
+  const key = normalizeMatchKey(displayLine);
+  for (const actId of ALL_NORMALIZE_ACTS) {
+    const tax = loadDafaTaxonomyForAct(actId);
+    if (!tax) continue;
+    for (const entry of tax.entries) {
+      if (normalizeMatchKey(entry.displayLine) === key) {
+        return actId;
+      }
+    }
+  }
+  return null;
+}
 
 const taxonomyCache = new Map<string, DafaTaxonomyFile>();
 
@@ -96,10 +119,22 @@ export function formatDafaTaxonomyForPrompt(bookScope?: BookScope): string {
   return blocks.join("\n\n");
 }
 
+/** Single-book taxonomy (scoped normalize or tooling). */
+export function formatDafaTaxonomyForBookId(bookId: string): string {
+  if (!bookId || bookId === "auto") return "";
+  const act = bookScopeToNormalizeAct(bookId);
+  if (!act) return "";
+  const tax = loadDafaTaxonomyForAct(act);
+  if (!tax?.entries.length) return "";
+  return `#### ${ACT_ENGLISH_NAMES[act]}\n${tax.entries.map((e) => e.displayLine).join("\n")}`;
+}
+
 function normalizeMatchKey(text: string): string {
   return text
     .replace(/\s+/g, " ")
     .replace(/[ः:.…]/g, "")
+    .replace(/वहुविवाह/gu, "बहुविवाह")
+    .replace(/बहु\s*विवाह/gu, "बहुविवाह")
     .trim()
     .toLowerCase();
 }
@@ -113,9 +148,7 @@ export function resolveDafaNumbersFromMatchingNames(
 
   const acts: NormalizeActId[] = act
     ? (() => {
-        const fromAct = Object.entries(ACT_ENGLISH_NAMES).find(
-          ([, english]) => english === act.trim()
-        )?.[0] as NormalizeActId | undefined;
+        const fromAct = resolveNormalizeActFromEnglishName(act);
         return fromAct ? [fromAct] : ALL_NORMALIZE_ACTS;
       })()
     : ALL_NORMALIZE_ACTS;
@@ -142,7 +175,8 @@ export function resolveDafaNumbersFromMatchingNames(
     let root = byDisplay.get(key) ?? byTitle.get(key);
 
     if (root == null) {
-      const labelMatch = trimmed.match(/^([\d०-९]+[क-ह]?)\./u);
+      const withoutDafaPrefix = trimmed.replace(/^दफा\s+/u, "");
+      const labelMatch = withoutDafaPrefix.match(/^([\d०-९]+[क-ह]?)\./u);
       if (labelMatch) {
         root = sectionRootFromLabel(labelMatch[1]);
       }

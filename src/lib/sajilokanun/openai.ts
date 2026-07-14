@@ -1,4 +1,10 @@
 import OpenAI from "openai";
+import { openAiChatCacheParams } from "./advocate-chat-cache";
+import {
+  fromOpenAiUsage,
+  recordTokenUsage,
+  type UsageOperation,
+} from "./token-usage";
 
 export const EMBEDDING_MODEL =
   process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-large";
@@ -53,6 +59,12 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
   throw new Error(`Failed ${label} after retries`);
 }
 
+/** GPT-5 models only support the default temperature — omit the param. */
+export function resolveOpenAiTemperature(model: string): number | undefined {
+  if (/^gpt-5/i.test(model)) return undefined;
+  return 0;
+}
+
 export function getOpenAI(): OpenAI {
   if (!client) {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -72,6 +84,11 @@ export async function embedText(text: string): Promise<number[]> {
       input: text,
       dimensions: EMBEDDING_DIMENSION,
     });
+    fromOpenAiUsage(response.usage, {
+      operation: "embedding",
+      provider: "openai",
+      model: EMBEDDING_MODEL,
+    });
     return response.data[0].embedding;
   }, "embedText");
 }
@@ -83,6 +100,11 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
       input: texts,
       dimensions: EMBEDDING_DIMENSION,
     });
+    fromOpenAiUsage(response.usage, {
+      operation: "embedding",
+      provider: "openai",
+      model: EMBEDDING_MODEL,
+    });
     return response.data.map((item) => item.embedding);
   }, `embedTexts(${texts.length})`);
 }
@@ -91,13 +113,24 @@ export async function embedQuery(text: string): Promise<number[]> {
   return embedText(text);
 }
 
+export type OpenAiChatCacheOptions = {
+  promptCacheKey?: string;
+};
+
 export async function streamChatCompletion(
   systemPrompt: string,
-  userPrompt: string
+  userPrompt: string,
+  cacheOptions?: OpenAiChatCacheOptions
 ) {
+  const cacheParams = cacheOptions?.promptCacheKey
+    ? openAiChatCacheParams(cacheOptions.promptCacheKey, CHAT_MODEL)
+    : {};
+
   return getOpenAI().chat.completions.create({
     model: CHAT_MODEL,
     stream: true,
+    stream_options: { include_usage: true },
+    ...cacheParams,
     messages: [
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
@@ -108,16 +141,29 @@ export async function streamChatCompletion(
 export async function completeChat(
   systemPrompt: string,
   userPrompt: string,
-  model = process.env.ADVOCATE_ANALYSIS_MODEL ?? CHAT_MODEL
+  model = process.env.ADVOCATE_ANALYSIS_MODEL ?? CHAT_MODEL,
+  operation: UsageOperation = "chat",
+  cacheOptions?: OpenAiChatCacheOptions
 ): Promise<string> {
   return withRetry(async () => {
+    const temperature = resolveOpenAiTemperature(model);
+    const cacheParams = cacheOptions?.promptCacheKey
+      ? openAiChatCacheParams(cacheOptions.promptCacheKey, model)
+      : {};
+
     const response = await getOpenAI().chat.completions.create({
       model,
-      temperature: 0,
+      ...(temperature !== undefined ? { temperature } : {}),
+      ...cacheParams,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
+    });
+    fromOpenAiUsage(response.usage, {
+      operation,
+      provider: "openai",
+      model,
     });
     const text = response.choices[0]?.message?.content?.trim();
     if (!text) {
@@ -139,11 +185,12 @@ export async function transcribeImage(
   const detail =
     process.env.OPENAI_OCR_DETAIL === "low" ? "low" : ("high" as const);
   const base64 = imageBuffer.toString("base64");
+  const temperature = resolveOpenAiTemperature(OCR_MODEL);
 
   return withRetry(async () => {
     const response = await getOpenAI().chat.completions.create({
       model: OCR_MODEL,
-      temperature: 0,
+      ...(temperature !== undefined ? { temperature } : {}),
       max_tokens: 8192,
       messages: [
         {

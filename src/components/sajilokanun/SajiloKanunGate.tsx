@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import { UserNav } from "@/components/user/UserNav";
 import { UserFooter } from "@/components/user/UserFooter";
@@ -100,160 +101,168 @@ export function SajiloKanunGate() {
   return (
     <>
       <UserNav />
-      <main className={pageStyles.skGatePage}>
-        <div className={pageStyles.skGateInner}>
-          <section className={pageStyles.skGateHero}>
-            <p className={pageStyles.skGateEyebrow}>⚖️ {msg.nav.sajiloKanun}</p>
-            <h1>{t.gateTitle}</h1>
-            <p className={pageStyles.skGateLead}>{t.gateSubtitle}</p>
-            <ul className={pageStyles.skGateFeatures}>
-              {features.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </section>
+      <section className={pageStyles.calculatorPage}>
+        <div className={`${pageStyles.calculatorPageInner} ${emiStyles.emiPageInner}`}>
+          <Link href="/" className={pageStyles.calculatorBack}>
+            ← Home
+          </Link>
 
-          <div className={pageStyles.skGateColumns}>
-            <section className={`${emiStyles.emiPanel} ${pageStyles.skGateCard}`}>
-              <h2>{t.loginTitle}</h2>
-              <form className={pageStyles.skGateForm} onSubmit={handleLogin}>
-                <div className={pageStyles.contactField}>
-                  <label htmlFor="sk-username">{t.usernameLabel}</label>
-                  <input
-                    id="sk-username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder={t.usernamePlaceholder}
-                    className={emiStyles.emiNumberInput}
-                    autoComplete="username"
-                    required
-                  />
-                </div>
-                <div className={pageStyles.contactField}>
-                  <label htmlFor="sk-password">{t.passwordLabel}</label>
-                  <input
-                    id="sk-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t.passwordPlaceholder}
-                    className={emiStyles.emiNumberInput}
-                    autoComplete="current-password"
-                    required
-                  />
-                </div>
-                {loginError && <p className={pageStyles.contactError}>{loginError}</p>}
-                <button type="submit" className={pageStyles.contactSubmit} disabled={loginLoading}>
-                  {loginLoading ? t.loginSubmitting : t.loginSubmit}
-                </button>
-              </form>
+          <header className={emiStyles.emiHeader}>
+            <h1>{t.gateTitle}</h1>
+            <p className={pageStyles.calculatorSubtitle}>{t.gateSubtitle}</p>
+          </header>
+
+          <ul className={pageStyles.skGateFeatures} style={{ marginBottom: "1.5rem" }}>
+            {features.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+
+          <div className={emiStyles.emiLayout}>
+            <section className={emiStyles.emiPanel}>
+              <h2 className={emiStyles.emiPanelTitle}>{t.loginTitle}</h2>
+              <div className={`${emiStyles.emiFadeCard} ${emiStyles.emiFormSection}`}>
+                <form className={pageStyles.skGateForm} onSubmit={handleLogin}>
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="sk-username">{t.usernameLabel}</label>
+                    <input
+                      id="sk-username"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder={t.usernamePlaceholder}
+                      className={emiStyles.emiNumberInput}
+                      autoComplete="username"
+                      required
+                    />
+                  </div>
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="sk-password">{t.passwordLabel}</label>
+                    <input
+                      id="sk-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={t.passwordPlaceholder}
+                      className={emiStyles.emiNumberInput}
+                      autoComplete="current-password"
+                      required
+                    />
+                  </div>
+                  {loginError && <p className={pageStyles.contactError}>{loginError}</p>}
+                  <button type="submit" className={pageStyles.contactSubmit} disabled={loginLoading}>
+                    {loginLoading ? t.loginSubmitting : t.loginSubmit}
+                  </button>
+                </form>
+              </div>
             </section>
 
-            <section className={`${emiStyles.emiPanel} ${pageStyles.skGateCard}`}>
-              <h2>{t.demoTitle}</h2>
-              <p className={pageStyles.skGateDemoLead}>{t.demoSubtitle}</p>
+            <section className={emiStyles.emiPanel}>
+              <h2 className={emiStyles.emiPanelTitle}>{t.demoTitle}</h2>
+              <div className={`${emiStyles.emiFadeCard} ${emiStyles.emiFormSection}`}>
+                <p className={pageStyles.skGateDemoLead}>{t.demoSubtitle}</p>
 
-              {!demoOpen ? (
-                <button
-                  type="button"
-                  className={pageStyles.skGateDemoBtn}
-                  onClick={() => setDemoOpen(true)}
-                >
-                  {t.openDemoForm}
-                </button>
-              ) : demoStatus !== "idle" ? (
-                <div className={pageStyles.contactSuccess}>
-                  <p>{demoStatus === "already" ? t.demoAlready : t.demoSuccess}</p>
-                </div>
-              ) : (
-                <form className={pageStyles.skGateForm} onSubmit={handleDemoSubmit}>
-                  <div className={pageStyles.contactField}>
-                    <label htmlFor="sk-demo-name">{t.demoNameLabel}</label>
-                    <input
-                      id="sk-demo-name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder={t.demoNamePlaceholder}
-                      className={emiStyles.emiNumberInput}
-                      required
-                    />
+                {!demoOpen ? (
+                  <button
+                    type="button"
+                    className={pageStyles.skGateDemoBtn}
+                    onClick={() => setDemoOpen(true)}
+                  >
+                    {t.openDemoForm}
+                  </button>
+                ) : demoStatus !== "idle" ? (
+                  <div className={pageStyles.contactSuccess}>
+                    <p>{demoStatus === "already" ? t.demoAlready : t.demoSuccess}</p>
                   </div>
-                  <div className={pageStyles.contactField}>
-                    <label htmlFor="sk-demo-email">{t.demoEmailLabel}</label>
-                    <input
-                      id="sk-demo-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder={t.demoEmailPlaceholder}
-                      className={emiStyles.emiNumberInput}
-                      required
-                    />
-                  </div>
-                  <div className={pageStyles.contactField}>
-                    <label htmlFor="sk-demo-contact">{t.demoContactLabel}</label>
-                    <input
-                      id="sk-demo-contact"
-                      type="tel"
-                      value={contactNo}
-                      onChange={(e) => setContactNo(e.target.value)}
-                      placeholder={t.demoContactPlaceholder}
-                      className={emiStyles.emiNumberInput}
-                      required
-                    />
-                  </div>
-                  <div className={pageStyles.contactField}>
-                    <label htmlFor="sk-demo-profession">{t.demoProfessionLabel}</label>
-                    <input
-                      id="sk-demo-profession"
-                      type="text"
-                      value={profession}
-                      onChange={(e) => setProfession(e.target.value)}
-                      placeholder={t.demoProfessionPlaceholder}
-                      className={emiStyles.emiNumberInput}
-                      required
-                    />
-                  </div>
-                  <div className={pageStyles.contactField}>
-                    <label htmlFor="sk-demo-queries">{t.demoQueriesLabel}</label>
-                    <textarea
-                      id="sk-demo-queries"
-                      value={queries}
-                      onChange={(e) => setQueries(e.target.value)}
-                      placeholder={t.demoQueriesPlaceholder}
-                      className={pageStyles.contactTextarea}
-                      rows={4}
-                      required
-                      minLength={10}
-                      maxLength={2000}
-                    />
-                  </div>
-                  {demoError && <p className={pageStyles.contactError}>{demoError}</p>}
-                  <div className={pageStyles.skGateDemoActions}>
-                    <button
-                      type="button"
-                      className={pageStyles.skGateDemoSecondary}
-                      onClick={() => setDemoOpen(false)}
-                    >
-                      {t.closeDemoForm}
-                    </button>
-                    <button
-                      type="submit"
-                      className={pageStyles.contactSubmit}
-                      disabled={demoLoading}
-                    >
-                      {demoLoading ? t.demoSubmitting : t.demoSubmit}
-                    </button>
-                  </div>
-                </form>
-              )}
+                ) : (
+                  <form className={pageStyles.skGateForm} onSubmit={handleDemoSubmit}>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="sk-demo-name">{t.demoNameLabel}</label>
+                      <input
+                        id="sk-demo-name"
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder={t.demoNamePlaceholder}
+                        className={emiStyles.emiNumberInput}
+                        required
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="sk-demo-email">{t.demoEmailLabel}</label>
+                      <input
+                        id="sk-demo-email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder={t.demoEmailPlaceholder}
+                        className={emiStyles.emiNumberInput}
+                        required
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="sk-demo-contact">{t.demoContactLabel}</label>
+                      <input
+                        id="sk-demo-contact"
+                        type="tel"
+                        value={contactNo}
+                        onChange={(e) => setContactNo(e.target.value)}
+                        placeholder={t.demoContactPlaceholder}
+                        className={emiStyles.emiNumberInput}
+                        required
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="sk-demo-profession">{t.demoProfessionLabel}</label>
+                      <input
+                        id="sk-demo-profession"
+                        type="text"
+                        value={profession}
+                        onChange={(e) => setProfession(e.target.value)}
+                        placeholder={t.demoProfessionPlaceholder}
+                        className={emiStyles.emiNumberInput}
+                        required
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="sk-demo-queries">{t.demoQueriesLabel}</label>
+                      <textarea
+                        id="sk-demo-queries"
+                        value={queries}
+                        onChange={(e) => setQueries(e.target.value)}
+                        placeholder={t.demoQueriesPlaceholder}
+                        className={pageStyles.contactTextarea}
+                        rows={4}
+                        required
+                        minLength={10}
+                        maxLength={2000}
+                      />
+                    </div>
+                    {demoError && <p className={pageStyles.contactError}>{demoError}</p>}
+                    <div className={pageStyles.skGateDemoActions}>
+                      <button
+                        type="button"
+                        className={pageStyles.skGateDemoSecondary}
+                        onClick={() => setDemoOpen(false)}
+                      >
+                        {t.closeDemoForm}
+                      </button>
+                      <button
+                        type="submit"
+                        className={pageStyles.contactSubmit}
+                        disabled={demoLoading}
+                      >
+                        {demoLoading ? t.demoSubmitting : t.demoSubmit}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             </section>
           </div>
         </div>
-      </main>
-      <UserFooter />
+      </section>
+      <UserFooter showContact={false} />
     </>
   );
 }

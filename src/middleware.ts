@@ -22,7 +22,9 @@ function clearTokenCookie(response: NextResponse): NextResponse {
 }
 
 function redirectForUserType(userType: string, request: NextRequest): NextResponse {
-  if (userType === "admin") return NextResponse.redirect(new URL("/admin", request.url));
+  if (userType === "admin" || userType === "superadmin") {
+    return NextResponse.redirect(new URL("/admin", request.url));
+  }
   if (userType === "advocate") return NextResponse.redirect(new URL("/advocate", request.url));
   if (userType === "user") return NextResponse.redirect(new URL("/account", request.url));
   const res = NextResponse.redirect(new URL("/login", request.url));
@@ -39,7 +41,7 @@ export function middleware(request: NextRequest) {
       const res = NextResponse.redirect(new URL("/login", request.url));
       return token && !userType ? clearTokenCookie(res) : res;
     }
-    if (userType !== "admin") {
+    if (userType !== "admin" && userType !== "superadmin") {
       return NextResponse.redirect(new URL("/login?error=admin_only", request.url));
     }
   }
@@ -108,7 +110,10 @@ export function middleware(request: NextRequest) {
 
   const isProtectedSajiloKanun =
     pathname.startsWith("/sajilokanun/chat") ||
-    pathname.startsWith("/sajilokanun/unicode-converter");
+    pathname.startsWith("/sajilokanun/unicode-converter") ||
+    pathname.startsWith("/sajilokanun/usage") ||
+    pathname.startsWith("/sajilokanun/team") ||
+    pathname.startsWith("/sajilokanun/cases");
 
   if (isProtectedSajiloKanun) {
     const skToken = request.cookies.get(SAJILO_KANUN_TOKEN_COOKIE)?.value;
@@ -131,5 +136,11 @@ export const config = {
     "/sajilokanun/chat/:path*",
     "/sajilokanun/unicode-converter",
     "/sajilokanun/unicode-converter/:path*",
+    "/sajilokanun/usage",
+    "/sajilokanun/usage/:path*",
+    "/sajilokanun/team",
+    "/sajilokanun/team/:path*",
+    "/sajilokanun/cases",
+    "/sajilokanun/cases/:path*",
   ],
 };

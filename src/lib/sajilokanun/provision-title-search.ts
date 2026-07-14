@@ -22,6 +22,9 @@ export function normalizeProvisionTitle(text: string): string {
   return text
     .replace(/[ः:।]/g, "")
     .replace(/\s+/g, " ")
+    // Indexed typo / alternate spellings — match OCR and LLM forms
+    .replace(/वहुविवाह/gu, "बहुविवाह")
+    .replace(/बहु\s*विवाह/gu, "बहुविवाह")
     .trim();
 }
 

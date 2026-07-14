@@ -9,16 +9,21 @@ type SourceTagsProps = {
 };
 
 export function SourceTags({ sources, onOpenPdf }: SourceTagsProps) {
-  const unique = dedupeSourcesForDisplay(sources).slice(0, UI_SOURCES_DISPLAY_MAX);
+  const deduped = dedupeSourcesForDisplay(sources);
+  const unique = (
+    deduped.some((source) => !source.related)
+      ? deduped.filter((source) => !source.related)
+      : deduped
+  ).slice(0, UI_SOURCES_DISPLAY_MAX);
   if (unique.length === 0) return null;
 
   return (
-    <div className="mt-3 flex flex-wrap gap-1.5">
+    <div className="mt-3.5 flex flex-wrap gap-2 sm:mt-3 sm:gap-1.5">
       {unique.map((source) => {
         const label = formatSourceLabel({ ...source, content: source.content });
         const preview = sourcePdfPreview(source);
         const className =
-          "inline-flex max-w-full items-center rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs leading-snug text-[var(--foreground)]";
+          "inline-flex max-w-full items-center rounded-lg border border-[var(--border)] bg-[var(--surface-muted)] px-3 py-1.5 text-sm leading-snug text-[var(--foreground)] sm:px-2.5 sm:py-1 sm:text-xs";
 
         if (preview) {
           return (

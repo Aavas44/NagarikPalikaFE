@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppHeader } from "@/components/sajilokanun/AppHeader";
-import { SelectField } from "@/components/sajilokanun/SelectField";
+import { SajiloKanunAppShell } from "@/components/sajilokanun/SajiloKanunAppShell";
+import shellStyles from "@/components/sajilokanun/SajiloKanunAppShell.module.css";
 import {
   extractTextFromDocx,
   isLegacyDocFile,
@@ -13,6 +13,8 @@ import {
   devanagariRatio,
   type LegacyFont,
 } from "@/lib/sajilokanun/legacy-font-convert";
+import emiStyles from "@/components/user/emi.module.css";
+import pageStyles from "@/app/user.module.css";
 
 const FONT_OPTIONS: { value: LegacyFont; label: string }[] = [
   { value: "auto", label: "Auto (Preeti / Kantipur)" },
@@ -95,123 +97,132 @@ export default function UnicodeConverterPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col">
-      <AppHeader />
+    <SajiloKanunAppShell
+      title="Unicode Converter"
+      subtitle="Convert Preeti, Kantipur, or PCS-encoded Nepali text to Devanagari Unicode. No AI — instant font mapping."
+    >
+      <div className={`${emiStyles.emiPanel} ${shellStyles.panelStack}`}>
+        <div className={emiStyles.emiRow}>
+          <div className={emiStyles.emiField} style={{ flex: "1 1 220px" }}>
+            <label htmlFor="font-select">Font</label>
+            <select
+              id="font-select"
+              className={emiStyles.emiNumberInput}
+              value={font}
+              onChange={(e) => setFont(e.target.value as LegacyFont)}
+            >
+              {FONT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div
+            className={emiStyles.emiField}
+            style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.docx"
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) void handleFile(file);
+                event.target.value = "";
+              }}
+            />
+            <button
+              type="button"
+              className={pageStyles.skGateDemoBtn}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              Upload .txt / .docx
+            </button>
+            {fileName && (
+              <p className={emiStyles.emiFieldHint} style={{ marginTop: "0.35rem" }}>
+                {fileName}
+              </p>
+            )}
+          </div>
+        </div>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-3 py-4 sm:gap-5 sm:px-4 sm:py-6">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight sm:text-xl">
-            Unicode Converter
-          </h2>
-          <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
-            Convert Preeti, Kantipur, or PCS-encoded Nepali text to Devanagari
-            Unicode. No AI — instant font mapping.
+        {error && <p className={pageStyles.contactError}>{error}</p>}
+
+        <div className={emiStyles.emiLayout}>
+          <div className={emiStyles.emiField}>
+            <label htmlFor="legacy-input">Input (legacy font)</label>
+            <textarea
+              id="legacy-input"
+              value={input}
+              onChange={(event) => {
+                setInput(event.target.value);
+                setError(null);
+              }}
+              placeholder="Paste Preeti/Kantipur text here…"
+              className={emiStyles.emiNumberInput}
+              style={{ resize: "vertical", minHeight: "240px", fontFamily: "inherit" }}
+            />
+          </div>
+          <div className={emiStyles.emiField}>
+            <label htmlFor="unicode-output">Output (Unicode)</label>
+            <textarea
+              id="unicode-output"
+              value={output}
+              readOnly
+              placeholder="Converted Devanagari will appear here…"
+              className={emiStyles.emiNumberInput}
+              style={{
+                resize: "vertical",
+                minHeight: "240px",
+                fontFamily: "inherit",
+                background: "#f9fafb",
+              }}
+            />
+          </div>
+        </div>
+
+        <div
+          className={emiStyles.emiRow}
+          style={{
+            alignItems: "center",
+            justifyContent: "space-between",
+            borderTop: "1px solid #e5e7eb",
+            paddingTop: "1rem",
+            marginTop: "0.25rem",
+          }}
+        >
+          <p className={emiStyles.emiFieldHint} style={{ margin: 0 }}>
+            {beforeRatio != null && afterRatio != null
+              ? `Devanagari: ${beforeRatio}% → ${afterRatio}%`
+              : "Paste text or upload a file to convert"}
           </p>
-        </div>
-
-        <div className="card space-y-4 p-3 sm:p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <div className="w-full sm:max-w-xs">
-              <SelectField
-                id="font-select"
-                label="Font"
-                value={font}
-                options={FONT_OPTIONS}
-                onChange={setFont}
-              />
-            </div>
-
-            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".txt,.docx"
-                className="hidden"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-                  if (file) void handleFile(file);
-                  event.target.value = "";
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] sm:w-auto sm:px-3 sm:py-2 sm:text-xs"
-              >
-                Upload .txt / .docx
-              </button>
-              {fileName && (
-                <span className="truncate text-center text-xs text-[var(--muted)] sm:text-left">
-                  {fileName}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {error && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm leading-relaxed text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
-              {error}
-            </p>
-          )}
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="legacy-input">
-                Input (legacy font)
-              </label>
-              <textarea
-                id="legacy-input"
-                value={input}
-                onChange={(event) => {
-                  setInput(event.target.value);
-                  setError(null);
-                }}
-                placeholder="Paste Preeti/Kantipur text here…"
-                className="input-field min-h-[200px] resize-y text-base leading-relaxed sm:min-h-[240px] sm:text-sm md:min-h-[280px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium" htmlFor="unicode-output">
-                Output (Unicode)
-              </label>
-              <textarea
-                id="unicode-output"
-                value={output}
-                readOnly
-                placeholder="Converted Devanagari will appear here…"
-                className="input-field min-h-[200px] resize-y bg-[var(--surface-muted)] text-base leading-relaxed sm:min-h-[240px] sm:text-sm md:min-h-[280px]"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 border-t border-[var(--border)] pt-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-center text-xs text-[var(--muted)] sm:text-left">
-              {beforeRatio != null && afterRatio != null
-                ? `Devanagari: ${beforeRatio}% → ${afterRatio}%`
-                : "Paste text or upload a file to convert"}
-            </p>
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
-              <button
-                type="button"
-                onClick={() => void handleCopy()}
-                disabled={!output}
-                className="rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-50 sm:rounded-lg sm:px-3 sm:py-1.5 sm:text-xs"
-              >
-                {copied ? "Copied" : "Copy"}
-              </button>
-              <button
-                type="button"
-                onClick={handleDownload}
-                disabled={!output}
-                className="btn-primary px-4 py-2.5 text-sm sm:px-3 sm:py-1.5 sm:text-xs disabled:opacity-50"
-              >
-                Download .txt
-              </button>
-            </div>
+          <div className={emiStyles.emiRow} style={{ gap: "0.5rem", margin: 0 }}>
+            <button
+              type="button"
+              onClick={() => void handleCopy()}
+              disabled={!output}
+              className={pageStyles.skGateDemoBtn}
+              style={{ opacity: output ? 1 : 0.5 }}
+            >
+              {copied ? "Copied" : "Copy"}
+            </button>
+            <button
+              type="button"
+              onClick={handleDownload}
+              disabled={!output}
+              className={pageStyles.contactSubmit}
+              style={{ opacity: output ? 1 : 0.5 }}
+            >
+              Download .txt
+            </button>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+      <p className={emiStyles.emiDisclaimer} style={{ marginTop: "1rem" }}>
+        Font mapping runs fully in your browser — nothing is uploaded to a server.
+      </p>
+    </SajiloKanunAppShell>
   );
 }

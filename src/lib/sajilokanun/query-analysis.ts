@@ -185,7 +185,9 @@ export async function analyzeQuery(
 
   const raw = await completeChat(
     ANALYSIS_SYSTEM,
-    buildAnalysisUserPrompt(question, bookScope)
+    buildAnalysisUserPrompt(question, bookScope),
+    undefined,
+    "analysis"
   );
   const llm = parseAnalysis(raw, question);
   const analysis = mergeQueryAnalysis(llm, heuristic);

@@ -1,0 +1,364 @@
+.skAppPage {
+  padding: 2.5rem 1.5rem 3rem;
+}
+
+/* Shared fade surface (salary-tax emiFadeCard vocabulary) */
+.fadeSurface {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #e6f1fb 0%, #eaf3de 100%);
+  border: 1px solid #b5d4f4;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+}
+
+.fadeSurface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0) 58%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.fadeSurface::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #60a5fa, #34d399, #86efac);
+  z-index: 1;
+}
+
+/* ——— App chrome ——— */
+
+.chrome {
+  margin-bottom: 1.15rem;
+}
+
+.chromeTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.backLink {
+  position: relative;
+  z-index: 2;
+  font-size: 13px;
+  color: #185fa5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.actionCluster {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #b8cce8 0%, #d8e8f8 50%, #eef6ff 100%);
+  border: 1px solid #9ec5e8;
+  box-shadow:
+    inset 0 3px 6px rgba(24, 95, 165, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  border-right: 1px solid rgba(158, 197, 232, 0.75);
+  background: transparent;
+  padding: 0.5rem 0.85rem;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  color: #4b5563;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.actionBtn:last-child {
+  border-right: none;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.55);
+  color: #1f2937;
+}
+
+.actionBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.actionPrimary {
+  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+  color: #0c447c;
+  box-shadow:
+    0 2px 5px rgba(24, 95, 165, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.actionPrimary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffffff 0%, #cfe4fb 100%);
+  color: #042c53;
+}
+
+.actionMuted {
+  color: #4b5563;
+}
+
+.pageIntro {
+  margin-bottom: 0.9rem;
+}
+
+.pageIntroText h1 {
+  margin: 0 0 0.3rem;
+  font-size: 1.55rem;
+  font-weight: 650;
+  color: #042c53;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.pageIntroText p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.45;
+}
+
+.rolePill {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid #b5d4f4;
+  color: #0c447c;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
+/* Nav — same language as emiUnitToggle inside fade cards */
+
+.navTabs {
+  display: flex;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #b8cce8 0%, #d8e8f8 50%, #eef6ff 100%);
+  border: 1px solid #9ec5e8;
+  box-shadow:
+    inset 0 3px 6px rgba(24, 95, 165, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.85);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.navTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.navTab {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: max-content;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #4b5563;
+  font-size: 12.5px;
+  font-weight: 600;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
+}
+
+.navTab:hover {
+  color: #1f2937;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.navTabActive {
+  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+  color: #0c447c;
+  box-shadow:
+    0 3px 7px rgba(24, 95, 165, 0.22),
+    0 1px 3px rgba(24, 95, 165, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+}
+
+.navTabActive:hover {
+  color: #042c53;
+  background: linear-gradient(180deg, #ffffff 0%, #cfe4fb 100%);
+}
+
+.navTabIcon {
+  flex-shrink: 0;
+}
+
+.navTabLabel {
+  line-height: 1;
+}
+
+.navTabMeta {
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(181, 212, 244, 0.9);
+  color: #0c447c;
+}
+
+.navTabActive .navTabMeta {
+  background: #fff;
+  border-color: #b5d4f4;
+}
+
+/* Chat layout */
+
+.chatPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: min(70vh, 720px);
+  padding: 0 !important;
+  overflow: hidden;
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 0%, #f7fafc 55%, #f3f7f1 100%) !important;
+  border: 1px solid #b5d4f4 !important;
+  box-shadow: 0 4px 20px rgba(24, 95, 165, 0.07) !important;
+}
+
+.chatPanel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #60a5fa, #34d399, #86efac);
+  z-index: 2;
+}
+
+.chatBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.25rem 0.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chatFooter {
+  border-top: 1px solid rgba(181, 212, 244, 0.85);
+  padding: 1rem 1.25rem 1.25rem;
+  background: linear-gradient(180deg, rgba(230, 241, 251, 0.55) 0%, #ffffff 100%);
+}
+
+.messageStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+}
+
+.panelStack {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .skAppPage {
+    padding: 1rem 0.35rem 1.75rem !important;
+  }
+
+  .chrome {
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .chromeTop {
+    margin-bottom: 0.75rem;
+  }
+
+  .actionBtn {
+    padding: 0.5rem 0.65rem;
+    font-size: 12px;
+  }
+
+  .pageIntroText h1 {
+    font-size: 1.3rem;
+  }
+
+  .pageIntroText p {
+    font-size: 0.85rem;
+  }
+
+  .navTabs {
+    gap: 2px;
+    padding: 3px;
+  }
+
+  .navTab {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.45rem 0.3rem;
+    font-size: 10.5px;
+  }
+
+  .navTabMeta {
+    font-size: 9.5px;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .chatPanel {
+    min-height: min(70vh, 720px);
+    border-radius: 10px;
+  }
+
+  .chatBody {
+    padding: 0.85rem 0.45rem 0.6rem;
+  }
+
+  .chatFooter {
+    padding: 0.85rem 0.55rem 1rem;
+  }
+
+  .messageStack {
+    gap: 1.5rem;
+  }
+}

@@ -7,6 +7,10 @@ import {
 import type { MatchedChunk } from "./supabase";
 import type { QueryAnalysis, SectionHint } from "./query-analysis";
 import { questionTopicSectionLookups } from "./question-topic-pins";
+import { scoreProvisionTitleMatch } from "./provision-title-search";
+
+/** Max unique दफा sections in advocate answers (provisions + UI sources). */
+export const ADVOCATE_DAFA_MAX = Number(process.env.ADVOCATE_DAFA_MAX ?? 3);
 
 /** Extra search strings when the query matches known legal topic patterns. */
 export function supplementalRetrievalQueries(
@@ -673,4 +677,100 @@ export function focusAdvocateChunks(
   return [...focused].sort(
     (a, b) => sectionSortKey(a.section_label) - sectionSortKey(b.section_label)
   );
+}
+
+function advocateDafaGroupKey(chunk: MatchedChunk): string {
+  const section = chunk.section_label?.split(".")[0] ?? "unknown";
+  return `${chunk.filename}|${section}`;
+}
+
+function chunkTitleForMatch(chunk: MatchedChunk): string {
+  return (
+    chunk.section_title?.trim() ||
+    chunk.content.match(/दफा\s*[:\s]+([^\n]+)/u)?.[1]?.trim() ||
+    ""
+  );
+}
+
+/** True punishment language — not mere hierarchical "उपदफा (" structure. */
+function chunkHasPunishmentText(chunk: MatchedChunk): boolean {
+  const title = chunkTitleForMatch(chunk);
+  if (/सजाय|कैद|जरिबाना/u.test(title)) return true;
+  return /सजाय|कैद|जरिबाना/u.test(chunk.content);
+}
+
+function isPreciseAdvocateDafa(
+  chunk: MatchedChunk,
+  query: string,
+  hinted: boolean
+): boolean {
+  const title = chunkTitleForMatch(chunk);
+  const titleScore = title ? scoreProvisionTitleMatch(query, title) : 0;
+  const sim = chunk.similarity ?? 0;
+  const asksPunishment = /सजाय|कैद|जरिबाना/.test(query);
+  const hasPunishment = chunkHasPunishmentText(chunk);
+
+  if (hinted && (titleScore >= 0.5 || sim >= 0.7)) return true;
+  if (titleScore >= 0.65) return true;
+  if (sim >= 0.88) return true;
+  if (asksPunishment && hasPunishment && titleScore >= 0.45) return true;
+  return false;
+}
+
+/**
+ * Cap advocate output to ADVOCATE_DAFA_MAX unique दफा.
+ * Stop at 1–2 when the top match(es) already contain a precise answer (esp. सजाय).
+ */
+export function limitAdvocateDafaChunks(
+  chunks: MatchedChunk[],
+  query: string,
+  sectionHints: SectionHint[],
+  preferHintOrder: boolean
+): MatchedChunk[] {
+  if (chunks.length === 0) return chunks;
+
+  const hinted = (chunk: MatchedChunk) =>
+    preferHintOrder &&
+    sectionHints.some((h) => chunkMatchesSectionHint(chunk, h));
+
+  const unique: MatchedChunk[] = [];
+  const seen = new Set<string>();
+  for (const chunk of chunks) {
+    const key = advocateDafaGroupKey(chunk);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(chunk);
+    if (unique.length >= ADVOCATE_DAFA_MAX) break;
+  }
+
+  if (unique.length === 0) return chunks.slice(0, ADVOCATE_DAFA_MAX);
+
+  const first = unique[0];
+  if (unique.length === 1) return unique;
+
+  // Preserve all retrieved metadata/hint दफा (e.g. २४१ offense + २४२ सजाय).
+  const hintedRetrieved = unique.filter((c) => hinted(c));
+  if (preferHintOrder && hintedRetrieved.length >= 2) {
+    return hintedRetrieved.slice(0, ADVOCATE_DAFA_MAX);
+  }
+
+  const firstPrecise = isPreciseAdvocateDafa(first, query, hinted(first));
+  const asksPunishment = /सजाय|कैद|जरिबाना/.test(query);
+  const firstAnswersPunishment = chunkHasPunishmentText(first);
+
+  // Only early-stop to a single दफा when that दफा itself states the सजाय.
+  // Offense-definition दफा (e.g. २४१) often sort first but must not exclude सजाय दफा (२४२).
+  if (firstPrecise && asksPunishment && firstAnswersPunishment) {
+    return [first];
+  }
+
+  if (
+    unique.length >= 2 &&
+    firstPrecise &&
+    isPreciseAdvocateDafa(unique[1], query, hinted(unique[1]))
+  ) {
+    return unique.slice(0, 2);
+  }
+
+  return unique;
 }

@@ -57,7 +57,7 @@ import {
   targetBookIds,
   type ParsedBookScope,
 } from "./book-scope";
-import { UI_SOURCES_DISPLAY_MAX } from "./source-label";
+import { UI_SOURCES_PANEL_MAX } from "./source-label";
 
 const TOP_K = Number(process.env.RETRIEVAL_TOP_K ?? 8);
 const SECTION_TOP_K = Number(process.env.SECTION_RETRIEVAL_TOP_K ?? 24);
@@ -65,9 +65,9 @@ export const ADVOCATE_TOP_K = Number(process.env.ADVOCATE_RETRIEVAL_TOP_K ?? 24)
 export const ADVOCATE_CONTEXT_MAX = Number(
   process.env.ADVOCATE_CONTEXT_MAX ?? 18
 );
-/** Sources sent to UI tags/panel in advocate mode (LLM context uses ADVOCATE_CONTEXT_MAX). */
+/** Unique दफा sent to विस्तृत स्रोत in advocate mode (LLM context uses ADVOCATE_CONTEXT_MAX). */
 export const ADVOCATE_UI_SOURCES_MAX = Number(
-  process.env.ADVOCATE_UI_SOURCES_MAX ?? UI_SOURCES_DISPLAY_MAX
+  process.env.ADVOCATE_UI_SOURCES_MAX ?? UI_SOURCES_PANEL_MAX
 );
 const PINNED_SIMILARITY = 0.84;
 const CHAPTER_EXPANSION_MAX_SECTIONS = Number(

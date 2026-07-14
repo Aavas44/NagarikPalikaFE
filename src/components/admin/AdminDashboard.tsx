@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { Stats, Template, Term } from "@/types";
+import { fetchCurrentUser } from "@/lib/auth";
 import { AdminSidebarFooter } from "./AdminSidebarFooter";
 import { AdminTermPanel } from "./AdminTermPanel";
 import { AdminTemplatePanel } from "./AdminTemplatePanel";
 import { AdminFeedbackPanel } from "./AdminFeedbackPanel";
 import { AdminDemoRequestsPanel } from "./AdminDemoRequestsPanel";
+import { AdminSajiloKanunPanel } from "./AdminSajiloKanunPanel";
 import styles from "@/app/admin.module.css";
 
 function formatNumber(n: number) {
@@ -21,6 +24,14 @@ interface AdminDashboardProps {
 }
 
 export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps) {
+  const [isSuperadmin, setIsSuperadmin] = useState(false);
+
+  useEffect(() => {
+    fetchCurrentUser().then((user) => {
+      setIsSuperadmin(user?.userType === "superadmin");
+    });
+  }, []);
+
   return (
     <div className={styles.adminWrap}>
       <aside className={styles.sidebar}>
@@ -59,6 +70,15 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
           </a>
         </div>
 
+        {isSuperadmin && (
+          <div className={styles.navGroup}>
+            <div className={styles.navLabel}>Sajilo Kanun</div>
+            <a href="#sajilo-kanun-teams" className={styles.navItemLink}>
+              <span className="icon">🏢</span> Law firms
+            </a>
+          </div>
+        )}
+
         <AdminSidebarFooter />
       </aside>
 
@@ -93,6 +113,7 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
           <AdminTemplatePanel initialTemplates={templates} />
           <AdminFeedbackPanel />
           <AdminDemoRequestsPanel />
+          {isSuperadmin && <AdminSajiloKanunPanel />}
         </div>
       </div>
     </div>

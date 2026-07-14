@@ -3,8 +3,14 @@ import { resolveBookTitle } from "./legal-chunk";
 import { toNepaliNumberDisplay } from "./nepali-digits";
 import { extractChapterDisplayName } from "./provision-title-search";
 
-/** Max source tags shown in the chat UI (advocate + quote). */
+/** Max source tags shown above the answer (advocate + quote). */
 export const UI_SOURCES_DISPLAY_MAX = 3;
+
+/**
+ * Max unique दफा shown in विस्तृत स्रोत (includes related hits from any act
+ * that may not be quoted in the answer itself).
+ */
+export const UI_SOURCES_PANEL_MAX = 5;
 
 export type SourceLabelInput = {
   filename: string;

@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { ChatInput } from "@/components/sajilokanun/ChatInput";
 import { ChatMessage } from "@/components/sajilokanun/ChatMessage";
 import { EmptyState } from "@/components/sajilokanun/EmptyState";
-import { AppHeader } from "@/components/sajilokanun/AppHeader";
+import { SajiloKanunAppShell } from "@/components/sajilokanun/SajiloKanunAppShell";
+import shellStyles from "@/components/sajilokanun/SajiloKanunAppShell.module.css";
+import emiStyles from "@/components/user/emi.module.css";
 import { PdfPreviewPanel } from "@/components/sajilokanun/PdfPreviewPanel";
+import { useLanguage } from "@/context/LanguageContext";
 import type { Source } from "@/components/sajilokanun/SourcePanel";
 import { cleanAnswerDisplay } from "@/lib/sajilokanun/text-clean";
 import { type BookScope, LAW_BOOKS } from "@/lib/sajilokanun/lawbooks";
@@ -13,6 +16,7 @@ import type { SourcePdfPreview } from "@/lib/sajilokanun/source-pdf-link";
 import type { AnswerMode } from "@/lib/sajilokanun/answer-mode";
 import { needsGeminiPreprocess } from "@/lib/sajilokanun/query-latin-detect";
 import { toArabicDigits } from "@/lib/sajilokanun/nepali-digits";
+import { notifyUsageUpdated } from "@/lib/sajilokanun/token-usage";
 import type { QueryMetadataHint } from "@/lib/sajilokanun/query-translate";
 
 /** Quick client-side normalization for quote mode — just fix "dafa" → "दफा" etc. */
@@ -84,6 +88,7 @@ function extractDafaRootsFromResponse(
 }
 
 export default function Home() {
+  const { msg } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [bookScope, setBookScope] = useState<BookScope>("auto");
@@ -153,6 +158,7 @@ export default function Home() {
               rewritten: boolean;
             }
           | { type: "sources"; sources: Source[] }
+          | { type: "usage" }
           | { type: "error"; error: string };
 
         if (event.type === "query_meta" && userMessageId) {
@@ -182,6 +188,8 @@ export default function Home() {
               msg.id === assistantId ? { ...msg, sources: event.sources } : msg
             )
           );
+        } else if (event.type === "usage") {
+          notifyUsageUpdated();
         } else if (event.type === "error") {
           throw new Error(event.error);
         }
@@ -284,6 +292,7 @@ export default function Home() {
               )
             );
           }
+          notifyUsageUpdated();
         } else if (needsGeminiPreprocess(trimmed)) {
           const data = (await normalizeRes.json()) as { error?: string };
           throw new Error(data.error ?? "Failed to normalize query");
@@ -382,76 +391,77 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <AppHeader
-        actions={
-          messages.length > 0 ? (
-            <button
-              type="button"
-              onClick={handleClearChat}
-              disabled={loading}
-              className="rounded-lg border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--muted)] transition-colors hover:border-[var(--primary)] hover:text-[var(--primary)] disabled:opacity-50"
-            >
-              New chat
-            </button>
-          ) : undefined
-        }
-      />
+    <SajiloKanunAppShell
+      title={msg.sajilokanun.chat}
+      subtitle={msg.sajilokanun.subtitle}
+      headerAction={
+        messages.length > 0
+          ? {
+              label: "New chat",
+              onClick: handleClearChat,
+              disabled: loading,
+            }
+          : null
+      }
+    >
+      <div className={`${emiStyles.emiPanel} ${shellStyles.chatPanel}`}>
+        <div className={`${shellStyles.chatBody} chat-scroll`}>
+          {messages.length === 0 ? (
+            <EmptyState onSelect={handleExampleSelect} disabled={loading} />
+          ) : (
+            <div className={shellStyles.messageStack}>
+              {messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  role={message.role}
+                  content={message.content}
+                  originalQuery={message.originalQuery}
+                  queryUsed={message.queryUsed}
+                  rewritten={message.rewritten}
+                  sources={message.sources}
+                  isStreaming={message.id === streamingId}
+                  sourcesExpanded={expandedSources === message.id}
+                  onToggleSources={() =>
+                    setExpandedSources(
+                      expandedSources === message.id ? null : message.id
+                    )
+                  }
+                  canRetry={
+                    message.role === "assistant" &&
+                    Boolean(message.retryContext) &&
+                    message.id !== streamingId &&
+                    !message.content.startsWith("Error:") &&
+                    extractDafaRootsFromResponse(
+                      message.sources,
+                      message.content
+                    ).length > 0
+                  }
+                  onRetry={
+                    message.role === "assistant"
+                      ? () => void retryAnswer(message.id)
+                      : undefined
+                  }
+                  onOpenPdf={setPdfPreview}
+                />
+              ))}
+            </div>
+          )}
+          <div ref={bottomRef} className="h-2 shrink-0" />
+        </div>
 
-      <main className="chat-scroll mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-y-auto px-4 py-6">
-        {messages.length === 0 ? (
-          <EmptyState onSelect={handleExampleSelect} disabled={loading} />
-        ) : (
-          <div className="flex flex-col gap-6">
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                role={message.role}
-                content={message.content}
-                originalQuery={message.originalQuery}
-                queryUsed={message.queryUsed}
-                rewritten={message.rewritten}
-                sources={message.sources}
-                isStreaming={message.id === streamingId}
-                sourcesExpanded={expandedSources === message.id}
-                onToggleSources={() =>
-                  setExpandedSources(
-                    expandedSources === message.id ? null : message.id
-                  )
-                }
-                canRetry={
-                  message.role === "assistant" &&
-                  Boolean(message.retryContext) &&
-                  message.id !== streamingId &&
-                  !message.content.startsWith("Error:") &&
-                  extractDafaRootsFromResponse(
-                    message.sources,
-                    message.content
-                  ).length > 0
-                }
-                onRetry={
-                  message.role === "assistant"
-                    ? () => void retryAnswer(message.id)
-                    : undefined
-                }
-                onOpenPdf={setPdfPreview}
-              />
-            ))}
-          </div>
-        )}
-        <div ref={bottomRef} className="h-4 shrink-0" />
-      </main>
-
-      <ChatInput
-        input={input}
-        bookScope={bookScope}
-        answerMode={answerMode}
-        loading={loading}
-        onInputChange={setInput}
-        onBookChange={setBookScope}
-        onAnswerModeChange={setAnswerMode}
-        onSubmit={() => void sendQuestion(input)}
-      />
+        <div className={shellStyles.chatFooter}>
+          <ChatInput
+            input={input}
+            bookScope={bookScope}
+            answerMode={answerMode}
+            loading={loading}
+            onInputChange={setInput}
+            onBookChange={setBookScope}
+            onAnswerModeChange={setAnswerMode}
+            onSubmit={() => void sendQuestion(input)}
+          />
+        </div>
+      </div>
 
       {pdfPreview && (
         <PdfPreviewPanel
@@ -461,6 +471,6 @@ export default function Home() {
           onClose={() => setPdfPreview(null)}
         />
       )}
-    </div>
+    </SajiloKanunAppShell>
   );
 }

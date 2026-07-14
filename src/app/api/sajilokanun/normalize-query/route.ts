@@ -1,9 +1,19 @@
 import { parseNormalizeBookRequest } from "@/lib/sajilokanun/book-scope";
-import { requireSajiloKanunAccessFromRequest } from "@/lib/sajilokanun-guard";
+import {
+  getSajiloKanunTokenFromRequest,
+  requireSajiloKanunAccessFromRequest,
+} from "@/lib/sajilokanun-guard";
 import {
   normalizeQueryWithGemini,
   QueryNormalizeError,
 } from "@/lib/sajilokanun/query-translate";
+import {
+  createUsageRequestId,
+  persistSajiloKanunUsage,
+  setActiveUsageCollector,
+  truncateUsageLabel,
+  UsageCollector,
+} from "@/lib/sajilokanun/token-usage";
 
 export const runtime = "nodejs";
 
@@ -21,11 +31,25 @@ export async function POST(request: Request) {
 
     const { bookScope } = parseNormalizeBookRequest(body.book, body.books);
 
-    const result = await normalizeQueryWithGemini(message, {
-      book: bookScope === "auto" ? undefined : bookScope,
+    const collector = new UsageCollector();
+    setActiveUsageCollector(collector);
+    let result;
+    try {
+      result = await normalizeQueryWithGemini(message, {
+        book: bookScope === "auto" ? undefined : bookScope,
+      });
+    } finally {
+      setActiveUsageCollector(null);
+    }
+
+    const token = getSajiloKanunTokenFromRequest(request);
+    const usage = await persistSajiloKanunUsage(token, collector.getEntries(), {
+      requestId: createUsageRequestId(),
+      requestType: "normalize",
+      label: truncateUsageLabel(message),
     });
 
-    return Response.json(result);
+    return Response.json({ ...result, usage: usage ?? undefined });
   } catch (error) {
     if (error instanceof QueryNormalizeError) {
       return Response.json({ error: error.message }, { status: error.status });

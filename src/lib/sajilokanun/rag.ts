@@ -1,4 +1,5 @@
 import { streamChat, streamVerbatim } from "./chat";
+import { buildAdvocatePromptCacheKey } from "./advocate-chat-cache";
 import {
   buildKharejCourtFeeSaransh,
   buildKharejMuddha,
@@ -19,7 +20,7 @@ import {
 } from "./chunk-metadata";
 import { getProvisionBody, formatAdvocateProvisionBody } from "./provision-body";
 import { toArabicDigits } from "./nepali-digits";
-import { formatSourceLabel } from "./source-label";
+import { formatSourceLabel, UI_SOURCES_PANEL_MAX } from "./source-label";
 import { mergeSectionChunks } from "./merge-section-chunks";
 import { formatHierarchicalSectionAnswer, formatChapterProvisionAnswer, sortChunksHierarchically, parseProvisionPath } from "./hierarchical-section";
 import { applyChunkConflictPinning } from "./chunk-conflict-mandates";
@@ -37,6 +38,7 @@ import {
   needsTitleSearchFallback,
   prioritizeSectionHintChunks,
   sortAdvocateCollapsedChunks,
+  limitAdvocateDafaChunks,
   isPolygamyQuery,
   isContractValidityQuery,
   isCustodyPresentQuery,
@@ -76,6 +78,7 @@ import {
   type AdvocateHintResult,
   ADVOCATE_TOP_K,
   ADVOCATE_CONTEXT_MAX,
+  ADVOCATE_UI_SOURCES_MAX,
 } from "./retrieve";
 import { isStructuredLegalQuery, isProvisionTitleQuery } from "./structured-legal-query";
 import { filenameMatchesScope, normalizeActToBookScope, type BookScope } from "./lawbooks";
@@ -186,6 +189,83 @@ function buildAdvocateContext(chunks: MatchedChunk[]): string {
 function sectionGroupKey(chunk: MatchedChunk): string {
   const section = chunk.section_label?.split(".")[0] ?? "unknown";
   return `${chunk.filename}|${section}`;
+}
+
+export type UiSourceChunk = MatchedChunk & {
+  /** True when shown as an extra related hit (not used in the answer body). */
+  related?: boolean;
+};
+
+/** Related extras only appear when match % is at least 70. */
+function meetsRelatedMatchFloor(similarity: number): boolean {
+  return Math.round(similarity * 100) >= 70;
+}
+
+/**
+ * Build विस्तृत स्रोत list: keep primary (answer) दफा first, then fill with
+ * other unique hits up to `max` (any act / book allowed in related pool).
+ * Related fillers require at least a 70% match score.
+ */
+function mergeSourcesForPanel(
+  primary: MatchedChunk[],
+  relatedPool: MatchedChunk[],
+  max: number = UI_SOURCES_PANEL_MAX
+): UiSourceChunk[] {
+  const out: UiSourceChunk[] = [];
+  const seen = new Set<string>();
+
+  for (const chunk of primary) {
+    const key = sectionGroupKey(chunk);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ ...chunk, related: false });
+    if (out.length >= max) return out;
+  }
+
+  const relatedSorted = [...relatedPool]
+    .filter((chunk) => meetsRelatedMatchFloor(chunk.similarity))
+    .sort((a, b) => b.similarity - a.similarity);
+  for (const chunk of relatedSorted) {
+    const key = sectionGroupKey(chunk);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ ...chunk, related: true });
+    if (out.length >= max) break;
+  }
+
+  return out;
+}
+
+/** Prefer existing chunks for tags/panel; fetch cross-act related when thin. */
+async function sourcesForExpandedPanel(
+  queryUsed: string,
+  primary: MatchedChunk[],
+  relatedPool: MatchedChunk[] = [],
+  max: number = UI_SOURCES_PANEL_MAX
+): Promise<UiSourceChunk[]> {
+  let pool = relatedPool;
+  const uniquePrimary = mergeSourcesForPanel(primary, [], max);
+  if (uniquePrimary.length >= max) return uniquePrimary;
+
+  const pooledUnique = mergeSourcesForPanel(primary, pool, max);
+  if (pooledUnique.length >= max) return pooledUnique;
+
+  try {
+    const { chunks: acrossActs } = await retrieveChunks(
+      queryUsed,
+      undefined,
+      "auto"
+    );
+    pool = [...pool, ...acrossActs];
+  } catch (error) {
+    console.warn("Related sources (any-act) fetch failed:", error);
+  }
+
+  return mergeSourcesForPanel(primary, pool, max);
+}
+
+function advocateSourcesForUi(chunks: MatchedChunk[]): MatchedChunk[] {
+  return mergeSourcesForPanel(chunks, [], ADVOCATE_UI_SOURCES_MAX);
 }
 
 /** Merge indexed sub-chunks into one readable block per दफा for advocate LLM context. */
@@ -460,18 +540,6 @@ async function loadTitlePinnedSections(
   return out.length > 0 ? out : null;
 }
 
-function advocateSourcesForUi(chunks: MatchedChunk[]): MatchedChunk[] {
-  const seen = new Set<string>();
-  const unique: MatchedChunk[] = [];
-  for (const chunk of chunks) {
-    const key = sectionGroupKey(chunk);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    unique.push(chunk);
-  }
-  return unique;
-}
-
 function applyExcludeDafasToSectionHints<T extends { section: string }>(
   hints: T[],
   excludeDafas: number[]
@@ -492,7 +560,7 @@ async function streamAdvocateAnswer(
   excludeDafas: number[] = []
 ): Promise<{
   stream: Awaited<ReturnType<typeof streamChat>>["stream"];
-  sources: MatchedChunk[];
+  sources: UiSourceChunk[];
   retrievalMode: "vector" | "keyword";
   analysis: QueryAnalysis;
 }> {
@@ -866,7 +934,13 @@ async function streamAdvocateAnswer(
     analysis.sectionHints,
     hasMetadataExactDafa
   );
-  let chunks = collapsed.slice(0, ADVOCATE_CONTEXT_MAX);
+  const dafaLimited = limitAdvocateDafaChunks(
+    collapsed,
+    queryUsed,
+    analysis.sectionHints,
+    hasMetadataExactDafa
+  );
+  let chunks = dafaLimited.slice(0, ADVOCATE_CONTEXT_MAX);
 
   if (chunks.length === 0) {
     throw new Error(
@@ -893,7 +967,12 @@ async function streamAdvocateAnswer(
 
     return {
       stream: streamVerbatim(answer),
-      sources: advocateSourcesForUi(chunks),
+      sources: await sourcesForExpandedPanel(
+        queryUsed,
+        advocateSourcesForUi(chunks),
+        chunks,
+        ADVOCATE_UI_SOURCES_MAX
+      ),
       retrievalMode: mode,
       analysis,
     };
@@ -916,7 +995,12 @@ async function streamAdvocateAnswer(
 
     return {
       stream: streamVerbatim(answer),
-      sources: advocateSourcesForUi(chunks),
+      sources: await sourcesForExpandedPanel(
+        queryUsed,
+        advocateSourcesForUi(chunks),
+        chunks,
+        ADVOCATE_UI_SOURCES_MAX
+      ),
       retrievalMode: mode,
       analysis,
     };
@@ -940,6 +1024,7 @@ Statute text under **लागू प्रावधानहरू** is inserte
     "उपरोक्त लागू प्रावधानहरू अनुसार विषयको व्याख्या गर्नुहोस्।";
 
   try {
+    const promptCacheKey = buildAdvocatePromptCacheKey(chunks, bookScope, "advocate");
     const narrative = await completeChat(
       buildAdvocateNarrativeSystemPrompt(),
       buildAdvocateNarrativeUserPrompt(
@@ -947,7 +1032,10 @@ Statute text under **लागू प्रावधानहरू** is inserte
         analysis,
         context,
         { mandate }
-      )
+      ),
+      undefined,
+      "narrative",
+      { promptCacheKey }
     );
     ({ muddha, saransh } = parseAdvocateNarrative(narrative));
   } catch (error) {
@@ -970,7 +1058,12 @@ Statute text under **लागू प्रावधानहरू** is inserte
 
   return {
     stream: streamVerbatim(answer),
-    sources: advocateSourcesForUi(chunks),
+    sources: await sourcesForExpandedPanel(
+      queryUsed,
+      advocateSourcesForUi(chunks),
+      chunks,
+      ADVOCATE_UI_SOURCES_MAX
+    ),
     retrievalMode: mode,
     analysis,
   };
@@ -1203,7 +1296,7 @@ export async function streamAnswer(
 
       return {
         stream: streamVerbatim(answer),
-        sources: chunksToFormat,
+        sources: await sourcesForExpandedPanel(queryUsed, chunksToFormat),
         retrievalMode: "keyword" as const,
         chatMode: "verbatim" as const,
       };
@@ -1219,7 +1312,7 @@ export async function streamAnswer(
           : formatHierarchicalSectionAnswer(titleMatch.chunks);
       return {
         stream: streamVerbatim(answer),
-        sources: titleMatch.chunks,
+        sources: await sourcesForExpandedPanel(queryUsed, titleMatch.chunks),
         retrievalMode: "keyword" as const,
         chatMode: "verbatim" as const,
       };
@@ -1235,7 +1328,7 @@ export async function streamAnswer(
     const answer = formatHierarchicalSectionAnswer(quoteTopicChunks);
     return {
       stream: streamVerbatim(answer),
-      sources: quoteTopicChunks,
+      sources: await sourcesForExpandedPanel(queryUsed, quoteTopicChunks),
       retrievalMode: "keyword" as const,
       chatMode: "verbatim" as const,
     };
@@ -1270,6 +1363,8 @@ export async function streamAnswer(
     );
   }
 
+  const relatedPool = chunks;
+
   const chunkId =
     extractChunkIdFromQuery(queryUsed) ??
     extractChunkIdFromQuery(originalQuestion);
@@ -1277,7 +1372,7 @@ export async function streamAnswer(
     const answer = formatVerbatimSectionAnswer(chunks);
     return {
       stream: streamVerbatim(answer),
-      sources: chunks,
+      sources: await sourcesForExpandedPanel(queryUsed, chunks, relatedPool),
       retrievalMode: mode,
       chatMode: "verbatim" as const,
     };
@@ -1327,7 +1422,11 @@ export async function streamAnswer(
           : formatVerbatimSectionAnswer(toFormat);
       return {
         stream: streamVerbatim(answer),
-        sources: sectionChunks,
+        sources: await sourcesForExpandedPanel(
+          queryUsed,
+          toFormat,
+          relatedPool
+        ),
         retrievalMode: mode,
         chatMode: "verbatim" as const,
       };
@@ -1335,12 +1434,19 @@ export async function streamAnswer(
   }
 
   const context = buildContext(chunks);
+  const promptCacheKey = buildAdvocatePromptCacheKey(chunks, bookScope, "quote");
   const { stream, chatMode } = await streamChat({
     question: originalQuestion,
     systemPrompt: buildSystemPrompt(),
     userPrompt: buildUserPrompt(originalQuestion, context),
     chunks,
+    promptCacheKey,
   });
 
-  return { stream, sources: chunks, retrievalMode: mode, chatMode };
+  return {
+    stream,
+    sources: await sourcesForExpandedPanel(queryUsed, chunks, relatedPool),
+    retrievalMode: mode,
+    chatMode,
+  };
 }
