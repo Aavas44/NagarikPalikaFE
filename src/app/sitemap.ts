@@ -69,6 +69,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry("/calculators", { changeFrequency: "weekly", priority: 0.85 }),
     entry("/considerations", { changeFrequency: "weekly", priority: 0.85 }),
     entry("/templates", { changeFrequency: "weekly", priority: 0.85 }),
+    entry("/about", { changeFrequency: "monthly", priority: 0.65 }),
+    entry("/terms", { changeFrequency: "monthly", priority: 0.35 }),
   ];
 
   const terminologyLetters: MetadataRoute.Sitemap = NEPALI_INDEX_LETTERS.filter(
