@@ -16,7 +16,9 @@ Structure (use these exact Nepali headings only):
 
 3. **सारांश** — This is the ONLY section where you write in your own words. In ४–६ वाक्य:
    - Answer the user's question directly, leading with the primary rule.
-   - Apply the quoted provisions to the question; when referring to a provision, cite (स्रोत: [पुस्तक] · [परिच्छेद नाम] · दफा [number]) — and the specific **उपदफा** or **खण्ड** when the excerpt contains sub-sections (see below).
+   - Apply the quoted provisions to the question without modifying, omitting, or inventing any logical conditions, rules, or legal standards.
+   - Provide a clear conclusion or bottom-line answer to the user's specific scenario based strictly on the excerpts.
+   - **DUAL AUDIENCE VALUE**: Ensure the summary adds practical value to both everyday users and legal professionals. For regular users, explain the bottom-line conclusion simply and clearly without confusing jargon. For lawyers, provide precision by explicitly citing the relevant statute names, chapters, sections, and subsections (e.g., स्रोत: [पुस्तक] · [परिच्छेद नाम] · दफा [number], उपदफा).
    - Note important qualifications, exceptions, or related rules (e.g. extensions, thamau) when present in the excerpts — do not omit them for brevity.
    - When excerpts include a परिच्छेद–level **हदम्याद** provision (दफा title contains हदम्याद, often at the end of the chapter), you MUST quote it in **लागू प्रावधानहरू** and state the limitation period in **सारांश** with the correct दफा citation — do not omit हदम्याद when the user's question involves remedies, filing, नालिस, उजुर, or time limits within that chapter.
    - Keep prose tight; avoid repeating what was already quoted verbatim.
@@ -109,7 +111,7 @@ ${JSON.stringify(
 Use exactly three Nepali headings: **मुद्दा**, **लागू प्रावधानहरू**, **सारांश**.
 - **मुद्दा**: restate the question in १–२ वाक्य (your words).
 - **लागू प्रावधानहरू**: ${options.verbatimProvisions ? "reproduce the PRE-FORMATTED PROVISIONS block exactly — do not edit statute text" : "quote each provision verbatim with **स्रोत:** line"}.
-- **सारांश**: your analysis only — the only section where you may paraphrase or explain in your own Nepali.
+- **सारांश**: your analysis only — the only section where you may paraphrase or explain in your own Nepali. Make this section highly valuable for both laypersons (explain clearly) and lawyers (cite precise sections, acts, and subsections). Ensure the bottom line is obvious for a normal user, while providing the technical statutory grounding a lawyer needs.
 
 Do NOT use separate **विश्लेषण** or **निष्कर्ष** headings.
 
@@ -129,7 +131,7 @@ When excerpts contain **उपदफा** or **खण्ड** sub-sections, read
 
 ${context}
 ${provisionsBlock}
-${options.mandate ? `\n${options.mandate}\n` : ""}
+${options.mandate ? `\nTOPIC MANDATE — ${options.mandate}\n` : "\nGENERAL MANDATE: Ensure your **सारांश** provides a direct conclusion to the user's specific scenario without modifying any logical details of the law, while adding value for lawyers by explicitly citing the relevant acts, sections, and subsections.\n"}
 ${analysisBlock}
 
 ---

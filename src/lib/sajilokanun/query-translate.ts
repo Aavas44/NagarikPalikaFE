@@ -21,6 +21,8 @@ export type QueryMetadataHint = {
   matchingDafaNames?: string[];
   /** Root दफा numbers — from matchingDafaNames or Gemini exact_dafa_guess. */
   exactDafaGuess?: number[];
+  /** Trap dafas to penalize. */
+  excludedDafaGuess?: number[];
 };
 
 export const MAX_MATCHING_DAFA = 3;
@@ -63,6 +65,8 @@ type GeminiNormalizeResponse = {
   act?: string;
   exact_dafa_guess?: number | string | number[] | null;
   exactDafaGuess?: number | string | number[] | null;
+  excluded_dafa_guess?: number | string | number[] | null;
+  excludedDafaGuess?: number | string | number[] | null;
   matching_dafa_names?: string[] | string | null;
   matchingDafaNames?: string[] | string | null;
 };
@@ -140,11 +144,15 @@ export function finalizeMetadataHint(
   const exactDafaGuess = metadata.exactDafaGuess?.length
     ? metadata.exactDafaGuess
     : undefined;
+  const excludedDafaGuess = metadata.excludedDafaGuess?.length
+    ? metadata.excludedDafaGuess
+    : undefined;
   if (!act) return undefined;
 
   const hint: QueryMetadataHint = { act };
   if (matchingDafaNames?.length) hint.matchingDafaNames = matchingDafaNames;
   if (exactDafaGuess?.length) hint.exactDafaGuess = exactDafaGuess;
+  if (excludedDafaGuess?.length) hint.excludedDafaGuess = excludedDafaGuess;
   return hint;
 }
 
@@ -226,6 +234,13 @@ export function parseGeminiResponse(raw: string): {
           parsed.exact_dafa_guess ?? parsed.exactDafaGuess
         );
       }
+    }
+
+    const excludedFromGemini = parseExactDafaGuessList(
+      parsed.excluded_dafa_guess ?? parsed.excludedDafaGuess
+    );
+    if (excludedFromGemini.length > 0) {
+      metadata.excludedDafaGuess = excludedFromGemini;
     }
 
     const legalAnalysis =

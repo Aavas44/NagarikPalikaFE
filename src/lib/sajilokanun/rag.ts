@@ -727,6 +727,10 @@ async function streamAdvocateAnswer(
         : Promise.resolve([] as MatchedChunk[]),
     ]);
 
+  const exactDafas = metadataHint?.exactDafaGuess ?? [];
+
+  const effectiveExcludeDafas = excludeDafas.filter(ex => !exactDafas.some(exact => toArabicDigits(String(ex)) === toArabicDigits(String(exact))));
+
   let hybridChunks = multiResult.chunks;
   let preparedMetadataHints: MatchedChunk[] = [];
   if (useMetadataHybrid && metadataHintChunks.length > 0) {
@@ -738,9 +742,9 @@ async function streamAdvocateAnswer(
     hybridChunks = fuseVectorAndHintChunks(multiResult.chunks, preparedMetadataHints);
     hybridChunks = boostFusedExactDafaHints(
       hybridChunks,
-      (metadataHint?.exactDafaGuess ?? []).filter(
+      exactDafas.filter(
         (d) =>
-          !excludeDafas.some(
+          !effectiveExcludeDafas.some(
             (ex) => toArabicDigits(String(ex)) === toArabicDigits(String(d))
           )
       ),
@@ -781,7 +785,7 @@ async function streamAdvocateAnswer(
     merged = mergeUniqueChunks(merged, titleChunks);
   }
 
-  merged = filterExcludedDafaChunks(merged, excludeDafas);
+  merged = filterExcludedDafaChunks(merged, effectiveExcludeDafas);
 
   let definitionalFirstDafa: string | null = null;
   let definitionalScope: BookScope | null = null;
@@ -894,7 +898,7 @@ async function streamAdvocateAnswer(
     }
   }
 
-  merged = filterExcludedDafaChunks(merged, excludeDafas);
+  merged = filterExcludedDafaChunks(merged, effectiveExcludeDafas);
 
   if (definitionalFirstDafa && definitionalScope) {
     merged = prioritizeDefinitionalFirstDafa(
@@ -927,7 +931,7 @@ async function streamAdvocateAnswer(
       ? filterKharejCourtFeeChunks(merged)
       : merged;
 
-  const advocateMerged = filterExcludedDafaChunks(provisionInput, excludeDafas);
+  const advocateMerged = filterExcludedDafaChunks(provisionInput, effectiveExcludeDafas);
 
   const collapsed = sortAdvocateCollapsedChunks(
     collapseAdvocateSectionGroups(advocateMerged),
@@ -1096,10 +1100,12 @@ async function fetchMetadataHintChunks(
 ): Promise<MatchedChunk[]> {
   if (!metadataHint) return [];
 
-  const excluded = new Set(excludeDafas.map((d) => toArabicDigits(String(d))));
+  const exactDafas = metadataHint.exactDafaGuess ?? [];
+  // IMPORTANT: Do NOT exclude dafas that were explicitly guessed exactly
+  const excluded = new Set(excludeDafas.filter(ex => !exactDafas.some(exact => toArabicDigits(String(ex)) === toArabicDigits(String(exact)))).map((d) => toArabicDigits(String(d))));
   const sectionsToFetch: string[] = [];
 
-  for (const dafa of metadataHint.exactDafaGuess ?? []) {
+  for (const dafa of exactDafas) {
     const s = String(dafa);
     if (excluded.has(toArabicDigits(s))) continue;
     if (!sectionsToFetch.includes(s)) sectionsToFetch.push(s);
@@ -1144,7 +1150,8 @@ function boostFusedExactDafaHints(
     .map((chunk) => {
       const root = chunk.section_label?.split(".")[0];
       if (root && hinted.has(root)) {
-        return { ...chunk, similarity: Math.max(chunk.similarity, floor) };
+        // Boost explicitly chosen exact hints heavily so they overpower generic vector matches
+        return { ...chunk, similarity: Math.max(chunk.similarity, floor) + 0.15 }; 
       }
       return chunk;
     })
@@ -1186,7 +1193,11 @@ export async function streamAnswer(
   const originalQuestion = options.originalQuestion ?? queryUsed;
   const metadataHint = options.metadataHint;
   const searchKeywords = options.searchKeywords;
-  const excludeDafas = options.excludeDafas ?? [];
+  
+  const rawExcludeDafas = options.excludeDafas ?? [];
+  const exactDafas = metadataHint?.exactDafaGuess ?? [];
+  // Ensure that anything accurately targeted isn't stripped due to cross-firing queries.
+  const excludeDafas = rawExcludeDafas.filter(ex => !exactDafas.some(exact => toArabicDigits(String(ex)) === toArabicDigits(String(exact))));
 
   if (answerMode === "advocate") {
     const { stream, sources, retrievalMode, analysis } =
@@ -1353,6 +1364,7 @@ export async function streamAnswer(
 
   if (hintChunks.length > 0) {
     chunks = fuseVectorAndHintChunks(chunks, hintChunks);
+    chunks = boostFusedExactDafaHints(chunks, exactDafas, chunks[0]?.similarity ?? 0.85);
   }
 
   chunks = filterExcludedDafaChunks(chunks, excludeDafas);

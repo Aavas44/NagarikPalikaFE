@@ -128,16 +128,17 @@ export function bookScopeToNormalizeAct(
 export function normalizeActToBookScope(act: string): BookScope | null {
   const a = act.trim().toLowerCase();
   if (LAW_BOOKS.some((b) => b.id === a)) return a;
-  if (/civil.?procedure|देवानी.*कार्यविध|civil-procedure|karyavidhi/i.test(a)) {
+  
+  if (/civil.?procedure|देवानी.*कार्यविध|civil-procedure|karyavidhi|muluki devani karyavidhi/i.test(a)) {
     return "civil-procedure";
   }
-  if (/criminal.?procedure|फौजदारी.*कार्यविध|criminal-procedure|faujdar/i.test(a)) {
+  if (/criminal.?procedure|फौजदारी.*कार्यविध|criminal-procedure|faujdar.*karyavidhi|muluki faujdari karyavidhi/i.test(a)) {
     return "criminal-procedure";
   }
-  if (/criminal.?code|अपराध.*संहित|criminal-code|aparadh/i.test(a)) {
+  if (/criminal.?code|अपराध.*संहित|criminal-code|aparadh|muluki aparadh/i.test(a)) {
     return "criminal-code";
   }
-  if (/civil.?code|देवानी.*संहित|civil-code|devani.*sanhita/i.test(a)) {
+  if (/civil.?code|देवानी.*संहित|civil-code|devani.*sanhita|muluki devani samhita/i.test(a)) {
     return "civil-code";
   }
   return null;

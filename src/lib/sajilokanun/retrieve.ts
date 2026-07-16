@@ -845,13 +845,21 @@ async function retrieveSectionsByMetadataBatch(
   };
 
   const data = await withDbRetry(async () => {
+    // Match metadata section_dafa OR section_label root/prefix so upadafas hydrate with the parent.
+    const orQuery =
+      sectionNepalis.map((n) => `metadata->>section_dafa.eq.${n}`).join(",") +
+      "," +
+      sectionNums.map((n) => `section_label.ilike.${n}.%`).join(",") +
+      "," +
+      sectionNums.map((n) => `section_label.eq.${n}`).join(",");
+
     const result = await supabase
       .from("chunks")
       .select(
         "id, content, page_number, section_label, chapter, section_title, chunk_id, metadata, documents(filename)"
       )
-      .in("metadata->>section_dafa", sectionNepalis)
-      .limit(Math.min(500, sectionNepalis.length * 80));
+      .or(orQuery)
+      .limit(Math.min(500, Math.max(sectionNepalis.length, 1) * 80));
 
     if (result.error) {
       if (result.error.message.includes("metadata")) return [] as ChunkRow[];
@@ -3087,15 +3095,22 @@ export async function retrieveScopedSectionsBatch(
 ): Promise<MatchedChunk[]> {
   const unique = [...new Set(sectionNums)];
   const metadata = await retrieveSectionsByMetadataBatch(unique, bookScope);
-  if (metadata.length > 0) return metadata;
+  const out: MatchedChunk[] = [...metadata];
 
-  const out: MatchedChunk[] = [];
   for (const section of unique) {
+    // Skip fallback when metadata already returned sub-clauses for this root.
+    if (
+      metadata.some(
+        (c) => sectionRootLabel(c) === section && c.section_label?.includes(".")
+      )
+    ) {
+      continue;
+    }
     out.push(
       ...(await retrieveBySectionNumber(section, SECTION_TOP_K, "", bookScope))
     );
   }
-  return out;
+  return dedupeIndexedChunks(out);
 }
 
 /** Parse optional retry payload — root दफा integers to exclude from retrieval. */
