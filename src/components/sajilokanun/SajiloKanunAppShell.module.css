@@ -41,6 +41,24 @@
   margin-bottom: 1.15rem;
 }
 
+.quotaBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #b5d4f4;
+  border-radius: 10px;
+  background: #f3f8ff;
+  color: #185fa5;
+  font-size: 12px;
+}
+
+.quotaBanner span {
+  color: #64748b;
+}
+
 .chromeTop {
   display: flex;
   align-items: center;

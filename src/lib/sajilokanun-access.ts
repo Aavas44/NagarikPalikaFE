@@ -17,6 +17,14 @@ export interface SajiloKanunUser {
   teamName?: string | null;
 }
 
+export interface SajiloKanunDailyQuota {
+  limit: number;
+  used: number;
+  remaining: number;
+  resetAt: string;
+  questionId?: string | null;
+}
+
 export function setSajiloKanunToken(token: string): void {
   document.cookie = `${TOKEN_COOKIE}=${token}; path=/; max-age=${TOKEN_MAX_AGE}; SameSite=Lax`;
   localStorage.setItem(TOKEN_KEY, token);
@@ -62,6 +70,16 @@ export async function fetchSajiloKanunMe(): Promise<SajiloKanunUser> {
   return data.user as SajiloKanunUser;
 }
 
+export async function fetchSajiloKanunQuota(): Promise<{
+  plan: "individual" | "firm";
+  quota: SajiloKanunDailyQuota | null;
+}> {
+  const res = await skAuthedFetch("/api/sajilokanun-auth/quota");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load query allowance");
+  return data;
+}
+
 export function getSkRoleFromToken(): "admin" | "member" | null {
   const token = getSajiloKanunToken();
   if (!token) return null;
@@ -79,8 +97,60 @@ export interface TeamMember {
   username: string;
   name: string;
   email: string;
+  contactNo?: string;
   active: boolean;
   role: "admin" | "member" | null;
+  userType?: string | null;
+  teamId?: string | null;
+  firmName?: string | null;
+  createdAt?: string;
+  createdBy?: string | null;
+  createdByName?: string | null;
+}
+
+export type DirectoryUserType = "superadmin" | "admin" | "firm_admin" | "member";
+
+export type RoleKey =
+  | "platform.superadmin"
+  | "platform.admin"
+  | "sk.firm_admin"
+  | "sk.member"
+  | "sk.individual";
+
+export interface RolePermissionDefinition {
+  key: string;
+  label: string;
+  description: string;
+  roles: RoleKey[];
+  locked?: boolean;
+}
+
+export interface RolePolicyRecord {
+  key: RoleKey;
+  name: string;
+  scope: "Platform" | "Sajilo Kanun";
+  description: string;
+  defaultPermissions: string[];
+  permissions: string[];
+  updatedAt?: string | null;
+}
+
+export interface DirectoryPerson {
+  id: string;
+  kind: "platform" | "firm";
+  name: string;
+  email: string;
+  contactNo?: string;
+  username: string;
+  active: boolean;
+  teamId?: string | null;
+  firmName?: string | null;
+  role?: "admin" | "member" | null;
+  userType?: string | null;
+  directoryUserType?: DirectoryUserType;
+  createdAt?: string | null;
+  createdBy?: string | null;
+  createdByName?: string | null;
 }
 
 export interface LegalCaseRecord {
@@ -238,6 +308,91 @@ export async function adminFetchTeamAccounts(teamId: string): Promise<TeamMember
   return data as TeamMember[];
 }
 
+export async function adminFetchAllAccounts(options?: {
+  role?: "admin" | "member";
+}): Promise<TeamMember[]> {
+  const { authedFetch } = await import("@/lib/auth");
+  const params = new URLSearchParams();
+  if (options?.role) params.set("role", options.role);
+  const query = params.toString();
+  const res = await authedFetch(`/admin/accounts${query ? `?${query}` : ""}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load accounts");
+  return data as TeamMember[];
+}
+
+export async function adminFetchDirectory(): Promise<DirectoryPerson[]> {
+  const { authedFetch } = await import("@/lib/auth");
+  const res = await authedFetch("/admin/directory");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load members directory");
+  return data as DirectoryPerson[];
+}
+
+export async function adminFetchRolePolicies(): Promise<{
+  roles: RolePolicyRecord[];
+  permissions: RolePermissionDefinition[];
+}> {
+  const { authedFetch } = await import("@/lib/auth");
+  const res = await authedFetch("/admin/role-policies");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load role policies");
+  return data;
+}
+
+export async function adminUpdateRolePolicy(
+  roleKey: RoleKey,
+  permissions: string[]
+): Promise<RolePolicyRecord> {
+  const { authedFetch } = await import("@/lib/auth");
+  const res = await authedFetch(
+    `/admin/role-policies/${encodeURIComponent(roleKey)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ permissions }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to update role policy");
+  return data;
+}
+
+export async function adminCreateDirectoryPerson(input: {
+  name: string;
+  password: string;
+  email?: string;
+  contactNo?: string;
+  username?: string;
+  userType: DirectoryUserType;
+  role: "superadmin" | "admin" | "firm_admin" | "member";
+  firmId?: string;
+}): Promise<DirectoryPerson> {
+  const { authedFetch } = await import("@/lib/auth");
+  const role =
+    input.role === "firm_admin"
+      ? "admin"
+      : input.role === "member"
+        ? "member"
+        : input.role;
+
+  const res = await authedFetch("/admin/directory", {
+    method: "POST",
+    body: JSON.stringify({
+      name: input.name,
+      password: input.password,
+      email: input.email,
+      contactNo: input.contactNo,
+      username: input.username,
+      userType: input.userType,
+      role,
+      firmId: input.firmId,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to create account");
+  return data as DirectoryPerson;
+}
+
 export async function adminCreateTeamAccount(
   teamId: string,
   input: {
@@ -245,6 +400,7 @@ export async function adminCreateTeamAccount(
     password: string;
     name: string;
     email?: string;
+    contactNo?: string;
     role: "admin" | "member";
   }
 ): Promise<TeamMember> {
@@ -260,7 +416,13 @@ export async function adminCreateTeamAccount(
 
 export async function adminUpdateAccount(
   id: string,
-  input: { active?: boolean; role?: "admin" | "member"; password?: string }
+  input: {
+    active?: boolean;
+    role?: "admin" | "member";
+    password?: string;
+    teamId?: string;
+    contactNo?: string;
+  }
 ): Promise<TeamMember> {
   const { authedFetch } = await import("@/lib/auth");
   const res = await authedFetch(`/admin/accounts/${id}`, {

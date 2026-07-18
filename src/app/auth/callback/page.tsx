@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { setToken } from "@/lib/auth";
+import { setSajiloKanunToken } from "@/lib/sajilokanun-access";
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -10,10 +11,12 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const token = searchParams.get("token");
+    const sajiloToken = searchParams.get("sajiloToken");
     const redirect = searchParams.get("redirect") ?? "/account";
 
-    if (token) {
+    if (token && sajiloToken) {
       setToken(token);
+      setSajiloKanunToken(sajiloToken);
       router.replace(redirect);
     } else {
       router.replace("/login?error=oauth_failed");

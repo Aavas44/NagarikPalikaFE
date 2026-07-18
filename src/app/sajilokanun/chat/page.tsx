@@ -18,6 +18,10 @@ import { needsGeminiPreprocess } from "@/lib/sajilokanun/query-latin-detect";
 import { toArabicDigits } from "@/lib/sajilokanun/nepali-digits";
 import { notifyUsageUpdated } from "@/lib/sajilokanun/token-usage";
 import type { QueryMetadataHint } from "@/lib/sajilokanun/query-translate";
+import {
+  fetchSajiloKanunQuota,
+  type SajiloKanunDailyQuota,
+} from "@/lib/sajilokanun-access";
 
 /** Quick client-side normalization for quote mode — just fix "dafa" → "दफा" etc. */
 function quickLocalNormalize(text: string): string {
@@ -38,6 +42,7 @@ function quickLocalNormalize(text: string): string {
 
 /** Context saved on assistant messages so retry can skip normalize-query. */
 type RetryContext = {
+  questionId: string;
   chatMessage: string;
   originalQuestion: string;
   book: BookScope;
@@ -97,11 +102,19 @@ export default function Home() {
   const [streamingId, setStreamingId] = useState<string | null>(null);
   const [expandedSources, setExpandedSources] = useState<string | null>(null);
   const [pdfPreview, setPdfPreview] = useState<SourcePdfPreview | null>(null);
+  const [dailyQuota, setDailyQuota] =
+    useState<SajiloKanunDailyQuota | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    void fetchSajiloKanunQuota()
+      .then((result) => setDailyQuota(result.quota))
+      .catch(() => undefined);
+  }, []);
 
   async function streamChatResponse(
     assistantId: string,
@@ -110,7 +123,10 @@ export default function Home() {
   ): Promise<RetryContext> {
     const response = await fetch("/api/sajilokanun/chat", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Sajilo-Question-Id": request.questionId,
+      },
       body: JSON.stringify({
         message: request.chatMessage,
         originalQuestion: request.originalQuestion,
@@ -203,8 +219,12 @@ export default function Home() {
           : msg
       )
     );
+    void fetchSajiloKanunQuota()
+      .then((result) => setDailyQuota(result.quota))
+      .catch(() => undefined);
 
     return {
+      questionId: request.questionId,
       chatMessage: request.chatMessage,
       originalQuestion: request.originalQuestion,
       book: request.book,
@@ -261,7 +281,10 @@ export default function Home() {
 
         const normalizeRes = await fetch("/api/sajilokanun/normalize-query", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "X-Sajilo-Question-Id": userMessageId,
+          },
           body: JSON.stringify(normalizePayload),
         });
 
@@ -302,6 +325,7 @@ export default function Home() {
       }
 
       const retryContext = await streamChatResponse(assistantId, userMessageId, {
+        questionId: userMessageId,
         chatMessage,
         originalQuestion,
         book,
@@ -404,10 +428,29 @@ export default function Home() {
           : null
       }
     >
+      {dailyQuota ? (
+        <div className={shellStyles.quotaBanner}>
+          <strong>
+            {dailyQuota.remaining > 0
+              ? "1 free query available today"
+              : "Today’s free query has been used"}
+          </strong>
+          <span>
+            Resets{" "}
+            {new Date(dailyQuota.resetAt).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+            })}
+          </span>
+        </div>
+      ) : null}
       <div className={`${emiStyles.emiPanel} ${shellStyles.chatPanel}`}>
         <div className={`${shellStyles.chatBody} chat-scroll`}>
           {messages.length === 0 ? (
-            <EmptyState onSelect={handleExampleSelect} disabled={loading} />
+            <EmptyState
+              onSelect={handleExampleSelect}
+              disabled={loading || dailyQuota?.remaining === 0}
+            />
           ) : (
             <div className={shellStyles.messageStack}>
               {messages.map((message) => (
@@ -454,7 +497,7 @@ export default function Home() {
             input={input}
             bookScope={bookScope}
             answerMode={answerMode}
-            loading={loading}
+            loading={loading || dailyQuota?.remaining === 0}
             onInputChange={setInput}
             onBookChange={setBookScope}
             onAnswerModeChange={setAnswerMode}

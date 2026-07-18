@@ -1,4 +1,4 @@
-import { getGemini } from "./gemini";
+import { getGemini, getGeminiFallback } from "./gemini";
 import { NORMALIZE_PROMPT_VERSION } from "./query-normalize-prompt";
 
 export type NormalizePromptBundle = {
@@ -45,6 +45,14 @@ export function isGeminiQuotaError(error: unknown): boolean {
   );
 }
 
+/** Free-tier context-cache storage failures should not skip generateContent. */
+export function isGeminiContextCacheOnlyError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /TotalCachedContentStorageTokens|CachedContentStorageTokens/i.test(
+    message
+  );
+}
+
 export function openAiPromptCacheParams(
   promptCacheKey: string,
   model: string
@@ -71,7 +79,6 @@ export async function resolveGeminiContextCache(
 ): Promise<string | null> {
   if (!contextCacheEnabled()) return null;
   if (!process.env.GEMINI_API_KEY?.trim()) return null;
-  if (isGeminiDepleted()) return null;
 
   const existing = contextCacheByKey.get(bundle.semanticKey);
   if (existing && Date.now() < existing.expiresAt) {
@@ -79,48 +86,63 @@ export async function resolveGeminiContextCache(
   }
 
   const ttlSec = Number(process.env.QUERY_NORMALIZE_CONTEXT_CACHE_TTL_SEC ?? 86400);
+  const clients = [
+    { label: "primary", client: getGemini() },
+    ...(getGeminiFallback()
+      ? [{ label: "fallback-key", client: getGeminiFallback()! }]
+      : []),
+  ];
 
-  try {
-    const response = await getGemini().caches.create({
-      model: geminiModel,
-      config: {
-        systemInstruction: bundle.systemPrompt,
-        displayName: `handyLaw-normalize-${bundle.scopeLabel}-${bundle.semanticKey}`,
-        ttl: `${ttlSec}s`,
-      },
-    });
-
-    if (!response.name) return null;
-
-    contextCacheByKey.set(bundle.semanticKey, {
-      name: response.name,
-      expiresAt: Date.now() + (ttlSec - 3600) * 1000,
-    });
-
-    console.log(
-      "[HandyLaw query preprocess gemini]",
-      JSON.stringify({
-        contextCacheCreated: true,
-        scope: bundle.scopeLabel,
+  for (const { label, client } of clients) {
+    try {
+      const response = await client.caches.create({
         model: geminiModel,
-        key: bundle.semanticKey,
-        promptVersion: NORMALIZE_PROMPT_VERSION,
-        promptChars: bundle.systemPrompt.length,
-      })
-    );
+        config: {
+          systemInstruction: bundle.systemPrompt,
+          displayName: `handyLaw-normalize-${bundle.scopeLabel}-${bundle.semanticKey}`,
+          ttl: `${ttlSec}s`,
+        },
+      });
 
-    return response.name;
-  } catch (error) {
-    markGeminiDepleted(error);
-    const message = error instanceof Error ? error.message : String(error);
-    console.warn(
-      `[HandyLaw query preprocess gemini] ${bundle.scopeLabel} context cache unavailable, using dynamic prompt:`,
-      message
-    );
-    return null;
+      if (!response.name) continue;
+
+      contextCacheByKey.set(bundle.semanticKey, {
+        name: response.name,
+        expiresAt: Date.now() + (ttlSec - 3600) * 1000,
+      });
+
+      console.log(
+        "[HandyLaw query preprocess gemini]",
+        JSON.stringify({
+          contextCacheCreated: true,
+          apiKey: label,
+          scope: bundle.scopeLabel,
+          model: geminiModel,
+          key: bundle.semanticKey,
+          promptVersion: NORMALIZE_PROMPT_VERSION,
+          promptChars: bundle.systemPrompt.length,
+        })
+      );
+
+      return response.name;
+    } catch (error) {
+      // Cache storage quota is independent of generateContent — keep trying generate.
+      if (!isGeminiContextCacheOnlyError(error)) {
+        markGeminiDepleted(error);
+      }
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[HandyLaw query preprocess gemini] ${bundle.scopeLabel} context cache unavailable via ${label}, using dynamic prompt:`,
+        message
+      );
+    }
   }
+
+  return null;
 }
 
 export function noteGeminiGenerateFailure(error: unknown) {
+  // Only deplete after true generate billing/quota failures, not cache-storage free-tier limits.
+  if (isGeminiContextCacheOnlyError(error)) return;
   markGeminiDepleted(error);
 }

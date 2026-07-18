@@ -560,6 +560,13 @@
   color: #374151;
 }
 
+.navItemLinkActive {
+  background: #eff6ff;
+  color: #185fa5;
+  font-weight: 600;
+  border-right: 3px solid #185fa5;
+}
+
 .ratingDisplay {
   display: inline-flex;
   align-items: center;
@@ -639,6 +646,380 @@
 
 .skRowSelected {
   background: #f0f7ff;
+}
+
+.skTeamDetail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skTeamDetailHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.skTeamDetailMeta {
+  margin: -0.35rem 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.skUsageChips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.skUsageChip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  min-width: 100px;
+}
+
+.skUsageChip strong {
+  font-size: 14px;
+  color: #042c53;
+}
+
+.skUsageChipLabel {
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.skRoleSection {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.skRoleSectionAdmin {
+  border-color: #bfd7f2;
+}
+
+.skRoleSectionMember {
+  border-color: #d8e0ea;
+}
+
+.skRoleHeader {
+  padding: 0.9rem 1rem 0.55rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.skRoleSectionAdmin .skRoleHeader {
+  background: #f3f8ff;
+}
+
+.skRoleTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: #042c53;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skRoleCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e8eef5;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.skRoleDesc {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.skRolePolicyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.skRolePolicyCard {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid #d8e0ea;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.skRolePolicyTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.skPermissionEditor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+}
+
+.skPermissionOption {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: flex-start;
+  padding: 0.7rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.skPermissionOption:hover {
+  border-color: #b8cee5;
+  background: #f8fbff;
+}
+
+.skPermissionOption input {
+  margin-top: 3px;
+}
+
+.skPermissionOption span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.skPermissionOption strong {
+  color: #1f2937;
+  font-size: 13px;
+}
+
+.skPermissionOption small {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.skPermissionOption em {
+  color: #185fa5;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
+.skPermissionOptionLocked {
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.skRolePolicyActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #64748b;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .skRolePolicyGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skPermissionList {
+  margin: 0;
+  padding: 0.65rem 1rem 0.75rem 1.9rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 1rem;
+  font-size: 12px;
+  color: #475569;
+  background: #fcfdff;
+  border-bottom: 1px solid #eef2f7;
+}
+
+@media (max-width: 700px) {
+  .skPermissionList {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skPermissionList li::marker {
+  color: #185fa5;
+}
+
+.skPersonName {
+  font-weight: 600;
+  color: #111827;
+}
+
+.skPersonMeta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.skUsername {
+  font-size: 12px;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #374151;
+}
+
+.skStatusPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.skStatusActive {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.skStatusInactive {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.skActionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.skEmptyCell {
+  text-align: center;
+  color: #6b7280;
+  font-size: 13px;
+  padding: 1.25rem 0.75rem !important;
+}
+
+.skEmptyDetail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  color: #6b7280;
+  font-size: 13px;
+  padding: 1.5rem;
+  text-align: center;
+}
+
+.skRoleForm {
+  padding: 0.9rem 1rem 1rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.skRoleFormGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+@media (max-width: 700px) {
+  .skRoleFormGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.skMemberTable {
+  min-width: 760px;
+}
+
+.skMemberActions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.skMemberActions .filterSelect {
+  width: 100%;
+  font-size: 12px;
+}
+
+.skUserTypeBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.skDirectory {
+  padding: 0 1.25rem 1.5rem;
+}
+
+.skAddMemberCard {
+  margin: 0 1.25rem 1.25rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.skAddMemberCard .skSubheading {
+  margin: 0;
+  padding: 0.9rem 1rem 0;
+}
+
+.skAddMemberCard .skRoleForm {
+  border-top: none;
+}
+
+.skAddMemberFormActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.skDirectory .skSubheading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skDirectory .skTeamDetailMeta {
+  margin: 0 0 0.75rem;
 }
 
 .addFormStacked {

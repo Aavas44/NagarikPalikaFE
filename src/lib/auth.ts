@@ -1,5 +1,9 @@
 import type { AuthUser, LoginResponse } from "@/types";
 
+export interface CitizenLoginResponse extends LoginResponse {
+  sajiloKanunToken: string;
+}
+
 const TOKEN_KEY = "nagarik_palika_token";
 const TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
 
@@ -43,6 +47,35 @@ export async function login(email: string, password: string): Promise<LoginRespo
   }
 
   return data as LoginResponse;
+}
+
+export async function citizenLogin(
+  email: string,
+  password: string
+): Promise<CitizenLoginResponse> {
+  const res = await fetch("/api/auth/user/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Login failed");
+  return data as CitizenLoginResponse;
+}
+
+export async function citizenRegister(input: {
+  name: string;
+  email: string;
+  password: string;
+}): Promise<CitizenLoginResponse> {
+  const res = await fetch("/api/auth/user/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Registration failed");
+  return data as CitizenLoginResponse;
 }
 
 export async function advocateLogin(email: string, password: string): Promise<LoginResponse> {

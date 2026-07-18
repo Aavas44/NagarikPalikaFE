@@ -40,6 +40,7 @@ export const EMBEDDING_DIMENSION = Number(
 );
 
 let client: GoogleGenAI | null = null;
+let fallbackClient: GoogleGenAI | null = null;
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -57,15 +58,23 @@ export function isQuotaError(error: unknown): boolean {
   return isRateLimitError(error);
 }
 
-async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
+async function withRetry<T>(fn: (activeClient: GoogleGenAI) => Promise<T>, label: string): Promise<T> {
   const maxAttempts = 6;
+  let useFallback = false;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      return await fn();
+      const activeClient = useFallback ? (getGeminiFallback() ?? getGemini()) : getGemini();
+      return await fn(activeClient);
     } catch (error) {
       if (!isRateLimitError(error) || attempt === maxAttempts) {
         throw error;
+      }
+
+      if (!useFallback && getGeminiFallback()) {
+        console.warn(`  Rate limited on ${label}, switching to fallback key (attempt ${attempt}/${maxAttempts})`);
+        useFallback = true;
+        continue;
       }
 
       const waitMs = Math.min(2000 * 2 ** (attempt - 1), 60000);
@@ -106,9 +115,18 @@ export function getGemini(): GoogleGenAI {
   return client;
 }
 
+export function getGeminiFallback(): GoogleGenAI | null {
+  if (!fallbackClient) {
+    const apiKey = process.env.GEMINI_API_KEY_FALLBACK;
+    if (!apiKey) return null;
+    fallbackClient = new GoogleGenAI({ apiKey });
+  }
+  return fallbackClient;
+}
+
 export async function embedText(text: string): Promise<number[]> {
-  return withRetry(async () => {
-    const result = await getGemini().models.embedContent({
+  return withRetry(async (activeClient) => {
+    const result = await activeClient.models.embedContent({
       model: EMBEDDING_MODEL,
       contents: text,
       config: {
@@ -135,8 +153,8 @@ export async function embedText(text: string): Promise<number[]> {
 }
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  return withRetry(async () => {
-    const result = await getGemini().models.embedContent({
+  return withRetry(async (activeClient) => {
+    const result = await activeClient.models.embedContent({
       model: EMBEDDING_MODEL,
       contents: texts,
       config: {
@@ -170,8 +188,8 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
 }
 
 export async function embedQuery(text: string): Promise<number[]> {
-  return withRetry(async () => {
-    const result = await getGemini().models.embedContent({
+  return withRetry(async (activeClient) => {
+    const result = await activeClient.models.embedContent({
       model: EMBEDDING_MODEL,
       contents: text,
       config: {
@@ -203,8 +221,8 @@ export async function completeChat(
   model = process.env.ADVOCATE_ANALYSIS_MODEL ?? CHAT_MODEL,
   operation: UsageOperation = "chat"
 ): Promise<string> {
-  return withRetry(async () => {
-    const response = await getGemini().models.generateContent({
+  return withRetry(async (activeClient) => {
+    const response = await activeClient.models.generateContent({
       model,
       contents: userPrompt,
       config: {

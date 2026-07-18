@@ -44,9 +44,6 @@ function parseAnswerMode(value: unknown): AnswerMode {
 }
 
 export async function POST(request: Request) {
-  const denied = requireSajiloKanunAccessFromRequest(request);
-  if (denied) return denied;
-
   try {
     const body = await request.json();
     const message = typeof body.message === "string" ? body.message.trim() : "";
@@ -93,6 +90,12 @@ export async function POST(request: Request) {
         return Response.json({ error: validation.error }, { status: 400 });
       }
     }
+
+    const denied = await requireSajiloKanunAccessFromRequest(request, {
+      consumeQuery: true,
+      questionText: originalQuestion || message,
+    });
+    if (denied) return denied;
 
     const normalizedMessage =
       answerMode === "quote" && needsGeminiPreprocess(message)

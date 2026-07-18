@@ -18,9 +18,6 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const denied = requireSajiloKanunAccessFromRequest(request);
-  if (denied) return denied;
-
   try {
     const body = await request.json();
     const message = typeof body.message === "string" ? body.message.trim() : "";
@@ -30,6 +27,12 @@ export async function POST(request: Request) {
     }
 
     const { bookScope } = parseNormalizeBookRequest(body.book, body.books);
+
+    const denied = await requireSajiloKanunAccessFromRequest(request, {
+      consumeQuery: true,
+      questionText: message,
+    });
+    if (denied) return denied;
 
     const collector = new UsageCollector();
     setActiveUsageCollector(collector);

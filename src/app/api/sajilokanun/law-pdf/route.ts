@@ -7,7 +7,7 @@ import { requireSajiloKanunAccessFromRequest } from "@/lib/sajilokanun-guard";
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
-  const denied = requireSajiloKanunAccessFromRequest(request);
+  const denied = await requireSajiloKanunAccessFromRequest(request);
   if (denied) return denied;
 
   const book = new URL(request.url).searchParams.get("book");

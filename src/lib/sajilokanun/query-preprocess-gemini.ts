@@ -1,4 +1,4 @@
-import { getGemini, extractGeminiResponseText } from "./gemini";
+import { getGemini, getGeminiFallback, extractGeminiResponseText } from "./gemini";
 import { getOpenAI, resolveOpenAiTemperature } from "./openai";
 import {
   fromGeminiUsage,
@@ -9,8 +9,6 @@ import {
 import { bookScopeToNormalizeAct, bookTitleForScope, type BookScope } from "./lawbooks";
 import {
   type NormalizePromptBundle,
-  isGeminiDepleted,
-  noteGeminiGenerateFailure,
   openAiNormalizeCacheParams,
   resolveGeminiContextCache,
 } from "./normalize-prompt-cache";
@@ -20,6 +18,7 @@ import {
   normalizeSemanticCacheKey,
   type NormalizeActId,
 } from "./query-normalize-prompt";
+import type { GoogleGenAI } from "@google/genai";
 
 const NON_GEMINI_MODEL = /^(gpt-|o[0-9](?:-|$)|claude-|text-davinci)/i;
 
@@ -117,10 +116,24 @@ type NormalizeGenerateParams = {
   bookScope?: BookScope;
   needsTranslation: boolean;
   usedFallback?: boolean;
+  apiKeyLabel?: string;
   operation: UsageOperation;
 };
 
-async function generateNormalizeWithModel(
+function geminiNormalizeClients(): Array<{ label: string; client: GoogleGenAI }> {
+  const clients: Array<{ label: string; client: GoogleGenAI }> = [];
+  if (process.env.GEMINI_API_KEY?.trim()) {
+    clients.push({ label: "primary", client: getGemini() });
+  }
+  const fallback = getGeminiFallback();
+  if (fallback && process.env.GEMINI_API_KEY_FALLBACK?.trim()) {
+    clients.push({ label: "fallback-key", client: fallback });
+  }
+  return clients;
+}
+
+async function generateNormalizeWithGeminiClient(
+  client: GoogleGenAI,
   params: NormalizeGenerateParams
 ): Promise<string> {
   const {
@@ -132,10 +145,11 @@ async function generateNormalizeWithModel(
     bookScope,
     needsTranslation,
     usedFallback,
+    apiKeyLabel,
     operation,
   } = params;
 
-  const response = await getGemini().models.generateContent({
+  const response = await client.models.generateContent({
     model,
     contents: userPrompt,
     config: {
@@ -164,6 +178,7 @@ async function generateNormalizeWithModel(
     JSON.stringify({
       model,
       operation,
+      apiKey: apiKeyLabel ?? "primary",
       bookScope: bookScope ?? "auto",
       cachedContent: Boolean(cachedContent) && !usedFallback,
       needsTranslation,
@@ -175,6 +190,49 @@ async function generateNormalizeWithModel(
   );
 
   return text;
+}
+
+/** Try GEMINI_API_KEY, then GEMINI_API_KEY_FALLBACK, same model. */
+async function generateNormalizeWithGeminiKeys(
+  params: NormalizeGenerateParams
+): Promise<string> {
+  const clients = geminiNormalizeClients();
+  if (clients.length === 0) {
+    throw new Error("GEMINI_API_KEY is required for query normalization.");
+  }
+
+  let lastError: unknown;
+  for (let i = 0; i < clients.length; i++) {
+    const { label, client } = clients[i]!;
+    try {
+      return await generateNormalizeWithGeminiClient(client, {
+        ...params,
+        // Only the first key may reuse a primary-created context cache name.
+        cachedContent: i === 0 ? params.cachedContent : undefined,
+        usedFallback: i > 0 ? true : params.usedFallback,
+        apiKeyLabel: label,
+      });
+    } catch (error) {
+      lastError = error;
+      if (!shouldUseNormalizeFallback(error) || i === clients.length - 1) {
+        break;
+      }
+      console.warn(
+        "[HandyLaw query preprocess gemini]",
+        JSON.stringify({
+          primaryModel: params.model,
+          apiKey: label,
+          nextApiKey: clients[i + 1]?.label,
+          operation: params.operation,
+          reason: error instanceof Error ? error.message : String(error),
+        })
+      );
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(String(lastError ?? "Gemini normalize failed"));
 }
 
 async function generateNormalizeWithOpenAI(
@@ -250,9 +308,18 @@ type GenerateContext = {
 
 async function generateWithFallback(
   ctx: GenerateContext,
-  params: Omit<NormalizeGenerateParams, "model" | "usedFallback" | "thinkingBudget">
+  params: Omit<
+    NormalizeGenerateParams,
+    "model" | "usedFallback" | "thinkingBudget" | "apiKeyLabel"
+  >
 ): Promise<string> {
-  const { model, fallbackModel, thinkingBudget, openAiFallback, geminiAvailable } = ctx;
+  const {
+    model,
+    fallbackModel,
+    thinkingBudget,
+    openAiFallback,
+    geminiAvailable,
+  } = ctx;
 
   const tryOpenAi = () =>
     generateNormalizeWithOpenAI({
@@ -261,25 +328,20 @@ async function generateWithFallback(
       usedFallback: geminiAvailable,
     });
 
-  if (!geminiAvailable || isGeminiDepleted()) {
-    if (openAiFallback) {
-      return tryOpenAi();
-    }
-    if (!geminiAvailable) {
-      throw new Error("GEMINI_API_KEY is required for query normalization.");
-    }
+  if (!geminiAvailable) {
+    if (openAiFallback) return tryOpenAi();
+    throw new Error("GEMINI_API_KEY is required for query normalization.");
   }
 
   try {
-    return await generateNormalizeWithModel({
+    // 1) GEMINI_API_KEY  2) GEMINI_API_KEY_FALLBACK  — same Gemini model
+    return await generateNormalizeWithGeminiKeys({
       ...params,
       model,
       thinkingBudget,
     });
   } catch (error) {
-    noteGeminiGenerateFailure(error);
-
-    if (!shouldUseNormalizeFallback(error) || model === fallbackModel) {
+    if (!shouldUseNormalizeFallback(error) || !openAiFallback) {
       throw error;
     }
 
@@ -293,17 +355,8 @@ async function generateWithFallback(
       })
     );
 
-    if (isOpenAiNormalizeModel(fallbackModel)) {
-      return tryOpenAi();
-    }
-
-    return generateNormalizeWithModel({
-      ...params,
-      model: fallbackModel,
-      cachedContent: undefined,
-      thinkingBudget,
-      usedFallback: true,
-    });
+    // 3) OpenAI last resort
+    return tryOpenAi();
   }
 }
 
@@ -351,7 +404,9 @@ export async function preprocessLegalQueryWithGemini(
   const thinkingBudget = Number(process.env.QUERY_NORMALIZE_THINKING_BUDGET ?? 0);
   const openAiFallback =
     isOpenAiNormalizeModel(fallbackModel) && Boolean(process.env.OPENAI_API_KEY?.trim());
-  const geminiAvailable = Boolean(process.env.GEMINI_API_KEY?.trim());
+  const geminiAvailable =
+    Boolean(process.env.GEMINI_API_KEY?.trim()) ||
+    Boolean(process.env.GEMINI_API_KEY_FALLBACK?.trim());
 
   return runNormalizeStep(
     {
@@ -371,7 +426,10 @@ export async function preprocessLegalQueryWithGemini(
 }
 
 export function geminiQueryPreprocessAvailable(): boolean {
-  return Boolean(process.env.GEMINI_API_KEY?.trim());
+  return (
+    Boolean(process.env.GEMINI_API_KEY?.trim()) ||
+    Boolean(process.env.GEMINI_API_KEY_FALLBACK?.trim())
+  );
 }
 
 /** True when Gemini or OpenAI fallback can run query normalization. */
