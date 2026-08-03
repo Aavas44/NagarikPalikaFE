@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   adminCreateDirectoryPerson,
   adminCreateTeam,
@@ -22,6 +22,7 @@ import {
 } from "@/lib/sajilokanun-access";
 import { authedFetch } from "@/lib/auth";
 import { formatTokenCount } from "@/lib/sajilokanun/token-usage";
+import { FirmSearchSelect } from "@/components/admin/FirmSearchSelect";
 import styles from "@/app/admin.module.css";
 
 type AccountRole = "admin" | "member";
@@ -46,6 +47,31 @@ type DirectoryFormState = {
   firmId: string;
 };
 
+type EditUserFormState = {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  contactNo: string;
+  password: string;
+  teamId: string;
+  firmName: string;
+  label: string;
+  isCaseUser: boolean;
+  assignedCases: Array<{
+    id: string;
+    title: string;
+    caseNo: string;
+    status: string;
+  }>;
+};
+
+type EditFirmFormState = {
+  id: string;
+  name: string;
+  label: string;
+};
+
 const EMPTY_FORM: AccountFormState = {
   username: "",
   password: "",
@@ -64,6 +90,47 @@ const EMPTY_DIRECTORY_FORM: DirectoryFormState = {
   role: "member",
   firmId: "",
 };
+
+function editFormFromPerson(person: DirectoryPerson): EditUserFormState {
+  return {
+    id: person.id,
+    name: person.name ?? "",
+    username: person.username ?? "",
+    email: person.email ?? "",
+    contactNo: person.contactNo ?? "",
+    password: "",
+    teamId: person.teamId ?? "",
+    firmName: person.firmName ?? "",
+    label: person.name || person.username,
+    isCaseUser:
+      person.role === "caseUser" || person.directoryUserType === "case_user",
+    assignedCases: person.assignedCases ?? [],
+  };
+}
+
+function editFormFromMember(account: TeamMember): EditUserFormState {
+  return {
+    id: account.id,
+    name: account.name ?? "",
+    username: account.username ?? "",
+    email: account.email ?? "",
+    contactNo: account.contactNo ?? "",
+    password: "",
+    teamId: account.teamId ?? "",
+    firmName: account.firmName ?? "",
+    label: account.name || account.username,
+    isCaseUser: account.role === "caseUser",
+    assignedCases: [],
+  };
+}
+
+function editFormFromFirm(team: AdminTeam): EditFirmFormState {
+  return {
+    id: team.id,
+    name: team.name ?? "",
+    label: team.name,
+  };
+}
 
 // Kept for the legacy account-assignment markup below. Role permissions are
 // now loaded from the server and edited in the dedicated role-policy view.
@@ -87,6 +154,163 @@ function isFirmAssignable(userType: DirectoryUserType, role: AssignableRole) {
     userType === "member" ||
     role === "firm_admin" ||
     role === "member"
+  );
+}
+
+function MemberKebabMenu({
+  busy,
+  active,
+  role,
+  onToggleActive,
+  onChangeRole,
+}: {
+  busy: boolean;
+  active: boolean;
+  role: AccountRole | "caseUser" | null | undefined;
+  onToggleActive: () => void;
+  onChangeRole: (role: AccountRole) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const canChangeRole = role === "admin" || role === "member";
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(event: MouseEvent) {
+      if (!wrapRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className={styles.skKebabWrap} ref={wrapRef}>
+      <button
+        type="button"
+        className={styles.skKebabBtn}
+        disabled={busy}
+        aria-label="More actions"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        ⋮
+      </button>
+      {open ? (
+        <div className={styles.skKebabMenu} role="menu">
+          <button
+            type="button"
+            className={styles.skKebabItem}
+            role="menuitem"
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              onToggleActive();
+            }}
+          >
+            {active ? "Deactivate" : "Activate"}
+          </button>
+          {canChangeRole && role === "admin" ? (
+            <button
+              type="button"
+              className={styles.skKebabItem}
+              role="menuitem"
+              disabled={busy}
+              onClick={() => {
+                setOpen(false);
+                onChangeRole("member");
+              }}
+            >
+              Make firm member
+            </button>
+          ) : null}
+          {canChangeRole && role === "member" ? (
+            <button
+              type="button"
+              className={styles.skKebabItem}
+              role="menuitem"
+              disabled={busy}
+              onClick={() => {
+                setOpen(false);
+                onChangeRole("admin");
+              }}
+            >
+              Make firm admin
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FirmKebabMenu({
+  busy,
+  active,
+  onToggleActive,
+}: {
+  busy: boolean;
+  active: boolean;
+  onToggleActive: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(event: MouseEvent) {
+      if (!wrapRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className={styles.skKebabWrap} ref={wrapRef}>
+      <button
+        type="button"
+        className={styles.skKebabBtn}
+        disabled={busy}
+        aria-label="More firm actions"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+      >
+        ⋮
+      </button>
+      {open ? (
+        <div className={styles.skKebabMenu} role="menu">
+          <button
+            type="button"
+            className={styles.skKebabItem}
+            role="menuitem"
+            disabled={busy}
+            onClick={() => {
+              setOpen(false);
+              onToggleActive();
+            }}
+          >
+            {active ? "Deactivate" : "Activate"}
+          </button>
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -124,23 +348,14 @@ function AdminAccountRow({
         </span>
       </td>
       <td>
-        <div className={styles.skActionRow}>
-          <button
-            type="button"
-            className={styles.skSmallBtn}
-            disabled={busy}
-            onClick={() => onToggleActive(account)}
-          >
-            {account.active ? "Deactivate" : "Activate"}
-          </button>
-          <button
-            type="button"
-            className={styles.skSmallBtn}
-            disabled={busy}
-            onClick={() => onChangeRole(account, "member")}
-          >
-            Make member
-          </button>
+        <div className={styles.skMemberActions}>
+          <MemberKebabMenu
+            busy={busy}
+            active={account.active}
+            role={account.role}
+            onToggleActive={() => onToggleActive(account)}
+            onChangeRole={(role) => onChangeRole(account, role)}
+          />
         </div>
       </td>
     </tr>
@@ -149,22 +364,19 @@ function AdminAccountRow({
 
 function DirectoryPersonRow({
   person,
-  firms,
   busyId,
+  onEdit,
   onToggleActive,
   onChangeRole,
-  onMoveFirm,
 }: {
   person: DirectoryPerson;
-  firms: AdminTeam[];
   busyId: string | null;
+  onEdit: (person: DirectoryPerson) => void;
   onToggleActive: (person: DirectoryPerson) => void;
   onChangeRole: (person: DirectoryPerson, role: AccountRole) => void;
-  onMoveFirm: (person: DirectoryPerson, firmId: string) => void;
 }) {
   const busy = busyId === person.id;
   const isPlatform = person.kind === "platform";
-  const currentFirmId = person.teamId ?? "";
 
   return (
     <tr>
@@ -200,56 +412,21 @@ function DirectoryPersonRow({
           <span className={styles.skPersonMeta}>Platform account</span>
         ) : (
           <div className={styles.skMemberActions}>
-            <select
-              className={styles.filterSelect}
-              value={currentFirmId}
-              disabled={busy || firms.length === 0}
-              aria-label={`Move ${person.name} to firm`}
-              onChange={(e) => {
-                const nextFirmId = e.target.value;
-                if (!nextFirmId || nextFirmId === currentFirmId) return;
-                onMoveFirm(person, nextFirmId);
-              }}
+            <button
+              type="button"
+              className={styles.skSmallBtn}
+              disabled={busy}
+              onClick={() => onEdit(person)}
             >
-              {firms.map((firm) => (
-                <option
-                  key={firm.id}
-                  value={firm.id}
-                  disabled={!firm.active && firm.id !== currentFirmId}
-                >
-                  {firm.active ? firm.name : `${firm.name} (inactive)`}
-                </option>
-              ))}
-            </select>
-            <div className={styles.skActionRow}>
-              <button
-                type="button"
-                className={styles.skSmallBtn}
-                disabled={busy}
-                onClick={() => onToggleActive(person)}
-              >
-                {person.active ? "Deactivate" : "Activate"}
-              </button>
-              {person.role === "admin" ? (
-                <button
-                  type="button"
-                  className={styles.skSmallBtn}
-                  disabled={busy}
-                  onClick={() => onChangeRole(person, "member")}
-                >
-                  Make member
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className={styles.skSmallBtn}
-                  disabled={busy}
-                  onClick={() => onChangeRole(person, "admin")}
-                >
-                  Make admin
-                </button>
-              )}
-            </div>
+              Edit
+            </button>
+            <MemberKebabMenu
+              busy={busy}
+              active={person.active}
+              role={person.role}
+              onToggleActive={() => onToggleActive(person)}
+              onChangeRole={(role) => onChangeRole(person, role)}
+            />
           </div>
         )}
       </td>
@@ -259,23 +436,20 @@ function DirectoryPersonRow({
 
 function MemberDetailRow({
   account,
-  firms,
   busyId,
   showFirmColumn,
+  onEdit,
   onToggleActive,
   onChangeRole,
-  onMoveFirm,
 }: {
   account: TeamMember;
-  firms: AdminTeam[];
   busyId: string | null;
   showFirmColumn?: boolean;
+  onEdit: (account: TeamMember) => void;
   onToggleActive: (account: TeamMember) => void;
   onChangeRole: (account: TeamMember, role: AccountRole) => void;
-  onMoveFirm: (account: TeamMember, firmId: string) => void;
 }) {
   const busy = busyId === account.id;
-  const currentFirmId = account.teamId ?? "";
 
   return (
     <tr>
@@ -294,7 +468,12 @@ function MemberDetailRow({
       ) : null}
       <td>
         <span className={styles.skUserTypeBadge}>
-          {account.userType ?? (account.role === "admin" ? "Firm admin" : "Member")}
+          {account.userType ??
+            (account.role === "admin"
+              ? "Firm admin"
+              : account.role === "caseUser"
+                ? "Case user"
+                : "Firm member")}
         </span>
       </td>
       <td>{formatCreatedAt(account.createdAt)}</td>
@@ -310,52 +489,21 @@ function MemberDetailRow({
       </td>
       <td>
         <div className={styles.skMemberActions}>
-          <select
-            className={styles.filterSelect}
-            value={currentFirmId}
-            disabled={busy || firms.length === 0}
-            aria-label={`Move ${account.name} to firm`}
-            onChange={(e) => {
-              const nextFirmId = e.target.value;
-              if (!nextFirmId || nextFirmId === currentFirmId) return;
-              onMoveFirm(account, nextFirmId);
-            }}
+          <button
+            type="button"
+            className={styles.skSmallBtn}
+            disabled={busy}
+            onClick={() => onEdit(account)}
           >
-            {firms.map((firm) => (
-              <option key={firm.id} value={firm.id} disabled={!firm.active && firm.id !== currentFirmId}>
-                {firm.active ? firm.name : `${firm.name} (inactive)`}
-              </option>
-            ))}
-          </select>
-          <div className={styles.skActionRow}>
-            <button
-              type="button"
-              className={styles.skSmallBtn}
-              disabled={busy}
-              onClick={() => onToggleActive(account)}
-            >
-              {account.active ? "Deactivate" : "Activate"}
-            </button>
-            {account.role === "admin" ? (
-              <button
-                type="button"
-                className={styles.skSmallBtn}
-                disabled={busy}
-                onClick={() => onChangeRole(account, "member")}
-              >
-                Make member
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={styles.skSmallBtn}
-                disabled={busy}
-                onClick={() => onChangeRole(account, "admin")}
-              >
-                Make admin
-              </button>
-            )}
-          </div>
+            Edit
+          </button>
+          <MemberKebabMenu
+            busy={busy}
+            active={account.active}
+            role={account.role}
+            onToggleActive={() => onToggleActive(account)}
+            onChangeRole={(role) => onChangeRole(account, role)}
+          />
         </div>
       </td>
     </tr>
@@ -435,6 +583,13 @@ export function AdminSajiloKanunPanel({
   const [directoryForm, setDirectoryForm] =
     useState<DirectoryFormState>(EMPTY_DIRECTORY_FORM);
   const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [editUserForm, setEditUserForm] = useState<EditUserFormState | null>(null);
+  const [memberFilterUserType, setMemberFilterUserType] = useState<"" | DirectoryUserType>(
+    ""
+  );
+  const [memberFilterFirmId, setMemberFilterFirmId] = useState("");
+  const [showAddFirmForm, setShowAddFirmForm] = useState(false);
+  const [editFirmForm, setEditFirmForm] = useState<EditFirmFormState | null>(null);
   const [usageSummary, setUsageSummary] = useState<{
     billableTokens: number;
     totalTokens: number;
@@ -456,6 +611,29 @@ export function AdminSajiloKanunPanel({
     () => accounts.filter((account) => account.role !== "admin"),
     [accounts]
   );
+
+  const filteredMembers = useMemo(() => {
+    return allMembers.filter((person) => {
+      if (memberFilterUserType) {
+        const typeKey =
+          person.directoryUserType ??
+          (person.role === "admin"
+            ? "firm_admin"
+            : person.role === "caseUser"
+              ? "case_user"
+              : person.role === "member"
+                ? "member"
+                : null);
+        if (typeKey !== memberFilterUserType) return false;
+      }
+      if (memberFilterFirmId === "__none__") {
+        if (person.teamId) return false;
+      } else if (memberFilterFirmId) {
+        if (person.teamId !== memberFilterFirmId) return false;
+      }
+      return true;
+    });
+  }, [allMembers, memberFilterUserType, memberFilterFirmId]);
 
   const loadAllMembers = useCallback(async () => {
     const data = await adminFetchDirectory();
@@ -538,13 +716,37 @@ export function AdminSajiloKanunPanel({
   async function handleCreateTeam(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setBusyId("create-firm");
     try {
       const team = await adminCreateTeam(teamName);
       setTeamName("");
+      setShowAddFirmForm(false);
       await loadTeams();
       setSelectedTeamId(team.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create firm");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function saveEditFirm(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editFirmForm) return;
+    if (!editFirmForm.name.trim()) {
+      setError("Firm name is required");
+      return;
+    }
+    setError("");
+    setBusyId(editFirmForm.id);
+    try {
+      await adminUpdateTeam(editFirmForm.id, { name: editFirmForm.name.trim() });
+      setEditFirmForm(null);
+      await refreshAll();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update firm");
+    } finally {
+      setBusyId(null);
     }
   }
 
@@ -610,14 +812,36 @@ export function AdminSajiloKanunPanel({
     }
   }
 
-  async function moveAccountFirm(account: TeamMember, firmId: string) {
+  async function saveEditUser(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editUserForm) return;
+    if (!editUserForm.name.trim() || !editUserForm.username.trim()) {
+      setError("Name and username are required");
+      return;
+    }
+    if (!editUserForm.isCaseUser && !editUserForm.teamId) {
+      setError("Firm is required");
+      return;
+    }
     setError("");
-    setBusyId(account.id);
+    setBusyId(editUserForm.id);
     try {
-      await adminUpdateAccount(account.id, { teamId: firmId });
+      await adminUpdateAccount(editUserForm.id, {
+        name: editUserForm.name.trim(),
+        username: editUserForm.username.trim(),
+        email: editUserForm.email.trim(),
+        contactNo: editUserForm.contactNo.trim(),
+        ...(editUserForm.isCaseUser
+          ? {}
+          : { teamId: editUserForm.teamId }),
+        ...(editUserForm.password.trim()
+          ? { password: editUserForm.password.trim() }
+          : {}),
+      });
+      setEditUserForm(null);
       await refreshAll();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to move member");
+      setError(err instanceof Error ? err.message : "Failed to update user");
     } finally {
       setBusyId(null);
     }
@@ -679,20 +903,6 @@ export function AdminSajiloKanunPanel({
     }
   }
 
-  async function moveDirectoryFirm(person: DirectoryPerson, firmId: string) {
-    if (person.kind !== "firm") return;
-    setError("");
-    setBusyId(person.id);
-    try {
-      await adminUpdateAccount(person.id, { teamId: firmId });
-      await refreshAll();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to move member");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   function toggleRolePermission(
     roleKey: RoleKey,
     permissionKey: string,
@@ -734,6 +944,16 @@ export function AdminSajiloKanunPanel({
       setBusyId(null);
     }
   }
+
+  useEffect(() => {
+    // Leaving a section must close edit/create forms so the members table
+    // is visible again when returning to Members.
+    setEditUserForm(null);
+    setShowAddUserForm(false);
+    setEditFirmForm(null);
+    setShowAddFirmForm(false);
+    setError("");
+  }, [section]);
 
   useEffect(() => {
     if (!directoryForm.firmId && teams[0]?.id) {
@@ -872,21 +1092,213 @@ export function AdminSajiloKanunPanel({
             <button
               type="button"
               className={styles.btnPrimary}
-              onClick={() => setShowAddUserForm((open) => !open)}
+              onClick={() => {
+                setEditUserForm(null);
+                setShowAddUserForm((open) => !open);
+              }}
             >
               {showAddUserForm ? "Close" : "Add User"}
             </button>
           </div>
         </div>
-        <p className={styles.panelDesc}>
-          Platform superadmins and admins, plus every firm admin and member.
-          Use Add User to create accounts, then manage firm assignment from the
-          directory.
-        </p>
+
+        {!editUserForm && (
+        <div className={styles.filterBar}>
+          <select
+            className={styles.filterSelect}
+            value={memberFilterUserType}
+            onChange={(e) =>
+              setMemberFilterUserType(e.target.value as "" | DirectoryUserType)
+            }
+            aria-label="Filter by user type"
+          >
+            <option value="">All user types</option>
+            <option value="superadmin">Superadmin</option>
+            <option value="admin">Admin</option>
+            <option value="firm_admin">Firm admin</option>
+            <option value="member">Firm member</option>
+            <option value="case_user">Case user</option>
+          </select>
+          <select
+            className={styles.filterSelect}
+            value={memberFilterFirmId}
+            onChange={(e) => setMemberFilterFirmId(e.target.value)}
+            aria-label="Filter by firm"
+          >
+            <option value="">All firms</option>
+            <option value="__none__">No firm</option>
+            {teams.map((firm) => (
+              <option key={firm.id} value={firm.id}>
+                {firm.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        )}
 
         {error && <p className={styles.formError}>{error}</p>}
 
-        {showAddUserForm && (
+        {editUserForm && (
+          <div className={`${styles.skAddMemberCard} ${styles.skEditUserCard}`}>
+            <h3 className={styles.skSubheading}>
+              Edit user — {editUserForm.label}
+            </h3>
+            <form className={styles.skRoleForm} onSubmit={(e) => void saveEditUser(e)}>
+              <div className={styles.skFormSection}>
+                <h4 className={styles.skFormSectionTitle}>Account details</h4>
+                <div className={styles.skRoleFormGrid}>
+                  <label className={styles.skField}>
+                    <span className={styles.skFieldLabel}>Name</span>
+                    <input
+                      className={styles.filterInput}
+                      value={editUserForm.name}
+                      onChange={(e) =>
+                        setEditUserForm((f) =>
+                          f ? { ...f, name: e.target.value } : f
+                        )
+                      }
+                      required
+                    />
+                  </label>
+                  <label className={styles.skField}>
+                    <span className={styles.skFieldLabel}>Username</span>
+                    <input
+                      className={styles.filterInput}
+                      value={editUserForm.username}
+                      onChange={(e) =>
+                        setEditUserForm((f) =>
+                          f ? { ...f, username: e.target.value } : f
+                        )
+                      }
+                      required
+                    />
+                  </label>
+                  <label className={styles.skField}>
+                    <span className={styles.skFieldLabel}>Email</span>
+                    <input
+                      className={styles.filterInput}
+                      type="email"
+                      value={editUserForm.email}
+                      onChange={(e) =>
+                        setEditUserForm((f) =>
+                          f ? { ...f, email: e.target.value } : f
+                        )
+                      }
+                    />
+                  </label>
+                  <label className={styles.skField}>
+                    <span className={styles.skFieldLabel}>Contact</span>
+                    <input
+                      className={styles.filterInput}
+                      value={editUserForm.contactNo}
+                      onChange={(e) =>
+                        setEditUserForm((f) =>
+                          f ? { ...f, contactNo: e.target.value } : f
+                        )
+                      }
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className={styles.skFormSection}>
+                <h4 className={styles.skFormSectionTitle}>Security</h4>
+                <label className={styles.skField}>
+                  <span className={styles.skFieldLabel}>New password</span>
+                  <input
+                    className={styles.filterInput}
+                    type="password"
+                    value={editUserForm.password}
+                    onChange={(e) =>
+                      setEditUserForm((f) =>
+                        f ? { ...f, password: e.target.value } : f
+                      )
+                    }
+                    autoComplete="new-password"
+                    placeholder="Leave blank to keep current password"
+                  />
+                  <p className={styles.skFieldHint}>
+                    Leave blank to keep the current password.
+                  </p>
+                </label>
+              </div>
+
+              <div className={styles.skFormSection}>
+                <h4 className={styles.skFormSectionTitle}>Firm</h4>
+                {editUserForm.isCaseUser ? (
+                  <>
+                    <div className={styles.skField}>
+                      <span className={styles.skFieldLabel}>Firm</span>
+                      <p className={styles.skReadonlyValue}>
+                        {editUserForm.firmName?.trim() || "—"}
+                      </p>
+                      <p className={styles.skFieldHint}>
+                        Case users stay on the firm of their assigned case. Firm
+                        cannot be changed here.
+                      </p>
+                    </div>
+                    <div className={styles.skField}>
+                      <span className={styles.skFieldLabel}>Assigned cases</span>
+                      {editUserForm.assignedCases.length === 0 ? (
+                        <p className={styles.skReadonlyValue}>No active cases</p>
+                      ) : (
+                        <ul className={styles.skAssignedCaseList}>
+                          {editUserForm.assignedCases.map((legalCase) => (
+                            <li key={legalCase.id}>
+                              <strong>{legalCase.caseNo || "—"}</strong>
+                              <span>{legalCase.title || "Untitled case"}</span>
+                              <em>{legalCase.status}</em>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <label className={styles.skField}>
+                    <span className={styles.skFieldLabel}>Firm</span>
+                    <FirmSearchSelect
+                      value={editUserForm.teamId}
+                      selectedLabel={editUserForm.firmName}
+                      required
+                      disabled={busyId === editUserForm.id}
+                      onChange={(firmId, firmName) =>
+                        setEditUserForm((f) =>
+                          f ? { ...f, teamId: firmId, firmName } : f
+                        )
+                      }
+                    />
+                    <p className={styles.skFieldHint}>
+                      Search firms by name. Results load from the firms API.
+                    </p>
+                  </label>
+                )}
+              </div>
+
+              <div className={styles.skAddMemberFormActions}>
+                <button
+                  type="button"
+                  className={styles.skSmallBtn}
+                  onClick={() => setEditUserForm(null)}
+                >
+                  Back to list
+                </button>
+                <button
+                  type="submit"
+                  className={styles.btnPrimary}
+                  disabled={
+                    busyId === editUserForm.id ||
+                    (!editUserForm.isCaseUser && !editUserForm.teamId)
+                  }
+                >
+                  {busyId === editUserForm.id ? "Saving…" : "Save changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {!editUserForm && showAddUserForm && (
         <div className={styles.skAddMemberCard}>
           <h3 className={styles.skSubheading}>Add user</h3>
           <form
@@ -966,7 +1378,7 @@ export function AdminSajiloKanunPanel({
                 <option value="superadmin">User type: Superadmin</option>
                 <option value="admin">User type: Admin</option>
                 <option value="firm_admin">User type: Firm admin</option>
-                <option value="member">User type: Member</option>
+                <option value="member">User type: Firm member</option>
               </select>
               <select
                 className={styles.filterSelect}
@@ -982,7 +1394,7 @@ export function AdminSajiloKanunPanel({
                 <option value="superadmin">Role: Superadmin</option>
                 <option value="admin">Role: Admin</option>
                 <option value="firm_admin">Role: Firm admin</option>
-                <option value="member">Role: Member</option>
+                <option value="member">Role: Firm member</option>
               </select>
               <select
                 className={styles.filterSelect}
@@ -1023,10 +1435,11 @@ export function AdminSajiloKanunPanel({
         </div>
         )}
 
+        {!editUserForm && (
         <div className={styles.skDirectory}>
           <h3 className={styles.skSubheading}>
             All people
-            <span className={styles.skRoleCount}>{allMembers.length}</span>
+            <span className={styles.skRoleCount}>{filteredMembers.length}</span>
           </h3>
           <div className={styles.tblWrap}>
             <table className={`${styles.table} ${styles.skMemberTable}`}>
@@ -1039,26 +1452,30 @@ export function AdminSajiloKanunPanel({
                   <th>Created</th>
                   <th>Created by</th>
                   <th>Status</th>
-                  <th>Move firm / actions</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {allMembers.length === 0 ? (
+                {filteredMembers.length === 0 ? (
                   <tr>
                     <td colSpan={8} className={styles.skEmptyCell}>
-                      No accounts yet.
+                      {allMembers.length === 0
+                        ? "No accounts yet."
+                        : "No people match these filters."}
                     </td>
                   </tr>
                 ) : (
-                  allMembers.map((person) => (
+                  filteredMembers.map((person) => (
                     <DirectoryPersonRow
                       key={`${person.kind}-${person.id}`}
                       person={person}
-                      firms={teams}
                       busyId={busyId}
+                      onEdit={(p) => {
+                        setShowAddUserForm(false);
+                        setEditUserForm(editFormFromPerson(p));
+                      }}
                       onToggleActive={(p) => void toggleDirectoryActive(p)}
                       onChangeRole={(p, role) => void changeDirectoryRole(p, role)}
-                      onMoveFirm={(p, firmId) => void moveDirectoryFirm(p, firmId)}
                     />
                   ))
                 )}
@@ -1066,6 +1483,7 @@ export function AdminSajiloKanunPanel({
             </table>
           </div>
         </div>
+        )}
       </section>
     );
   }
@@ -1239,7 +1657,7 @@ export function AdminSajiloKanunPanel({
                         <th>Created</th>
                         <th>Created by</th>
                         <th>Status</th>
-                        <th>Move firm / actions</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1254,11 +1672,10 @@ export function AdminSajiloKanunPanel({
                           <MemberDetailRow
                             key={account.id}
                             account={account}
-                            firms={teams}
                             busyId={busyId}
+                            onEdit={(a) => setEditUserForm(editFormFromMember(a))}
                             onToggleActive={(a) => void toggleAccountActive(a)}
                             onChangeRole={(a, role) => void changeAccountRole(a, role)}
-                            onMoveFirm={(a, firmId) => void moveAccountFirm(a, firmId)}
                           />
                         ))
                       )}
@@ -1297,28 +1714,99 @@ export function AdminSajiloKanunPanel({
     <section id="sajilo-kanun-firms" className={styles.panel}>
       <div className={styles.panelHeader}>
         <h2>Sajilo Kanun — Firms</h2>
+        <div className={styles.panelHeaderActions}>
+          <button
+            type="button"
+            className={styles.btnPrimary}
+            onClick={() => {
+              setEditFirmForm(null);
+              setShowAddFirmForm((open) => !open);
+            }}
+          >
+            {showAddFirmForm ? "Close" : "Add Firm"}
+          </button>
+        </div>
       </div>
       <p className={styles.panelDesc}>
-        Create and activate law firms. Assign people and roles from Roles and
-        Members.
+        Create and manage law firms. Edit updates the firm name; use ⋮ to
+        activate or deactivate. Assign people from Members.
       </p>
 
       {error && <p className={styles.formError}>{error}</p>}
 
-      <form onSubmit={handleCreateTeam} className={styles.skInlineForm}>
-        <input
-          type="text"
-          placeholder="New firm name"
-          value={teamName}
-          onChange={(e) => setTeamName(e.target.value)}
-          className={styles.filterInput}
-          style={{ maxWidth: 280 }}
-          required
-        />
-        <button type="submit" className={styles.btnPrimary}>
-          Create firm
-        </button>
-      </form>
+      {editFirmForm && (
+        <div className={`${styles.skAddMemberCard} ${styles.skEditUserCard}`}>
+          <h3 className={styles.skSubheading}>
+            Edit firm — {editFirmForm.label}
+          </h3>
+          <form className={styles.skRoleForm} onSubmit={(e) => void saveEditFirm(e)}>
+            <div className={styles.skRoleFormGrid}>
+              <input
+                className={styles.filterInput}
+                placeholder="Firm name"
+                value={editFirmForm.name}
+                onChange={(e) =>
+                  setEditFirmForm((f) => (f ? { ...f, name: e.target.value } : f))
+                }
+                required
+              />
+            </div>
+            <div className={styles.skAddMemberFormActions}>
+              <button
+                type="button"
+                className={styles.skSmallBtn}
+                onClick={() => setEditFirmForm(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={styles.btnPrimary}
+                disabled={busyId === editFirmForm.id}
+              >
+                {busyId === editFirmForm.id ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {showAddFirmForm && (
+        <div className={styles.skAddMemberCard}>
+          <h3 className={styles.skSubheading}>Add firm</h3>
+          <form
+            className={styles.skRoleForm}
+            onSubmit={(e) => void handleCreateTeam(e)}
+          >
+            <div className={styles.skRoleFormGrid}>
+              <input
+                type="text"
+                placeholder="Firm name"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                className={styles.filterInput}
+                required
+              />
+            </div>
+            <div className={styles.skAddMemberFormActions}>
+              <button
+                type="button"
+                className={styles.skSmallBtn}
+                onClick={() => setShowAddFirmForm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={styles.btnPrimary}
+                disabled={busyId === "create-firm"}
+              >
+                {busyId === "create-firm" ? "Creating…" : "Create firm"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className={styles.skPanelBody}>
         <div className={styles.tblWrap}>
@@ -1327,15 +1815,16 @@ export function AdminSajiloKanunPanel({
               <tr>
                 <th>Firm</th>
                 <th>People</th>
+                <th>Created</th>
                 <th>Status</th>
                 <th>Usage</th>
-                <th />
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {teams.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className={styles.skEmptyCell}>
+                  <td colSpan={6} className={styles.skEmptyCell}>
                     No firms yet. Create one to get started.
                   </td>
                 </tr>
@@ -1357,6 +1846,7 @@ export function AdminSajiloKanunPanel({
                       </button>
                     </td>
                     <td>{team.memberCount ?? 0}</td>
+                    <td>{formatCreatedAt(team.createdAt)}</td>
                     <td>
                       <span
                         className={`${styles.skStatusPill} ${
@@ -1378,14 +1868,25 @@ export function AdminSajiloKanunPanel({
                       )}
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className={styles.skSmallBtn}
-                        disabled={busyId === team.id}
-                        onClick={() => void toggleTeamActive(team)}
-                      >
-                        {team.active ? "Deactivate" : "Activate"}
-                      </button>
+                      <div className={styles.skMemberActions}>
+                        <button
+                          type="button"
+                          className={styles.skSmallBtn}
+                          disabled={busyId === team.id}
+                          onClick={() => {
+                            setShowAddFirmForm(false);
+                            setEditFirmForm(editFormFromFirm(team));
+                            setSelectedTeamId(team.id);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <FirmKebabMenu
+                          busy={busyId === team.id}
+                          active={team.active}
+                          onToggleActive={() => void toggleTeamActive(team)}
+                        />
+                      </div>
                     </td>
                   </tr>
                 ))

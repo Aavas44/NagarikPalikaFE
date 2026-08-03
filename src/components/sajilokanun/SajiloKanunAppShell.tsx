@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode, type SVGProps } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode, type SVGProps } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
@@ -18,7 +18,6 @@ import {
   SAJILO_KANUN_USAGE_UPDATED_EVENT,
 } from "@/lib/sajilokanun/token-usage";
 import pageStyles from "@/app/user.module.css";
-import emiStyles from "@/components/user/emi.module.css";
 import styles from "./SajiloKanunAppShell.module.css";
 
 type HeaderAction = {
@@ -40,13 +39,14 @@ type SajiloKanunAppShellProps = {
   children: ReactNode;
 };
 
+const DASHBOARD = "/sajilokanun/dashboard";
 const CHAT = "/sajilokanun/chat";
 const CASES = "/sajilokanun/cases";
 const TEAM = "/sajilokanun/team";
 const USAGE = "/sajilokanun/usage";
 const UNICODE = "/sajilokanun/unicode-converter";
 
-type TabId = "chat" | "cases" | "team" | "usage" | "convert";
+type TabId = "dashboard" | "chat" | "cases" | "team" | "usage" | "convert";
 
 function Icon({
   name,
@@ -55,8 +55,8 @@ function Icon({
   name: TabId | "new" | "logout";
 } & SVGProps<SVGSVGElement>) {
   const common = {
-    width: 15,
-    height: 15,
+    width: 13,
+    height: 13,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor",
@@ -68,6 +68,15 @@ function Icon({
   };
 
   switch (name) {
+    case "dashboard":
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="7" height="9" rx="1" />
+          <rect x="14" y="3" width="7" height="5" rx="1" />
+          <rect x="14" y="12" width="7" height="9" rx="1" />
+          <rect x="3" y="16" width="7" height="5" rx="1" />
+        </svg>
+      );
     case "chat":
       return (
         <svg {...common}>
@@ -144,7 +153,35 @@ export function SajiloKanunAppShell({
       .catch(() => setUser(null));
   }, []);
 
+  const role = user?.role ?? getSkRoleFromToken();
+  const isCaseUser = role === "caseUser";
+  const isFirmUser = Boolean(user?.teamId) && !isCaseUser;
+
   useEffect(() => {
+    if (!isCaseUser) return;
+    const blocked =
+      pathname.startsWith(DASHBOARD) ||
+      pathname.startsWith(CHAT) ||
+      pathname.startsWith(USAGE) ||
+      pathname.startsWith(UNICODE) ||
+      pathname.startsWith(TEAM);
+    if (blocked) {
+      router.replace(CASES);
+    }
+  }, [isCaseUser, pathname, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (!isFirmUser && pathname.startsWith(DASHBOARD)) {
+      router.replace(CHAT);
+    }
+  }, [user, isFirmUser, pathname, router]);
+
+  useEffect(() => {
+    if (isCaseUser) {
+      setBillableTokens(null);
+      return;
+    }
     const refresh = () => {
       fetchSajiloKanunUsage()
         .then((usage) => {
@@ -155,20 +192,32 @@ export function SajiloKanunAppShell({
     refresh();
     window.addEventListener(SAJILO_KANUN_USAGE_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(SAJILO_KANUN_USAGE_UPDATED_EVENT, refresh);
-  }, []);
+  }, [isCaseUser]);
 
-  const role = user?.role ?? getSkRoleFromToken();
-
-  const tabs: { href: string; id: TabId; label: string }[] = [
-    { href: CHAT, id: "chat", label: msg.sajilokanun.chat },
-    { href: CASES, id: "cases", label: "Cases" },
-    ...(role === "admin" ? [{ href: TEAM, id: "team" as const, label: "Team" }] : []),
-    { href: USAGE, id: "usage", label: msg.sajilokanun.usageNavShort },
-    { href: UNICODE, id: "convert", label: msg.sajilokanun.converterShort },
-  ];
+  const tabs: { href: string; id: TabId; label: string }[] = isCaseUser
+    ? [{ href: CASES, id: "cases", label: msg.sajilokanun.casesNav }]
+    : [
+        ...(isFirmUser
+          ? [
+              {
+                href: DASHBOARD,
+                id: "dashboard" as const,
+                label: msg.sajilokanun.dashboardNav,
+              },
+            ]
+          : []),
+        { href: CHAT, id: "chat", label: msg.sajilokanun.chat },
+        { href: CASES, id: "cases", label: msg.sajilokanun.casesNav },
+        ...(role === "admin"
+          ? [{ href: TEAM, id: "team" as const, label: "Team" }]
+          : []),
+        { href: USAGE, id: "usage", label: msg.sajilokanun.usageNavShort },
+        { href: UNICODE, id: "convert", label: msg.sajilokanun.converterShort },
+      ];
 
   function isActive(href: string) {
-    return pathname === href || (href !== CHAT && pathname.startsWith(href));
+    if (href === DASHBOARD || href === CHAT) return pathname === href;
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
 
   function handleLogout() {
@@ -181,7 +230,7 @@ export function SajiloKanunAppShell({
     <>
       <UserNav />
       <section className={`${pageStyles.calculatorPage} ${styles.skAppPage}`}>
-        <div className={`${pageStyles.calculatorPageInner} ${emiStyles.emiPageInner}`}>
+        <div className={styles.appInner}>
           <div className={styles.chrome}>
             <div className={styles.chromeTop}>
               <Link href="/sajilokanun" className={styles.backLink}>
@@ -225,7 +274,18 @@ export function SajiloKanunAppShell({
               </header>
             )}
 
-            <nav className={styles.navTabs} aria-label="Sajilo Kanun">
+            <nav
+              className={styles.navTabs}
+              aria-label="Sajilo Kanun"
+              style={
+                {
+                  ["--nav-cols"]: String(Math.max(tabs.length, 1)),
+                  ["--nav-mobile-cols"]: String(
+                    tabs.length <= 3 ? Math.max(tabs.length, 1) : 3
+                  ),
+                } as CSSProperties
+              }
+            >
               {tabs.map((tab) => (
                 <Link
                   key={tab.href}
@@ -236,14 +296,29 @@ export function SajiloKanunAppShell({
                   className={`${styles.navTab} ${
                     isActive(tab.href) ? styles.navTabActive : ""
                   }`}
+                  onClick={(e) => {
+                    // While viewing a case detail on /cases?case=…, Cases should
+                    // return to the full listing (same path, no query).
+                    if (tab.id === "cases" && pathname.startsWith(CASES)) {
+                      e.preventDefault();
+                      router.push(CASES);
+                      window.dispatchEvent(
+                        new Event("sajilo-kanun:show-cases-list")
+                      );
+                    }
+                  }}
                 >
                   <Icon name={tab.id} className={styles.navTabIcon} />
                   <span className={styles.navTabLabel}>{tab.label}</span>
-                  {tab.id === "usage" && billableTokens != null && (
-                    <span className={styles.navTabMeta}>
-                      {formatTokenCount(billableTokens)}
+                  {tab.id === "usage" && !isCaseUser ? (
+                    <span
+                      className={`${styles.navTabMeta} ${
+                        billableTokens == null ? styles.navTabMetaPlaceholder : ""
+                      }`}
+                    >
+                      {billableTokens != null ? formatTokenCount(billableTokens) : "—"}
                     </span>
-                  )}
+                  ) : null}
                 </Link>
               ))}
             </nav>

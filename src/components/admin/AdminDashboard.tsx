@@ -10,9 +10,10 @@ import { AdminTemplatePanel } from "./AdminTemplatePanel";
 import { AdminFeedbackPanel } from "./AdminFeedbackPanel";
 import { AdminDemoRequestsPanel } from "./AdminDemoRequestsPanel";
 import { AdminSajiloKanunPanel } from "./AdminSajiloKanunPanel";
+import { AdminGeminiKeysPanel } from "./AdminGeminiKeysPanel";
 import styles from "@/app/admin.module.css";
 
-type SajiloSection = "firms" | "roles" | "members" | null;
+type SajiloSection = "firms" | "roles" | "members" | "gemini-keys" | null;
 
 function hashToSajiloSection(hash: string): SajiloSection {
   switch (hash.replace(/^#/, "")) {
@@ -23,6 +24,8 @@ function hashToSajiloSection(hash: string): SajiloSection {
       return "roles";
     case "sajilo-kanun-members":
       return "members";
+    case "sajilo-kanun-gemini-keys":
+      return "gemini-keys";
     default:
       return null;
   }
@@ -43,16 +46,29 @@ interface AdminDashboardProps {
   stats: Stats;
   terms: Term[];
   templates: Template[];
+  loadError?: string | null;
 }
 
-export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps) {
+export function AdminDashboard({
+  stats,
+  terms,
+  templates,
+  loadError = null,
+}: AdminDashboardProps) {
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [sajiloSection, setSajiloSection] = useState<SajiloSection>(null);
 
   useEffect(() => {
-    fetchCurrentUser().then((user) => {
-      setIsSuperadmin(user?.userType === "superadmin");
-    });
+    fetchCurrentUser()
+      .then((user) => {
+        setIsPlatformAdmin(
+          user?.userType === "superadmin" || user?.userType === "admin"
+        );
+        setIsSuperadmin(user?.userType === "superadmin");
+      })
+      .finally(() => setAuthChecked(true));
   }, []);
 
   useEffect(() => {
@@ -69,7 +85,9 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
         ? "Sajilo Kanun — Roles"
         : sajiloSection === "members"
           ? "Sajilo Kanun — Members"
-          : "Content management";
+          : sajiloSection === "gemini-keys"
+            ? "Sajilo Kanun — Gemini keys"
+            : "Content management";
 
   return (
     <div className={styles.adminWrap}>
@@ -127,7 +145,7 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
           </a>
         </div>
 
-        {isSuperadmin && (
+        {isPlatformAdmin && (
           <div className={styles.navGroup}>
             <div className={styles.navLabel}>Sajilo Kanun</div>
             <a
@@ -148,6 +166,14 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
             >
               <span className="icon">👥</span> Members
             </a>
+            {isSuperadmin ? (
+              <a
+                href="#sajilo-kanun-gemini-keys"
+                className={navClass(sajiloSection === "gemini-keys")}
+              >
+                <span className="icon">🔑</span> Gemini keys
+              </a>
+            ) : null}
           </div>
         )}
 
@@ -160,6 +186,12 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
         </div>
 
         <div className={styles.content}>
+          {loadError ? (
+            <p className={styles.formError} style={{ margin: "0 0 1rem" }}>
+              Could not load admin data from the API ({loadError}). If the backend
+              just started, refresh the page.
+            </p>
+          ) : null}
           {sajiloSection === null ? (
             <>
               <div className={styles.metrics}>
@@ -188,9 +220,26 @@ export function AdminDashboard({ stats, terms, templates }: AdminDashboardProps)
               <AdminFeedbackPanel />
               <AdminDemoRequestsPanel />
             </>
-          ) : isSuperadmin ? (
+          ) : !authChecked ? (
+            <p className={styles.panelDesc}>Loading…</p>
+          ) : sajiloSection === "gemini-keys" ? (
+            isSuperadmin ? (
+              <AdminGeminiKeysPanel />
+            ) : (
+              <p className={styles.formError}>
+                Superadmin access is required to manage Gemini API keys.
+              </p>
+            )
+          ) : isPlatformAdmin &&
+            (sajiloSection === "firms" ||
+              sajiloSection === "roles" ||
+              sajiloSection === "members") ? (
             <AdminSajiloKanunPanel section={sajiloSection} />
-          ) : null}
+          ) : (
+            <p className={styles.formError}>
+              Platform admin access is required for Sajilo Kanun management.
+            </p>
+          )}
         </div>
       </div>
     </div>

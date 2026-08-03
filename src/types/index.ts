@@ -78,9 +78,12 @@ export interface Feedback {
 
 export type UserType = "user" | "advocate" | "admin" | "superadmin";
 
-export type SajiloKanunAccountRole = "admin" | "member";
-
-export type LegalCaseType = "civil" | "criminal" | "other";
+export type SajiloKanunAccountRole = "admin" | "member" | "caseUser";
+export type LegalCaseType =
+  | "civil"
+  | "criminal"
+  | "special_administrative"
+  | "constitutional_writ";
 export type LegalCaseStatus = "open" | "pending" | "closed";
 
 export type ConsultationStatus =

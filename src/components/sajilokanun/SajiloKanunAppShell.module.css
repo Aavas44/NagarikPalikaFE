@@ -1,5 +1,13 @@
 .skAppPage {
   padding: 2.5rem 1.5rem 3rem;
+  scrollbar-gutter: stable;
+}
+
+.appInner {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* Shared fade surface (salary-tax emiFadeCard vocabulary) */
@@ -181,89 +189,91 @@
   vertical-align: middle;
 }
 
-/* Nav — same language as emiUnitToggle inside fade cards */
+/* Nav — sleek, compact tab bar */
 
 .navTabs {
-  display: flex;
-  gap: 3px;
-  padding: 4px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #b8cce8 0%, #d8e8f8 50%, #eef6ff 100%);
-  border: 1px solid #9ec5e8;
-  box-shadow:
-    inset 0 3px 6px rgba(24, 95, 165, 0.18),
-    0 1px 0 rgba(255, 255, 255, 0.85);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-
-.navTabs::-webkit-scrollbar {
-  display: none;
+  display: grid;
+  grid-template-columns: repeat(var(--nav-cols, 5), minmax(0, 1fr));
+  align-items: stretch;
+  width: 100%;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: #eef4fb;
+  border: 1px solid #d5e4f4;
+  box-sizing: border-box;
 }
 
 .navTab {
-  flex: 1 1 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  min-width: max-content;
-  padding: 0.55rem 0.75rem;
-  border-radius: 8px;
+  gap: 0.3rem;
+  min-width: 0;
+  min-height: 2.15rem;
+  padding: 0.4rem 0.45rem;
+  border-radius: 7px;
   text-decoration: none;
-  color: #4b5563;
+  color: #5b6b7c;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  box-sizing: border-box;
   transition:
-    background 0.15s ease,
-    color 0.15s ease,
-    box-shadow 0.15s ease,
-    transform 0.12s ease;
+    background 0.12s ease,
+    color 0.12s ease;
 }
 
 .navTab:hover {
-  color: #1f2937;
-  background: rgba(255, 255, 255, 0.55);
+  color: #0c447c;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .navTabActive {
-  background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);
+  background: #fff;
   color: #0c447c;
-  box-shadow:
-    0 3px 7px rgba(24, 95, 165, 0.22),
-    0 1px 3px rgba(24, 95, 165, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
-  transform: translateY(-1px);
+  box-shadow: 0 1px 2px rgba(24, 95, 165, 0.1);
 }
 
 .navTabActive:hover {
   color: #042c53;
-  background: linear-gradient(180deg, #ffffff 0%, #cfe4fb 100%);
+  background: #fff;
 }
 
 .navTabIcon {
   flex-shrink: 0;
+  width: 13px;
+  height: 13px;
 }
 
 .navTabLabel {
   line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .navTabMeta {
+  flex-shrink: 0;
   font-variant-numeric: tabular-nums;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  padding: 0.15rem 0.4rem;
+  min-width: 1.75rem;
+  text-align: center;
+  padding: 0.1rem 0.3rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
-  border: 1px solid rgba(181, 212, 244, 0.9);
-  color: #0c447c;
+  background: #f3f8ff;
+  border: 1px solid #d7e6f7;
+  color: #185fa5;
+}
+
+.navTabMetaPlaceholder {
+  opacity: 0.4;
 }
 
 .navTabActive .navTabMeta {
-  background: #fff;
-  border-color: #b5d4f4;
+  background: #eef6ff;
+  border-color: #c9ddf5;
 }
 
 /* Chat layout */
@@ -344,23 +354,30 @@
     font-size: 0.85rem;
   }
 
+  /* Always expanded multi-row layout on phones (stable across routes) */
   .navTabs {
+    grid-template-columns: repeat(var(--nav-mobile-cols, 3), minmax(0, 1fr));
     gap: 2px;
     padding: 3px;
   }
 
   .navTab {
-    flex: 1 1 0;
-    min-width: 0;
-    flex-direction: column;
-    gap: 0.2rem;
-    padding: 0.45rem 0.3rem;
-    font-size: 10.5px;
+    min-height: 2.25rem;
+    gap: 0.25rem;
+    padding: 0.35rem 0.3rem;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  .navTabIcon {
+    width: 12px;
+    height: 12px;
   }
 
   .navTabMeta {
-    font-size: 9.5px;
-    padding: 0.1rem 0.3rem;
+    font-size: 9px;
+    min-width: 1.5rem;
+    padding: 0.05rem 0.25rem;
   }
 
   .chatPanel {

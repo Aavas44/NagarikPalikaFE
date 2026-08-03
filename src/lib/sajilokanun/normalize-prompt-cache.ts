@@ -1,4 +1,4 @@
-import { getGemini, getGeminiFallback } from "./gemini";
+import { listGeminiClientsOrdered } from "./gemini";
 import { NORMALIZE_PROMPT_VERSION } from "./query-normalize-prompt";
 
 export type NormalizePromptBundle = {
@@ -9,6 +9,7 @@ export type NormalizePromptBundle = {
 
 type ContextCacheEntry = {
   name: string;
+  apiKeyLabel: string;
   expiresAt: number;
 };
 
@@ -76,22 +77,23 @@ export function openAiNormalizeCacheParams(
 export async function resolveGeminiContextCache(
   bundle: NormalizePromptBundle,
   geminiModel: string
-): Promise<string | null> {
+): Promise<{ name: string; apiKeyLabel: string } | null> {
   if (!contextCacheEnabled()) return null;
-  if (!process.env.GEMINI_API_KEY?.trim()) return null;
 
   const existing = contextCacheByKey.get(bundle.semanticKey);
   if (existing && Date.now() < existing.expiresAt) {
-    return existing.name;
+    return { name: existing.name, apiKeyLabel: existing.apiKeyLabel };
   }
 
   const ttlSec = Number(process.env.QUERY_NORMALIZE_CONTEXT_CACHE_TTL_SEC ?? 86400);
-  const clients = [
-    { label: "primary", client: getGemini() },
-    ...(getGeminiFallback()
-      ? [{ label: "fallback-key", client: getGeminiFallback()! }]
-      : []),
-  ];
+  let clients: Array<{ label: string; client: import("@google/genai").GoogleGenAI }> =
+    [];
+  try {
+    clients = await listGeminiClientsOrdered();
+  } catch {
+    return null;
+  }
+  if (!clients.length) return null;
 
   for (const { label, client } of clients) {
     try {
@@ -108,6 +110,7 @@ export async function resolveGeminiContextCache(
 
       contextCacheByKey.set(bundle.semanticKey, {
         name: response.name,
+        apiKeyLabel: label,
         expiresAt: Date.now() + (ttlSec - 3600) * 1000,
       });
 
@@ -124,7 +127,7 @@ export async function resolveGeminiContextCache(
         })
       );
 
-      return response.name;
+      return { name: response.name, apiKeyLabel: label };
     } catch (error) {
       // Cache storage quota is independent of generateContent — keep trying generate.
       if (!isGeminiContextCacheOnlyError(error)) {

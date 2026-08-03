@@ -1,0 +1,8 @@
+{
+  "bookId": "criminal-code",
+  "note": "Manual page corrections. Merged on top of auto-generated map. 191 was matching a later 'दफा १९१' citation on p.74 because the heading on p.72 is glued as कसूर१९१.",
+  "map": {
+    "189": 72,
+    "191": 72
+  }
+}

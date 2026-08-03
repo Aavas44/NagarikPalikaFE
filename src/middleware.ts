@@ -4,16 +4,20 @@ import type { NextRequest } from "next/server";
 const TOKEN_COOKIE = "nagarik_palika_token";
 const SAJILO_KANUN_TOKEN_COOKIE = "sajilo_kanun_token";
 
-function getUserType(token: string): string | null {
+function getSkTokenPayload(token: string): { userType?: string; role?: string } | null {
   try {
-    const payload = JSON.parse(atob(token.split(".")[1] ?? "")) as {
+    return JSON.parse(atob(token.split(".")[1] ?? "")) as {
       userType?: string;
       role?: string;
     };
-    return payload.userType ?? payload.role ?? null;
   } catch {
     return null;
   }
+}
+
+function getUserType(token: string): string | null {
+  const payload = getSkTokenPayload(token);
+  return payload?.userType ?? payload?.role ?? null;
 }
 
 function clearTokenCookie(response: NextResponse): NextResponse {
@@ -109,6 +113,7 @@ export function middleware(request: NextRequest) {
   }
 
   const isProtectedSajiloKanun =
+    pathname.startsWith("/sajilokanun/dashboard") ||
     pathname.startsWith("/sajilokanun/chat") ||
     pathname.startsWith("/sajilokanun/unicode-converter") ||
     pathname.startsWith("/sajilokanun/usage") ||
@@ -119,6 +124,17 @@ export function middleware(request: NextRequest) {
     const skToken = request.cookies.get(SAJILO_KANUN_TOKEN_COOKIE)?.value;
     if (!skToken || getUserType(skToken) !== "sajilo_kanun") {
       return NextResponse.redirect(new URL("/sajilokanun", request.url));
+    }
+    const skPayload = getSkTokenPayload(skToken);
+    const isCaseUser = skPayload?.role === "caseUser";
+    const blockedForCaseUser =
+      pathname.startsWith("/sajilokanun/dashboard") ||
+      pathname.startsWith("/sajilokanun/chat") ||
+      pathname.startsWith("/sajilokanun/unicode-converter") ||
+      pathname.startsWith("/sajilokanun/usage") ||
+      pathname.startsWith("/sajilokanun/team");
+    if (isCaseUser && blockedForCaseUser) {
+      return NextResponse.redirect(new URL("/sajilokanun/cases", request.url));
     }
   }
 
@@ -132,6 +148,8 @@ export const config = {
     "/account/:path*",
     "/consult/:path*",
     "/advocate/:path*",
+    "/sajilokanun/dashboard",
+    "/sajilokanun/dashboard/:path*",
     "/sajilokanun/chat",
     "/sajilokanun/chat/:path*",
     "/sajilokanun/unicode-converter",

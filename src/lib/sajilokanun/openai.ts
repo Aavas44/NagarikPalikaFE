@@ -141,7 +141,7 @@ export async function streamChatCompletion(
 export async function completeChat(
   systemPrompt: string,
   userPrompt: string,
-  model = process.env.ADVOCATE_ANALYSIS_MODEL ?? CHAT_MODEL,
+  model = CHAT_MODEL,
   operation: UsageOperation = "chat",
   cacheOptions?: OpenAiChatCacheOptions
 ): Promise<string> {

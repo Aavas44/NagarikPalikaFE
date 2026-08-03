@@ -19,13 +19,15 @@ export type SourcePdfPreview = {
 };
 
 export function resolveSourcePage(source: SourcePdfInput): number | null {
-  if (source.page_number != null && source.page_number > 0) {
-    return source.page_number;
-  }
+  // Prefer the curated दफा → PDF page map (matches viewer page numbers).
+  // Chunk page_number often reflects OCR/index order and can be wrong.
   const bookId = resolveBookIdFromFilename(source.filename);
   if (bookId && source.section_label?.trim()) {
     const mapped = lookupDafaPage(bookId, source.section_label);
     if (mapped != null) return mapped;
+  }
+  if (source.page_number != null && source.page_number > 0) {
+    return source.page_number;
   }
   if (source.content) {
     const parsed = parsePageFromContent(source.content);
@@ -68,7 +70,10 @@ export function sourcePdfLinkTitle(source: SourcePdfInput): string {
 
 export function lawPdfIframeSrc(preview: SourcePdfPreview): string {
   if (preview.page != null && preview.page > 0) {
-    return `${preview.src}#page=${preview.page}&view=FitH`;
+    // Dummy query helps Chromium reload the PDF viewer when only the
+    // fragment would otherwise change (same-document navigation quirk).
+    const joiner = preview.src.includes("?") ? "&" : "?";
+    return `${preview.src}${joiner}_p=${preview.page}#page=${preview.page}&view=FitH`;
   }
   return preview.src;
 }

@@ -8,6 +8,7 @@ import { UserNav } from "@/components/user/UserNav";
 import { UserFooter } from "@/components/user/UserFooter";
 import {
   getDemoSessionId,
+  getSkRoleFromToken,
   hasSajiloKanunToken,
   hasSubmittedDemoThisSession,
   loginSajiloKanun,
@@ -15,6 +16,13 @@ import {
 } from "@/lib/sajilokanun-access";
 import pageStyles from "@/app/user.module.css";
 import emiStyles from "@/components/user/emi.module.css";
+
+function postLoginPath() {
+  const role = getSkRoleFromToken();
+  if (role === "caseUser") return "/sajilokanun/cases";
+  if (role === "admin" || role === "member") return "/sajilokanun/dashboard";
+  return "/sajilokanun/chat";
+}
 
 export function SajiloKanunGate() {
   const router = useRouter();
@@ -38,7 +46,7 @@ export function SajiloKanunGate() {
 
   useEffect(() => {
     if (hasSajiloKanunToken()) {
-      router.replace("/sajilokanun/chat");
+      router.replace(postLoginPath());
     }
   }, [router]);
 
@@ -54,7 +62,7 @@ export function SajiloKanunGate() {
     setLoginLoading(true);
     try {
       await loginSajiloKanun(username.trim(), password);
-      router.push("/sajilokanun/chat");
+      router.push(postLoginPath());
     } catch (err) {
       setLoginError(err instanceof Error ? err.message : t.loginError);
     } finally {

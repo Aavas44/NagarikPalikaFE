@@ -1,4 +1,10 @@
-import { getGemini, getGeminiFallback, extractGeminiResponseText } from "./gemini";
+import {
+  listGeminiClientsOrdered,
+  extractGeminiResponseText,
+  markGeminiKeyUsed,
+  reportGeminiKeyError,
+} from "./gemini";
+import type { GoogleGenAI } from "@google/genai";
 import { getOpenAI, resolveOpenAiTemperature } from "./openai";
 import {
   fromGeminiUsage,
@@ -18,7 +24,6 @@ import {
   normalizeSemanticCacheKey,
   type NormalizeActId,
 } from "./query-normalize-prompt";
-import type { GoogleGenAI } from "@google/genai";
 
 const NON_GEMINI_MODEL = /^(gpt-|o[0-9](?:-|$)|claude-|text-davinci)/i;
 
@@ -87,18 +92,31 @@ function resolveBookAct(bookScope?: BookScope): NormalizeActId | null {
 function shouldUseNormalizeFallback(error: unknown): boolean {
   if (error && typeof error === "object" && "status" in error) {
     const status = (error as { status: unknown }).status;
-    if (typeof status === "number" && [401, 403, 429, 500, 502, 503, 504].includes(status)) {
+    if (
+      typeof status === "number" &&
+      [400, 401, 403, 429, 500, 502, 503, 504].includes(status)
+    ) {
       return true;
     }
-    if (status === "UNAVAILABLE" || status === "RESOURCE_EXHAUSTED") return true;
+    if (
+      status === "UNAVAILABLE" ||
+      status === "RESOURCE_EXHAUSTED" ||
+      status === "INVALID_ARGUMENT" ||
+      status === "PERMISSION_DENIED"
+    ) {
+      return true;
+    }
   }
 
   const message = error instanceof Error ? error.message : String(error);
   if (/Empty Gemini query preprocess response/.test(message)) return true;
 
   return (
-    /"code"\s*:\s*(401|403|429|500|502|503|504)/.test(message) ||
-    /"status"\s*:\s*"(UNAVAILABLE|RESOURCE_EXHAUSTED)"/i.test(message) ||
+    /"code"\s*:\s*(400|401|403|429|500|502|503|504)/.test(message) ||
+    /"status"\s*:\s*"(UNAVAILABLE|RESOURCE_EXHAUSTED|INVALID_ARGUMENT|PERMISSION_DENIED)"/i.test(
+      message
+    ) ||
+    /API_KEY_INVALID|API key not valid|CachedContent not found/i.test(message) ||
     /high demand|prepayment credits|depleted|billing/i.test(message) ||
     /ECONNRESET|ETIMEDOUT|fetch failed/i.test(message) ||
     /\b503\b/.test(message) ||
@@ -112,6 +130,8 @@ type NormalizeGenerateParams = {
   systemPrompt: string;
   bundle: NormalizePromptBundle;
   cachedContent?: string;
+  /** Only use cachedContent with this Gemini pool label (cache is per-key). */
+  cachedContentApiKeyLabel?: string;
   thinkingBudget: number;
   bookScope?: BookScope;
   needsTranslation: boolean;
@@ -120,16 +140,10 @@ type NormalizeGenerateParams = {
   operation: UsageOperation;
 };
 
-function geminiNormalizeClients(): Array<{ label: string; client: GoogleGenAI }> {
-  const clients: Array<{ label: string; client: GoogleGenAI }> = [];
-  if (process.env.GEMINI_API_KEY?.trim()) {
-    clients.push({ label: "primary", client: getGemini() });
-  }
-  const fallback = getGeminiFallback();
-  if (fallback && process.env.GEMINI_API_KEY_FALLBACK?.trim()) {
-    clients.push({ label: "fallback-key", client: fallback });
-  }
-  return clients;
+async function geminiNormalizeClients(): Promise<
+  Array<{ label: string; client: GoogleGenAI }>
+> {
+  return listGeminiClientsOrdered();
 }
 
 async function generateNormalizeWithGeminiClient(
@@ -196,24 +210,32 @@ async function generateNormalizeWithGeminiClient(
 async function generateNormalizeWithGeminiKeys(
   params: NormalizeGenerateParams
 ): Promise<string> {
-  const clients = geminiNormalizeClients();
+  const clients = await geminiNormalizeClients();
   if (clients.length === 0) {
     throw new Error("GEMINI_API_KEY is required for query normalization.");
   }
 
   let lastError: unknown;
   for (let i = 0; i < clients.length; i++) {
-    const { label, client } = clients[i]!;
+    const { id, label, client } = clients[i]!;
     try {
-      return await generateNormalizeWithGeminiClient(client, {
+      const text = await generateNormalizeWithGeminiClient(client, {
         ...params,
-        // Only the first key may reuse a primary-created context cache name.
-        cachedContent: i === 0 ? params.cachedContent : undefined,
+        // Context cache names are key-scoped — only reuse on the creating key.
+        cachedContent:
+          params.cachedContent &&
+          params.cachedContentApiKeyLabel &&
+          params.cachedContentApiKeyLabel === label
+            ? params.cachedContent
+            : undefined,
         usedFallback: i > 0 ? true : params.usedFallback,
         apiKeyLabel: label,
       });
+      void markGeminiKeyUsed(id);
+      return text;
     } catch (error) {
       lastError = error;
+      void reportGeminiKeyError(id, error);
       if (!shouldUseNormalizeFallback(error) || i === clients.length - 1) {
         break;
       }
@@ -367,13 +389,14 @@ async function runNormalizeStep(
   operation: UsageOperation,
   bookScope?: BookScope
 ): Promise<string> {
-  const cachedContent = await resolveGeminiContextCache(bundle, ctx.model);
+  const cached = await resolveGeminiContextCache(bundle, ctx.model);
 
   return generateWithFallback(ctx, {
     userPrompt,
     systemPrompt: bundle.systemPrompt,
     bundle,
-    cachedContent: cachedContent ?? undefined,
+    cachedContent: cached?.name,
+    cachedContentApiKeyLabel: cached?.apiKeyLabel,
     bookScope,
     needsTranslation: ctx.needsTranslation,
     operation,

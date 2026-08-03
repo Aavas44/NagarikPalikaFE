@@ -1,6 +1,5 @@
 "use client";
 
-import { useId } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import styles from "@/app/user.module.css";
 
@@ -23,38 +22,43 @@ interface LanguageToggleProps {
 }
 
 export function LanguageToggle({ layout = "inline" }: LanguageToggleProps) {
-  const { locale, setLocale, msg } = useLanguage();
-  const labelId = useId();
-  const wrapClass = layout === "stacked" ? styles.langToggleStacked : styles.langToggleWrap;
+  const { locale, toggleLocale, msg } = useLanguage();
+  const wrapClass =
+    layout === "stacked" ? styles.langToggleStacked : styles.langToggleWrap;
+  const nextLocale = locale === "en" ? "ne" : "en";
+  const nextLabel = nextLocale === "en" ? msg.language.en : msg.language.ne;
+  const currentLabel = locale === "en" ? msg.language.en : msg.language.ne;
 
   return (
     <div className={wrapClass}>
-      <span className={styles.langToggleLabel} id={labelId}>
-        <GlobeIcon />
-        <span className={styles.langToggleLabelText}>{msg.language.toggle}</span>
-      </span>
-      <div
-        className={styles.langToggle}
-        role="group"
-        aria-labelledby={labelId}
+      <button
+        type="button"
+        className={styles.langSwitch}
+        onClick={toggleLocale}
+        aria-label={`${msg.language.toggle}: ${currentLabel}. ${nextLabel}`}
+        title={`${msg.language.toggle}: ${currentLabel}`}
       >
-        <button
-          type="button"
-          className={`${styles.langBtn} ${locale === "en" ? styles.langBtnActive : ""}`}
-          onClick={() => setLocale("en")}
-          aria-pressed={locale === "en"}
-        >
-          {msg.language.en}
-        </button>
-        <button
-          type="button"
-          className={`${styles.langBtn} ${locale === "ne" ? styles.langBtnActive : ""}`}
-          onClick={() => setLocale("ne")}
-          aria-pressed={locale === "ne"}
-        >
-          {msg.language.ne}
-        </button>
-      </div>
+        <span className={styles.langSwitchIcon}>
+          <GlobeIcon />
+        </span>
+        <span className={styles.langSwitchTrack} data-locale={locale}>
+          <span
+            className={`${styles.langSwitchOption} ${
+              locale === "en" ? styles.langSwitchOptionActive : ""
+            }`}
+          >
+            EN
+          </span>
+          <span
+            className={`${styles.langSwitchOption} ${
+              locale === "ne" ? styles.langSwitchOptionActive : ""
+            }`}
+          >
+            ने
+          </span>
+          <span className={styles.langSwitchThumb} aria-hidden />
+        </span>
+      </button>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import {
   BS_MONTHS_NE,
   type BsDate,
 } from "./nepaliCalendarTypes";
+import { toDevanagariDigits } from "./sajilokanun/nepali-digits";
 
 export type { BsDate } from "./nepaliCalendarTypes";
 export { BS_MONTHS_EN, BS_MONTHS_NE } from "./nepaliCalendarTypes";
@@ -148,14 +149,33 @@ export function adToBs(ad: Date): BsDate {
   return { year: bsYear, month: bsMonth, day: bsDay };
 }
 
+/** Today's date in Bikram Sambat, using Nepal (Asia/Kathmandu) calendar day. */
 export function getTodayBs(): BsDate {
-  return adToBs(new Date());
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kathmandu",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const year = Number(parts.find((part) => part.type === "year")?.value);
+  const month = Number(parts.find((part) => part.type === "month")?.value);
+  const day = Number(parts.find((part) => part.type === "day")?.value);
+
+  if (!year || !month || !day) {
+    return adToBs(new Date());
+  }
+
+  return adToBs(new Date(year, month - 1, day));
 }
 
 export function formatBsDate(date: BsDate, locale: "en" | "ne"): string {
   const monthName = locale === "ne" ? BS_MONTHS_NE[date.month - 1] : BS_MONTHS_EN[date.month - 1];
   if (locale === "ne") {
-    return `${date.year}/${String(date.month).padStart(2, "0")}/${String(date.day).padStart(2, "0")} (${monthName})`;
+    const year = toDevanagariDigits(String(date.year));
+    const month = toDevanagariDigits(String(date.month).padStart(2, "0"));
+    const day = toDevanagariDigits(String(date.day).padStart(2, "0"));
+    return `${year}/${month}/${day} (${monthName})`;
   }
   return `${date.year}-${monthName}-${date.day}`;
 }

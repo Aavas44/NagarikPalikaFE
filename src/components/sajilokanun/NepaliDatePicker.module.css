@@ -1,0 +1,14 @@
+.root {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 0.7fr;
+  gap: 0.55rem;
+  margin-top: 0.35rem;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .root {
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+}

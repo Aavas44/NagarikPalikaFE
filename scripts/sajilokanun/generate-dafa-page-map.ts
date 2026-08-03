@@ -71,12 +71,16 @@ function findPageByDafaNumber(
     ? ""
     : compact(title).slice(0, 16);
 
+  // Prefer heading form "१९१ ." — OCR often glues it to the prior word (कसूर१९१).
+  // Avoid bare "दफा १९१" citations, which appear on later pages.
+  const headingRe = new RegExp(
+    `(?:^|[^०-९0-9])(?:${display}|${nepali})\\s*\\.`,
+    "u"
+  );
+
   for (const page of pages) {
-    const text = page.text;
-    const hasNumber = new RegExp(
-      `(?:^|[\\s।|])${display}\\s*\\.|(?:^|[\\s।|])${nepali}\\s*\\.|(?:^|[\\s।|])${display}[\\.\\sः]|(?:^|[\\s।|])${nepali}[\\.\\sः]|दफा\\s*${display}|दफा\\s*${nepali}`
-    ).test(text.replace(/\s+/g, " "));
-    if (!hasNumber) continue;
+    const text = page.text.replace(/\s+/g, " ");
+    if (!headingRe.test(text)) continue;
     if (!titleNeedle || compact(text).includes(titleNeedle)) {
       return page.pageNumber;
     }
@@ -90,8 +94,10 @@ function findFirstPageMentioningDafa(
 ): number | null {
   const arabic = toArabicDigits(dafaNum);
   const nepali = arabic.replace(/\d/g, (d) => "०१२३४५६७८९"[Number(d)] ?? d);
+  // Heading-only: "१९१ ." / "191 ." — not later cross-references like "दफा १९१".
   const re = new RegExp(
-    `(?:^|[\\s।|])${nepali}\\s*\\.|(?:^|[\\s।|])${arabic}\\s*\\.|(?:^|[\\s।|])${nepali}[\\.\\sः]|(?:^|[\\s।|])${arabic}[\\.\\sः]|दफा\\s*${nepali}|दफा\\s*${arabic}`
+    `(?:^|[^०-९0-9])(?:${nepali}|${arabic})\\s*\\.`,
+    "u"
   );
 
   for (const page of pages) {

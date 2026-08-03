@@ -337,10 +337,15 @@
 
 .filterBar {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 0.75rem 1.25rem;
   background: #f9fafb;
   border-bottom: 1px solid #e5e7eb;
+}
+
+.filterBar .filterSelect {
+  min-width: 180px;
 }
 
 .filterInput {
@@ -964,14 +969,426 @@
 
 .skMemberActions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 160px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 120px;
 }
 
 .skMemberActions .filterSelect {
   width: 100%;
   font-size: 12px;
+}
+
+.skKebabWrap {
+  position: relative;
+  display: inline-flex;
+}
+
+.skKebabBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #374151;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.skKebabBtn:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.skKebabBtn[aria-expanded="true"] {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.skKebabBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skKebabMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  min-width: 168px;
+  max-width: min(240px, calc(100vw - 16px));
+  max-height: min(280px, 50vh);
+  padding: 6px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.skKebabMenuFixed {
+  position: fixed;
+  right: auto;
+  z-index: 90;
+}
+
+.skKebabMenuUp {
+  transform-origin: bottom right;
+}
+
+.skKebabMenuScroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.skKebabSection {
+  margin: 0;
+  padding: 0.35rem 0.7rem 0.2rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.skKebabDivider {
+  height: 1px;
+  margin: 6px 4px;
+  background: #f3f4f6;
+}
+
+.skKebabItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 0.55rem 0.7rem;
+  font-size: 13px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.skKebabItemLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.skKebabItemMeta {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.skKebabItem:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.skKebabItem:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: -2px;
+}
+
+.skKebabItem:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.skKebabItemDanger {
+  color: #b42318;
+}
+
+.skKebabItemDanger:hover:not(:disabled) {
+  background: #fef3f2;
+  color: #912018;
+}
+
+.geminiErrorLink {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #854f0b;
+  font-size: 13px;
+  text-decoration: underline;
+  font-family: inherit;
+}
+
+.geminiErrorLink:hover {
+  color: #633806;
+}
+
+.geminiRoleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.geminiRoleDefault {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.geminiRoleFallback {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+
+.geminiRolePool {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.geminiErrorOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.geminiErrorPopup {
+  width: min(420px, 100%);
+  max-height: min(70vh, 420px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+  padding: 0.85rem 1rem 1rem;
+}
+
+.geminiErrorPopupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.geminiErrorPopupHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #042c53;
+}
+
+.geminiErrorMeta {
+  margin: 0 0 0.65rem;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.geminiErrorBody {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #1f2937;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.skEditUserCard {
+  margin-bottom: 1rem;
+  overflow: visible;
+}
+
+.skAddMemberCard.skEditUserCard {
+  overflow: visible;
+}
+
+.skEditUserHint {
+  margin: 0 0 0.35rem;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.skFormSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.skFormSection:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.skFormSectionTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.skField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.skFieldLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.skFieldHint {
+  margin: 0;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.skReadonlyValue {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 13px;
+  color: #374151;
+}
+
+.skAssignedCaseList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.skAssignedCaseList li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.55rem;
+  align-items: baseline;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.skAssignedCaseList strong {
+  color: #111827;
+}
+
+.skAssignedCaseList span {
+  color: #4b5563;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skAssignedCaseList em {
+  font-style: normal;
+  font-size: 11px;
+  color: #6b7280;
+  text-transform: capitalize;
+}
+
+.skFirmSearch {
+  position: relative;
+  z-index: 5;
+}
+
+.skFirmSearchMenu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 40;
+  max-height: min(280px, 45vh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
+}
+
+.skFirmSearchStatus {
+  padding: 0.75rem 0.9rem;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.skFirmSearchOption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  color: #111827;
+}
+
+.skFirmSearchOption:hover:not(:disabled),
+.skFirmSearchOptionActive {
+  background: #f3f4f6;
+}
+
+.skFirmSearchOption:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.skFirmSearchOption span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.skFirmSearchOption small {
+  font-size: 11px;
+  color: #6b7280;
 }
 
 .skUserTypeBadge {
