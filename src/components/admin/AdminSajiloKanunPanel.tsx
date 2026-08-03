@@ -1362,15 +1362,18 @@ export function AdminSajiloKanunPanel({
                 value={directoryForm.userType}
                 onChange={(e) => {
                   const userType = e.target.value as DirectoryUserType;
+                  const role: AssignableRole =
+                    userType === "firm_admin"
+                      ? "firm_admin"
+                      : userType === "member"
+                        ? "member"
+                        : userType === "admin"
+                          ? "admin"
+                          : "superadmin";
                   setDirectoryForm((f) => ({
                     ...f,
                     userType,
-                    role:
-                      userType === "firm_admin"
-                        ? "firm_admin"
-                        : userType === "member"
-                          ? "member"
-                          : userType,
+                    role,
                   }));
                 }}
                 required

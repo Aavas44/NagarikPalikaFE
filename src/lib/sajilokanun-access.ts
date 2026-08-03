@@ -111,7 +111,7 @@ export interface TeamMember {
   email: string;
   contactNo?: string;
   active: boolean;
-  role: "admin" | "member" | null;
+  role: "admin" | "member" | "caseUser" | null;
   userType?: string | null;
   teamId?: string | null;
   firmName?: string | null;

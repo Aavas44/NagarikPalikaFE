@@ -141,7 +141,7 @@ type NormalizeGenerateParams = {
 };
 
 async function geminiNormalizeClients(): Promise<
-  Array<{ label: string; client: GoogleGenAI }>
+  Array<{ id: string | null; label: string; client: GoogleGenAI }>
 > {
   return listGeminiClientsOrdered();
 }
