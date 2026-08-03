@@ -97,21 +97,37 @@ export default function SajiloKanunDashboardPage() {
 
   const filtered = useMemo(() => {
     const rows = data?.activities ?? [];
-    return rows.filter((row) => {
+    const matched = rows.filter((row) => {
       if (typeFilter !== "all" && row.activityType !== typeFilter) return false;
       if (filter === "all") return true;
       if (filter === "overdue") return row.urgency === "overdue";
       if (filter === "today") return row.urgency === "today";
       if (filter === "week") return row.urgency === "today" || row.urgency === "week";
       if (filter === "actionable") {
+        // Remaining only — overdue lives under the Overdue tab.
         return (
-          row.urgency === "overdue" ||
           row.urgency === "today" ||
-          row.urgency === "week"
+          row.urgency === "week" ||
+          row.urgency === "upcoming"
         );
       }
       return true;
     });
+
+    return matched
+      .map((row) => ({
+        row,
+        remaining: remainingDaysFromBs({
+          year: row.bsYear,
+          month: row.bsMonth,
+          day: row.bsDay,
+        }),
+      }))
+      .sort((a, b) => {
+        if (a.remaining !== b.remaining) return a.remaining - b.remaining;
+        return a.row.caseNo.localeCompare(b.row.caseNo);
+      })
+      .map(({ row }) => row);
   }, [data, filter, typeFilter]);
 
   const remainingLabels = {

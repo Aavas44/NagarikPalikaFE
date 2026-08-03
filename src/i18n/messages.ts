@@ -71,7 +71,7 @@ export const messages = {
         loading: "Loading firm activities…",
         empty: "No matching activities right now.",
         tableTitle: "Activity report",
-        tableHint: "Sorted by urgency, then by Nepali calendar date.",
+        tableHint: "Shows remaining activities by default. Sorted by fewest days left first. Overdue items are under Overdue.",
         filterLabel: "Activity filters",
         filterActionable: "Needs attention",
         filterOverdue: "Overdue",
@@ -1003,7 +1003,8 @@ export const messages = {
         loading: "फर्म गतिविधिहरू लोड हुँदैछ…",
         empty: "अहिले मिल्ने गतिविधि छैन।",
         tableTitle: "गतिविधि प्रतिवेदन",
-        tableHint: "जरुरीताअनुसार, त्यसपछि नेपाली मितिअनुसार क्रमबद्ध।",
+        tableHint:
+          "पूर्वनिर्धारित रूपमा बाँकी गतिविधि मात्र। कम दिन बाँकी भएको माथि। म्याद नाघेको Overdue मा।",
         filterLabel: "गतिविधि फिल्टर",
         filterActionable: "ध्यान दिनुपर्ने",
         filterOverdue: "म्याद नाघेको",
