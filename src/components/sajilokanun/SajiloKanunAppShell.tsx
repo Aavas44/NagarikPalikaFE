@@ -10,6 +10,7 @@ import {
   fetchSajiloKanunMe,
   fetchSajiloKanunUsage,
   getSkRoleFromToken,
+  getSkTeamIdFromToken,
   logoutSajiloKanun,
   type SajiloKanunUser,
 } from "@/lib/sajilokanun-access";
@@ -155,7 +156,9 @@ export function SajiloKanunAppShell({
 
   const role = user?.role ?? getSkRoleFromToken();
   const isCaseUser = role === "caseUser";
-  const isFirmUser = Boolean(user?.teamId) && !isCaseUser;
+  // Prefer JWT teamId so Dashboard doesn't flicker while /me reloads on each page.
+  const isFirmUser =
+    Boolean(user?.teamId ?? getSkTeamIdFromToken()) && !isCaseUser;
 
   useEffect(() => {
     if (!isCaseUser) return;

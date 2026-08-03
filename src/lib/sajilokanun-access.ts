@@ -98,6 +98,21 @@ export function getSkRoleFromToken(): "admin" | "member" | "caseUser" | null {
   }
 }
 
+/** Firm id from JWT — available immediately on navigation (before /me resolves). */
+export function getSkTeamIdFromToken(): string | null {
+  const token = getSajiloKanunToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1] ?? "")) as {
+      teamId?: string | null;
+    };
+    const teamId = payload.teamId?.trim();
+    return teamId || null;
+  } catch {
+    return null;
+  }
+}
+
 export function isCaseUserRole(
   role?: string | null
 ): role is "caseUser" {
