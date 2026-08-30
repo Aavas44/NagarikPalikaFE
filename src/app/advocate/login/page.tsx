@@ -85,7 +85,7 @@ export default function AdvocateLoginPage() {
             New advocate? <Link href="/advocate/signup">Register your practice</Link>
           </p>
           <p style={{ fontSize: 13, marginTop: "0.5rem" }}>
-            <Link href="/login?intent=user">← Citizen sign in</Link>
+            <Link href="/sajilokanun/login">← Citizen sign in</Link>
           </p>
         </div>
       </main>

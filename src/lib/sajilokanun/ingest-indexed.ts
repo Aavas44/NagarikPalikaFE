@@ -93,7 +93,10 @@ export async function buildChunksForRule(rule: IndexingRule): Promise<IngestChun
 
 /** Generate Lawfiles/lawComission/.structured/*.txt from canonical sources. */
 export function normalizeLawComissionStructure(bookId?: string): void {
-  const script = path.join(process.cwd(), "scripts/normalize_law_structure.py");
+  const script = path.join(
+    process.cwd(),
+    "scripts/sajilokanun/normalize_law_structure.py"
+  );
   const args = [script, "--write", bookId ? "--book" : "--all"];
   if (bookId) args.push(bookId);
 

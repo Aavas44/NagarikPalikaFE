@@ -7,7 +7,8 @@ export type NormalizeActId =
   | "devani"
   | "devani_karyavidhi"
   | "aparadh"
-  | "faujdari_karyavidhi";
+  | "faujdari_karyavidhi"
+  | "electronic_transactions";
 
 export type DafaTaxonomyEntry = {
   label: string;
@@ -33,6 +34,7 @@ const ALL_NORMALIZE_ACTS: NormalizeActId[] = [
   "devani_karyavidhi",
   "aparadh",
   "faujdari_karyavidhi",
+  "electronic_transactions",
 ];
 
 export const ACT_ENGLISH_NAMES: Record<NormalizeActId, string> = {
@@ -40,7 +42,20 @@ export const ACT_ENGLISH_NAMES: Record<NormalizeActId, string> = {
   devani_karyavidhi: "Muluki Devani Karyavidhi Samhita 2074",
   aparadh: "Muluki Aparadh Samhita 2074",
   faujdari_karyavidhi: "Muluki Faujdari Karyavidhi Samhita 2074",
+  electronic_transactions: "Electronic Transactions Act 2063",
 };
+
+const BOOK_ID_BY_NORMALIZE_ACT: Record<NormalizeActId, string> = {
+  devani: "civil-code",
+  devani_karyavidhi: "civil-procedure",
+  aparadh: "criminal-code",
+  faujdari_karyavidhi: "criminal-procedure",
+  electronic_transactions: "electronic-transactions",
+};
+
+export function bookIdForNormalizeAct(act: NormalizeActId): string {
+  return BOOK_ID_BY_NORMALIZE_ACT[act];
+}
 
 export function resolveNormalizeActFromEnglishName(act: string): NormalizeActId | null {
   const trimmed = act.trim();
@@ -84,15 +99,7 @@ export function loadDafaTaxonomyByBookId(bookId: string): DafaTaxonomyFile | nul
 }
 
 export function loadDafaTaxonomyForAct(act: NormalizeActId): DafaTaxonomyFile | null {
-  const bookId =
-    act === "devani"
-      ? "civil-code"
-      : act === "devani_karyavidhi"
-        ? "civil-procedure"
-        : act === "aparadh"
-          ? "criminal-code"
-          : "criminal-procedure";
-  return loadDafaTaxonomyByBookId(bookId);
+  return loadDafaTaxonomyByBookId(bookIdForNormalizeAct(act));
 }
 
 export function resolveNormalizeActsForScope(

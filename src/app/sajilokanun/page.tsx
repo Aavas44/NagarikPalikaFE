@@ -1,6 +1,5 @@
-import { LanguageProvider } from "@/context/LanguageContext";
-import { SajiloKanunGate } from "@/components/sajilokanun/SajiloKanunGate";
+import { SajiloKanunLanding } from "@/components/sajilokanun/SajiloKanunLanding";
 
-export default function SajiloKanunAccessPage() {
-  return <SajiloKanunGate />;
+export default function SajiloKanunHomePage() {
+  return <SajiloKanunLanding />;
 }

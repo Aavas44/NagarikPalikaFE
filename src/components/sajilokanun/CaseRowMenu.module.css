@@ -1,0 +1,64 @@
+.root {
+  position: relative;
+}
+
+.trigger {
+  appearance: none;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid #d7e3f4;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #042c53;
+  font-size: 1.15rem;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.trigger:hover:not(:disabled) {
+  background: #f4f8fd;
+}
+
+.trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 20;
+  min-width: 10.5rem;
+  padding: 0.3rem;
+  border: 1px solid #d7e3f4;
+  border-radius: 0.6rem;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+}
+
+.item {
+  appearance: none;
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: #042c53;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+}
+
+.item:hover:not(:disabled) {
+  background: #eef5fc;
+}
+
+.item:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

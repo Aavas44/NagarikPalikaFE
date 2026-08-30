@@ -10,6 +10,7 @@ const BOOK_PDF_PATHS: Record<string, string> = {
   "criminal-code": "मुलुकी-अपराध-संहिता-ऐन-२०७४.pdf",
   "civil-procedure": "मुलुकी-देवानी-कार्यविधि-ऐन-२०७४.pdf",
   "criminal-procedure": "मुलुकी_फौजदारी_कार्यविधि_संहिता_२०७४(1).pdf",
+  "electronic-transactions": "विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३.pdf",
 };
 
 export function resolveLawbookPdfPath(bookId: string): string | null {

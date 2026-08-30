@@ -19,9 +19,9 @@ const notoDevanagari = Noto_Sans_Devanagari({
 });
 
 export const metadata: Metadata = {
-  title: "Sajilo Kanun — Nepali Legal Assistant",
+  title: "Sajilo Kanun — legal research and case workspace for Nepal",
   description:
-    "Ask questions about Muluki Ain 2074 in Nepali or English with cited provisions.",
+    "Indexed statute research, case files, hearing lists, and reviewable drafts for advocates and law firms in Nepal.",
 };
 
 export default function SajiloKanunLayout({

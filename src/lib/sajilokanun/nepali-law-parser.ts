@@ -30,7 +30,10 @@ export type NepaliLawPythonChunk = {
   };
 };
 
-const PARSER_SCRIPT = path.join(process.cwd(), "scripts/parse_nepali_law.py");
+const PARSER_SCRIPT = path.join(
+  process.cwd(),
+  "scripts/sajilokanun/parse_nepali_law.py"
+);
 
 export function pagesToRawText(pages: PdfPage[]): string {
   return pages.map((page) => `[PAGE:${page.pageNumber}] ${page.text}`).join("\n");

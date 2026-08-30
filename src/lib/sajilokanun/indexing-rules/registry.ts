@@ -2,6 +2,7 @@ import { CIVIL_CODE_INDEXING_RULE } from "./civil-code.rule";
 import { CIVIL_PROCEDURE_INDEXING_RULE } from "./civil-procedure.rule";
 import { CRIMINAL_CODE_INDEXING_RULE } from "./criminal-code.rule";
 import { CRIMINAL_PROCEDURE_INDEXING_RULE } from "./criminal-procedure.rule";
+import { ELECTRONIC_TRANSACTIONS_INDEXING_RULE } from "./electronic-transactions.rule";
 import type { IndexingRule } from "./types";
 
 export const INDEXING_RULES: IndexingRule[] = [
@@ -9,6 +10,7 @@ export const INDEXING_RULES: IndexingRule[] = [
   CIVIL_PROCEDURE_INDEXING_RULE,
   CRIMINAL_CODE_INDEXING_RULE,
   CRIMINAL_PROCEDURE_INDEXING_RULE,
+  ELECTRONIC_TRANSACTIONS_INDEXING_RULE,
 ];
 
 /** All rules whose source lives under Lawfiles/lawComission/ */

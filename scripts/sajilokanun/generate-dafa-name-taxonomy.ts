@@ -1,13 +1,13 @@
 /**
  * Extract दफा number + title lines from .structured law files → src/data/sajilokanun/dafa-taxonomy/*.json
- * Usage: npx tsx scripts/generate-dafa-name-taxonomy.ts
+ * Usage: npx tsx scripts/sajilokanun/generate-dafa-name-taxonomy.ts
  */
 import fs from "fs";
 import path from "path";
 import { toArabicDigits } from "../../src/lib/sajilokanun/nepali-digits";
 import type { NormalizeActId } from "../../src/lib/sajilokanun/dafa-name-taxonomy";
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "../..");
 const STRUCTURED_DIR = path.join(ROOT, "Lawfiles/lawComission/.structured");
 const OUT_DIR = path.join(ROOT, "src/data/sajilokanun/dafa-taxonomy");
 
@@ -16,6 +16,7 @@ const BOOK_FILES: Record<NormalizeActId, string> = {
   devani_karyavidhi: "मुलुकी देवानी कार्यविधि (संहिता), २०७४.txt",
   aparadh: "मुलुकी अपराध संहिता, २०७४.txt",
   faujdari_karyavidhi: "मुलुकी फौजदारी कार्यविधि संहिता, २०७४.txt",
+  electronic_transactions: "विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३.txt",
 };
 
 const ACT_ENGLISH: Record<NormalizeActId, string> = {
@@ -23,6 +24,7 @@ const ACT_ENGLISH: Record<NormalizeActId, string> = {
   devani_karyavidhi: "Muluki Devani Karyavidhi Samhita 2074",
   aparadh: "Muluki Aparadh Samhita 2074",
   faujdari_karyavidhi: "Muluki Faujdari Karyavidhi Samhita 2074",
+  electronic_transactions: "Electronic Transactions Act 2063",
 };
 
 const BOOK_ID: Record<NormalizeActId, string> = {
@@ -30,6 +32,7 @@ const BOOK_ID: Record<NormalizeActId, string> = {
   devani_karyavidhi: "civil-procedure",
   aparadh: "criminal-code",
   faujdari_karyavidhi: "criminal-procedure",
+  electronic_transactions: "electronic-transactions",
 };
 
 /** Top-level दफा line in .structured files (not indented उपदफा). */
@@ -94,11 +97,20 @@ function extractEntries(text: string): DafaTaxonomyEntry[] {
 function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const generatedAt = new Date().toISOString();
+  const bookArgIdx = process.argv.indexOf("--book");
+  const bookArg = bookArgIdx >= 0 ? process.argv[bookArgIdx + 1] : null;
 
-  for (const [normalizeActId, filename] of Object.entries(BOOK_FILES) as [
-    NormalizeActId,
-    string,
-  ][]) {
+  const entriesToWrite = (
+    Object.entries(BOOK_FILES) as [NormalizeActId, string][]
+  ).filter(([normalizeActId]) => {
+    if (!bookArg) return true;
+    return BOOK_ID[normalizeActId] === bookArg || normalizeActId === bookArg;
+  });
+  if (bookArg && entriesToWrite.length === 0) {
+    throw new Error(`Unknown book: ${bookArg}`);
+  }
+
+  for (const [normalizeActId, filename] of entriesToWrite) {
     const sourcePath = path.join(STRUCTURED_DIR, filename);
     const text = fs.readFileSync(sourcePath, "utf-8");
     const entries = extractEntries(text);

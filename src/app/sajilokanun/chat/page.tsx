@@ -15,11 +15,12 @@ import { type BookScope, LAW_BOOKS } from "@/lib/sajilokanun/lawbooks";
 import type { SourcePdfPreview } from "@/lib/sajilokanun/source-pdf-link";
 import type { AnswerMode } from "@/lib/sajilokanun/answer-mode";
 import { needsGeminiPreprocess } from "@/lib/sajilokanun/query-latin-detect";
-import { toArabicDigits } from "@/lib/sajilokanun/nepali-digits";
+import { toArabicDigits, toDevanagariDigits } from "@/lib/sajilokanun/nepali-digits";
 import { notifyUsageUpdated } from "@/lib/sajilokanun/token-usage";
 import type { QueryMetadataHint } from "@/lib/sajilokanun/query-translate";
 import {
   fetchSajiloKanunQuota,
+  isQuotaExhausted,
   type SajiloKanunDailyQuota,
 } from "@/lib/sajilokanun-access";
 
@@ -93,7 +94,8 @@ function extractDafaRootsFromResponse(
 }
 
 export default function Home() {
-  const { msg } = useLanguage();
+  const { locale, msg } = useLanguage();
+  const cq = msg.sajilokanun.chatQuota;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [bookScope, setBookScope] = useState<BookScope>("auto");
@@ -104,6 +106,7 @@ export default function Home() {
   const [pdfPreview, setPdfPreview] = useState<SourcePdfPreview | null>(null);
   const [dailyQuota, setDailyQuota] =
     useState<SajiloKanunDailyQuota | null>(null);
+  const [quotaPlan, setQuotaPlan] = useState<"individual" | "firm" | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -112,7 +115,10 @@ export default function Home() {
 
   useEffect(() => {
     void fetchSajiloKanunQuota()
-      .then((result) => setDailyQuota(result.quota))
+      .then((result) => {
+        setDailyQuota(result.quota);
+        setQuotaPlan(result.plan);
+      })
       .catch(() => undefined);
   }, []);
 
@@ -220,7 +226,10 @@ export default function Home() {
       )
     );
     void fetchSajiloKanunQuota()
-      .then((result) => setDailyQuota(result.quota))
+      .then((result) => {
+        setDailyQuota(result.quota);
+        setQuotaPlan(result.plan);
+      })
       .catch(() => undefined);
 
     return {
@@ -428,20 +437,57 @@ export default function Home() {
           : null
       }
     >
-      {dailyQuota ? (
-        <div className={shellStyles.quotaBanner}>
+      {dailyQuota && dailyQuota.limit != null ? (
+        <div
+          className={`${shellStyles.quotaBanner} ${
+            isQuotaExhausted(dailyQuota)
+              ? shellStyles.quotaBannerExhausted
+              : shellStyles.quotaBannerOk
+          }`}
+        >
           <strong>
-            {dailyQuota.remaining > 0
-              ? "1 free query available today"
-              : "Today’s free query has been used"}
+            {quotaPlan === "firm"
+              ? isQuotaExhausted(dailyQuota)
+                ? cq.firmExhausted
+                : (dailyQuota.remaining === 1
+                    ? cq.firmRemainingOne
+                    : cq.firmRemainingMany
+                  ).replace(
+                    "{n}",
+                    locale === "ne"
+                      ? toDevanagariDigits(String(dailyQuota.remaining ?? 0))
+                      : String(dailyQuota.remaining ?? 0)
+                  )
+              : dailyQuota.remaining != null && dailyQuota.remaining > 0
+                ? cq.individualAvailable
+                : cq.individualUsed}
           </strong>
-          <span>
-            Resets{" "}
-            {new Date(dailyQuota.resetAt).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-            })}
-          </span>
+          {quotaPlan === "firm" ? (
+            <span>
+              {cq.usedLabel
+                .replace(
+                  "{used}",
+                  locale === "ne"
+                    ? toDevanagariDigits(String(dailyQuota.used))
+                    : String(dailyQuota.used)
+                )
+                .replace(
+                  "{limit}",
+                  locale === "ne"
+                    ? toDevanagariDigits(String(dailyQuota.limit))
+                    : String(dailyQuota.limit)
+                )}
+              {isQuotaExhausted(dailyQuota) ? ` · ${cq.quotaReached}` : ""}
+            </span>
+          ) : dailyQuota.resetAt ? (
+            <span>
+              {cq.resets}{" "}
+              {new Date(dailyQuota.resetAt).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+              })}
+            </span>
+          ) : null}
         </div>
       ) : null}
       <div className={`${emiStyles.emiPanel} ${shellStyles.chatPanel}`}>
@@ -449,7 +495,7 @@ export default function Home() {
           {messages.length === 0 ? (
             <EmptyState
               onSelect={handleExampleSelect}
-              disabled={loading || dailyQuota?.remaining === 0}
+              disabled={loading || isQuotaExhausted(dailyQuota)}
             />
           ) : (
             <div className={shellStyles.messageStack}>
@@ -497,7 +543,7 @@ export default function Home() {
             input={input}
             bookScope={bookScope}
             answerMode={answerMode}
-            loading={loading || dailyQuota?.remaining === 0}
+            loading={loading || isQuotaExhausted(dailyQuota)}
             onInputChange={setInput}
             onBookChange={setBookScope}
             onAnswerModeChange={setAnswerMode}

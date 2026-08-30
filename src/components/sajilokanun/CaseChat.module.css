@@ -11,6 +11,12 @@
   background: linear-gradient(180deg, #f7fbff 0%, #f4f8f1 100%);
 }
 
+.chatLoadMore {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0.25rem;
+}
+
 .composer {
   display: grid;
   gap: 0.65rem;
@@ -123,6 +129,16 @@
   font-size: 0.75rem;
   font-weight: 700;
   white-space: nowrap;
+}
+
+.refreshIconSpin {
+  animation: skRefreshSpin 0.9s linear infinite;
+}
+
+@keyframes skRefreshSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .sectionHeader {

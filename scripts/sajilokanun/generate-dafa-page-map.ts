@@ -11,6 +11,7 @@ const BOOK_PDFS: Record<string, string> = {
   "criminal-code": "मुलुकी-अपराध-संहिता-ऐन-२०७४.pdf",
   "civil-procedure": "मुलुकी-देवानी-कार्यविधि-ऐन-२०७४.pdf",
   "criminal-procedure": "मुलुकी_फौजदारी_कार्यविधि_संहिता_२०७४(1).pdf",
+  "electronic-transactions": "विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३.pdf",
 };
 
 function compact(text: string): string {
@@ -133,7 +134,16 @@ async function main() {
   const outDir = path.join(process.cwd(), "src/data/sajilokanun/dafa-page-map");
   fs.mkdirSync(outDir, { recursive: true });
 
-  for (const rule of LAWCOMISSION_INDEXING_RULES) {
+  const bookArgIdx = process.argv.indexOf("--book");
+  const bookArg = bookArgIdx >= 0 ? process.argv[bookArgIdx + 1] : null;
+  const rules = bookArg
+    ? LAWCOMISSION_INDEXING_RULES.filter((rule) => rule.id === bookArg)
+    : LAWCOMISSION_INDEXING_RULES;
+  if (bookArg && rules.length === 0) {
+    throw new Error(`Unknown book: ${bookArg}`);
+  }
+
+  for (const rule of rules) {
     const pdfRel = BOOK_PDFS[rule.bookId ?? rule.id];
     if (!pdfRel) {
       console.warn(`No PDF configured for ${rule.id}`);

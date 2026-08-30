@@ -125,7 +125,7 @@ export async function fetchCurrentUser(): Promise<AuthUser | null> {
   return data.user as AuthUser;
 }
 
-export function logout(redirectTo = "/login"): void {
+export function logout(redirectTo = "/sajilokanun/login"): void {
   clearToken();
   window.location.href = redirectTo;
 }

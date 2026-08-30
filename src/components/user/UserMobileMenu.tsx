@@ -17,9 +17,14 @@ import { LanguageToggle } from "./LanguageToggle";
 interface UserMobileMenuProps {
   open: boolean;
   onClose: () => void;
+  signInHref?: string;
 }
 
-export function UserMobileMenu({ open, onClose }: UserMobileMenuProps) {
+export function UserMobileMenu({
+  open,
+  onClose,
+  signInHref = "/sajilokanun/login",
+}: UserMobileMenuProps) {
   const { locale, msg } = useLanguage();
   const [templates, setTemplates] = useState<Template[]>([]);
 
@@ -156,7 +161,7 @@ export function UserMobileMenu({ open, onClose }: UserMobileMenuProps) {
           <Link href="/#contact" className={styles.navMobileLink}>
             {msg.nav.contactUs}
           </Link>
-          <Link href="/login" className={styles.navMobileCta}>
+          <Link href={signInHref} className={styles.navMobileCta}>
             {msg.nav.signIn}
           </Link>
         </nav>

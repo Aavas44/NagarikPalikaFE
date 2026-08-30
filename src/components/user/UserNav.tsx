@@ -14,6 +14,7 @@ import styles from "@/app/user.module.css";
 export function UserNav() {
   const { msg } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const signInHref = "/sajilokanun/login";
 
   return (
     <nav className={styles.nav}>
@@ -76,11 +77,15 @@ export function UserNav() {
             </svg>
           )}
         </button>
-        <Link href="/login" className={styles.navCta}>
+        <Link href={signInHref} className={styles.navCta}>
           {msg.nav.signIn}
         </Link>
       </div>
-      <UserMobileMenu open={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+      <UserMobileMenu
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        signInHref={signInHref}
+      />
     </nav>
   );
 }

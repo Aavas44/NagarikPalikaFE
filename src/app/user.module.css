@@ -1798,6 +1798,86 @@
   gap: 0.875rem;
 }
 
+.skGateGoogle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #042c53;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.skGateGoogle:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #185fa5;
+}
+
+.skGateGoogle:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.skGateDisclaimer {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #334155;
+  margin-bottom: 0.9rem;
+}
+
+.skGateDisclaimer input {
+  margin-top: 0.2rem;
+  flex-shrink: 0;
+}
+
+.skGateDivider {
+  margin: 0.85rem 0 0.35rem;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.skGateModeTabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 0.35rem;
+  padding: 4px;
+  border-radius: 8px;
+  background: #f3f4f6;
+}
+
+.skGateModeTab,
+.skGateModeTabActive {
+  flex: 1;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  background: transparent;
+  color: #6b7280;
+}
+
+.skGateModeTabActive {
+  background: #fff;
+  color: #042c53;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 .skGateDemoBtn {
   align-self: flex-start;
   background: linear-gradient(180deg, #ffffff 0%, #dbeafe 100%);

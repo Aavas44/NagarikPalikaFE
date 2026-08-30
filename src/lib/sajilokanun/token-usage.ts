@@ -68,6 +68,10 @@ export type UsageRequestLog = {
   billableTokens: number;
   processCount: number;
   processes: UsageProcessLog[];
+  /** Present on team/admin usage logs. */
+  userId?: string;
+  userName?: string;
+  username?: string;
 };
 
 export type UsageLogResponse = {

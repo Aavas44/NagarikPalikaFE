@@ -36,6 +36,12 @@ export const LAW_BOOKS: LawBook[] = [
     match:
       /फौजदारी.*कार्यविधि|faujdar|faujdari|criminal procedure|lawComission\/मुलुकी\s*फौजदारी\s*कार्यविधि/i,
   },
+  {
+    id: "electronic-transactions",
+    title: "विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३",
+    match:
+      /विद्युतीय.*कारोबार|इलेक्ट्रोनिक.*कारोबार|electronic.?transaction|eta.?2063|lawComission\/विद्युतीय/i,
+  },
 ];
 
 export const ALL_LAW_BOOK_IDS = LAW_BOOKS.map((book) => book.id);
@@ -110,7 +116,13 @@ export function filterChunksToBookScope<T extends { filename: string }>(
 /** Map UI book id → normalize-prompt act id (book lock only). */
 export function bookScopeToNormalizeAct(
   scope: BookScope
-): "devani" | "devani_karyavidhi" | "aparadh" | "faujdari_karyavidhi" | null {
+):
+  | "devani"
+  | "devani_karyavidhi"
+  | "aparadh"
+  | "faujdari_karyavidhi"
+  | "electronic_transactions"
+  | null {
   switch (scope) {
     case "civil-code":
       return "devani";
@@ -120,6 +132,8 @@ export function bookScopeToNormalizeAct(
       return "aparadh";
     case "criminal-procedure":
       return "faujdari_karyavidhi";
+    case "electronic-transactions":
+      return "electronic_transactions";
     default:
       return null;
   }
@@ -140,6 +154,13 @@ export function normalizeActToBookScope(act: string): BookScope | null {
   }
   if (/civil.?code|देवानी.*संहित|civil-code|devani.*sanhita|muluki devani samhita/i.test(a)) {
     return "civil-code";
+  }
+  if (
+    /electronic.?transaction|विद्युतीय.*कारोबार|इलेक्ट्रोनिक.*कारोबार|eta.?2063|electronic_transactions|electronic-transactions/i.test(
+      a
+    )
+  ) {
+    return "electronic-transactions";
   }
   return null;
 }

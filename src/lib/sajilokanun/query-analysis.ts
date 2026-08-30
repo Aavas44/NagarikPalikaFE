@@ -42,7 +42,7 @@ Return ONLY valid JSON (no markdown fences) matching this schema:
   "sectionHints": [{"section": "82", "act": "civil-procedure"}],
   "chapterHints": [{"chapter": "6", "name": "अदालती शुल्क", "act": "civil-procedure"}],
   "titleSearchHints": ["मिलापत्र अदालती शुल्क"],
-  "preferredAct": "optional — civil-procedure | civil-code | criminal-code | criminal-procedure"
+  "preferredAct": "optional — civil-procedure | civil-code | criminal-code | criminal-procedure | electronic-transactions"
 }
 
 Rules for retrievalQueries:
@@ -50,12 +50,12 @@ Rules for retrievalQueries:
 - Use 2–4 queries for complex/scenario questions: split substantive law, procedure, fees, deadlines, remedies, etc.
 - Include formal Nepali legal terms from the statutes (e.g. अदालती शुल्क not just कोर्ट फी, मिलापत्र, प्रतिउत्तर, फिराद)
 - Write all retrievalQueries in Nepali (Devanagari) only
-- When book scope is "all indexed acts", search across all four Muluki books
+- When book scope is "all indexed acts", search across all indexed books
 - Set preferredAct to the act most likely to contain the answer
 
 Rules for sectionHints (critical for scenario questions):
 - Suggest up to 6 दफा numbers you believe DIRECTLY govern the answer, using Arabic numerals in "section" (e.g. "82", "101")
-- "act" must be one of: civil-procedure, civil-code, criminal-code, criminal-procedure
+- "act" must be one of: civil-procedure, civil-code, criminal-code, criminal-procedure, electronic-transactions
 - Only include hints you are confident about from Muluki Ain structure
 - For court fee + settlement → civil-procedure 82, 248; for written reply deadline → 101; etc.
 - For polygamy/बहुविवाह → criminal-code 175; incest/हाडनाता → 226; sexual harassment → 224

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   adminCreateDirectoryPerson,
   adminCreateTeam,
@@ -70,6 +71,9 @@ type EditFirmFormState = {
   id: string;
   name: string;
   label: string;
+  aiRequestsLimit: string;
+  casesLimit: string;
+  documentsLimit: string;
 };
 
 const EMPTY_FORM: AccountFormState = {
@@ -129,7 +133,38 @@ function editFormFromFirm(team: AdminTeam): EditFirmFormState {
     id: team.id,
     name: team.name ?? "",
     label: team.name,
+    aiRequestsLimit: team.aiRequestsLimit == null && team.firmQuota?.aiRequests.limit == null
+      ? ""
+      : String(team.aiRequestsLimit ?? team.firmQuota?.aiRequests.limit ?? ""),
+    casesLimit: team.casesLimit == null && team.firmQuota?.cases.limit == null
+      ? ""
+      : String(team.casesLimit ?? team.firmQuota?.cases.limit ?? ""),
+    documentsLimit:
+      team.documentsLimit == null && team.firmQuota?.documents.limit == null
+        ? ""
+        : String(team.documentsLimit ?? team.firmQuota?.documents.limit ?? ""),
   };
+}
+
+function parseQuotaInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
+    throw new Error(
+      "Quota limits must be blank (unlimited) or non-negative whole numbers"
+    );
+  }
+  return n;
+}
+
+function formatQuotaCell(used: number, limit: number | null | undefined): string {
+  if (limit == null) return `${used} / ∞`;
+  return `${used} / ${limit}`;
+}
+
+function isQuotaAtLimit(used: number, limit: number | null | undefined): boolean {
+  return limit != null && used >= limit;
 }
 
 // Kept for the legacy account-assignment markup below. Role permissions are
@@ -171,30 +206,81 @@ function MemberKebabMenu({
   onChangeRole: (role: AccountRole) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{
+    top: number;
+    left: number;
+    openUp: boolean;
+  } | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const canChangeRole = role === "admin" || role === "member";
 
+  const updatePosition = useCallback(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const menuWidth = 180;
+    const gap = 6;
+    const estimatedHeight = canChangeRole ? 120 : 56;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const preferUp =
+      spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+    const left = Math.min(
+      Math.max(8, rect.right - menuWidth),
+      window.innerWidth - menuWidth - 8
+    );
+    setMenuPos({
+      top: preferUp ? rect.top - gap : rect.bottom + gap,
+      left,
+      openUp: preferUp,
+    });
+  }, [canChangeRole]);
+
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setMenuPos(null);
+      return;
+    }
+    updatePosition();
     function onDocClick(event: MouseEvent) {
-      if (!wrapRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (
+        wrapRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
       }
+      setOpen(false);
     }
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
     }
+    function onReposition() {
+      updatePosition();
+    }
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
     return () => {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
     };
-  }, [open]);
+  }, [open, updatePosition]);
+
+  function runAndClose(action: () => void) {
+    setOpen(false);
+    action();
+  }
 
   return (
     <div className={styles.skKebabWrap} ref={wrapRef}>
       <button
+        ref={btnRef}
         type="button"
         className={styles.skKebabBtn}
         disabled={busy}
@@ -204,50 +290,57 @@ function MemberKebabMenu({
       >
         ⋮
       </button>
-      {open ? (
-        <div className={styles.skKebabMenu} role="menu">
-          <button
-            type="button"
-            className={styles.skKebabItem}
-            role="menuitem"
-            disabled={busy}
-            onClick={() => {
-              setOpen(false);
-              onToggleActive();
-            }}
-          >
-            {active ? "Deactivate" : "Activate"}
-          </button>
-          {canChangeRole && role === "admin" ? (
-            <button
-              type="button"
-              className={styles.skKebabItem}
-              role="menuitem"
-              disabled={busy}
-              onClick={() => {
-                setOpen(false);
-                onChangeRole("member");
+      {open && menuPos
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className={`${styles.skKebabMenu} ${styles.skKebabMenuFixed} ${
+                menuPos.openUp ? styles.skKebabMenuUp : ""
+              }`}
+              role="menu"
+              style={{
+                top: menuPos.openUp ? undefined : menuPos.top,
+                bottom: menuPos.openUp
+                  ? window.innerHeight - menuPos.top
+                  : undefined,
+                left: menuPos.left,
               }}
             >
-              Make firm member
-            </button>
-          ) : null}
-          {canChangeRole && role === "member" ? (
-            <button
-              type="button"
-              className={styles.skKebabItem}
-              role="menuitem"
-              disabled={busy}
-              onClick={() => {
-                setOpen(false);
-                onChangeRole("admin");
-              }}
-            >
-              Make firm admin
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+              <button
+                type="button"
+                className={styles.skKebabItem}
+                role="menuitem"
+                disabled={busy}
+                onClick={() => runAndClose(onToggleActive)}
+              >
+                {active ? "Deactivate" : "Activate"}
+              </button>
+              {canChangeRole && role === "admin" ? (
+                <button
+                  type="button"
+                  className={styles.skKebabItem}
+                  role="menuitem"
+                  disabled={busy}
+                  onClick={() => runAndClose(() => onChangeRole("member"))}
+                >
+                  Make firm member
+                </button>
+              ) : null}
+              {canChangeRole && role === "member" ? (
+                <button
+                  type="button"
+                  className={styles.skKebabItem}
+                  role="menuitem"
+                  disabled={busy}
+                  onClick={() => runAndClose(() => onChangeRole("admin"))}
+                >
+                  Make firm admin
+                </button>
+              ) : null}
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }
@@ -262,29 +355,75 @@ function FirmKebabMenu({
   onToggleActive: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{
+    top: number;
+    left: number;
+    openUp: boolean;
+  } | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const updatePosition = useCallback(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const menuWidth = 168;
+    const gap = 6;
+    const estimatedHeight = 56;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const preferUp =
+      spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+    const left = Math.min(
+      Math.max(8, rect.right - menuWidth),
+      window.innerWidth - menuWidth - 8
+    );
+    setMenuPos({
+      top: preferUp ? rect.top - gap : rect.bottom + gap,
+      left,
+      openUp: preferUp,
+    });
+  }, []);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setMenuPos(null);
+      return;
+    }
+    updatePosition();
     function onDocClick(event: MouseEvent) {
-      if (!wrapRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (
+        wrapRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
       }
+      setOpen(false);
     }
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
     }
+    function onReposition() {
+      updatePosition();
+    }
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
     return () => {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
     };
-  }, [open]);
+  }, [open, updatePosition]);
 
   return (
     <div className={styles.skKebabWrap} ref={wrapRef}>
       <button
+        ref={btnRef}
         type="button"
         className={styles.skKebabBtn}
         disabled={busy}
@@ -294,22 +433,38 @@ function FirmKebabMenu({
       >
         ⋮
       </button>
-      {open ? (
-        <div className={styles.skKebabMenu} role="menu">
-          <button
-            type="button"
-            className={styles.skKebabItem}
-            role="menuitem"
-            disabled={busy}
-            onClick={() => {
-              setOpen(false);
-              onToggleActive();
-            }}
-          >
-            {active ? "Deactivate" : "Activate"}
-          </button>
-        </div>
-      ) : null}
+      {open && menuPos
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className={`${styles.skKebabMenu} ${styles.skKebabMenuFixed} ${
+                menuPos.openUp ? styles.skKebabMenuUp : ""
+              }`}
+              role="menu"
+              style={{
+                top: menuPos.openUp ? undefined : menuPos.top,
+                bottom: menuPos.openUp
+                  ? window.innerHeight - menuPos.top
+                  : undefined,
+                left: menuPos.left,
+              }}
+            >
+              <button
+                type="button"
+                className={styles.skKebabItem}
+                role="menuitem"
+                disabled={busy}
+                onClick={() => {
+                  setOpen(false);
+                  onToggleActive();
+                }}
+              >
+                {active ? "Deactivate" : "Activate"}
+              </button>
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   );
 }
@@ -578,6 +733,9 @@ export function AdminSajiloKanunPanel({
     Partial<Record<RoleKey, string[]>>
   >({});
   const [teamName, setTeamName] = useState("");
+  const [createAiLimit, setCreateAiLimit] = useState("");
+  const [createCasesLimit, setCreateCasesLimit] = useState("");
+  const [createDocsLimit, setCreateDocsLimit] = useState("");
   const [adminForm, setAdminForm] = useState<AccountFormState>(EMPTY_FORM);
   const [memberForm, setMemberForm] = useState<AccountFormState>(EMPTY_FORM);
   const [directoryForm, setDirectoryForm] =
@@ -684,15 +842,19 @@ export function AdminSajiloKanunPanel({
   }, [loadTeams, loadAllMembers, loadTeamDetails, selectedTeamId]);
 
   useEffect(() => {
+    let cancelled = false;
     void (async () => {
       try {
         setLoading(true);
         if (section === "roles") {
           await loadRolePolicies();
-        } else {
+        } else if (section === "members") {
           await Promise.all([loadTeams(), loadAllMembers()]);
+        } else {
+          await loadTeams();
         }
       } catch (err) {
+        if (cancelled) return;
         setError(
           err instanceof Error
             ? err.message
@@ -701,25 +863,35 @@ export function AdminSajiloKanunPanel({
               : "Failed to load firms"
         );
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [section, loadTeams, loadAllMembers, loadRolePolicies]);
 
   useEffect(() => {
-    if (!selectedTeamId) return;
+    if (section !== "firms" || !selectedTeamId) return;
     void loadTeamDetails(selectedTeamId).catch((err) => {
       setError(err instanceof Error ? err.message : "Failed to load firm");
     });
-  }, [selectedTeamId, loadTeamDetails]);
+  }, [section, selectedTeamId, loadTeamDetails]);
 
   async function handleCreateTeam(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setBusyId("create-firm");
     try {
-      const team = await adminCreateTeam(teamName);
+      const team = await adminCreateTeam(teamName, {
+        aiRequestsLimit: parseQuotaInput(createAiLimit),
+        casesLimit: parseQuotaInput(createCasesLimit),
+        documentsLimit: parseQuotaInput(createDocsLimit),
+      });
       setTeamName("");
+      setCreateAiLimit("");
+      setCreateCasesLimit("");
+      setCreateDocsLimit("");
       setShowAddFirmForm(false);
       await loadTeams();
       setSelectedTeamId(team.id);
@@ -740,7 +912,12 @@ export function AdminSajiloKanunPanel({
     setError("");
     setBusyId(editFirmForm.id);
     try {
-      await adminUpdateTeam(editFirmForm.id, { name: editFirmForm.name.trim() });
+      await adminUpdateTeam(editFirmForm.id, {
+        name: editFirmForm.name.trim(),
+        aiRequestsLimit: parseQuotaInput(editFirmForm.aiRequestsLimit),
+        casesLimit: parseQuotaInput(editFirmForm.casesLimit),
+        documentsLimit: parseQuotaInput(editFirmForm.documentsLimit),
+      });
       setEditFirmForm(null);
       await refreshAll();
     } catch (err) {
@@ -864,7 +1041,6 @@ export function AdminSajiloKanunPanel({
       });
       setDirectoryForm({
         ...EMPTY_DIRECTORY_FORM,
-        firmId: teams[0]?.id ?? "",
       });
       setShowAddUserForm(false);
       await refreshAll();
@@ -955,11 +1131,8 @@ export function AdminSajiloKanunPanel({
     setError("");
   }, [section]);
 
-  useEffect(() => {
-    if (!directoryForm.firmId && teams[0]?.id) {
-      setDirectoryForm((form) => ({ ...form, firmId: teams[0].id }));
-    }
-  }, [teams, directoryForm.firmId]);
+  // Do not auto-select the first firm — firm admin/member must pick explicitly
+  // so accounts are never silently assigned to Default Firm.
 
   if (loading) {
     const title =
@@ -1731,8 +1904,10 @@ export function AdminSajiloKanunPanel({
         </div>
       </div>
       <p className={styles.panelDesc}>
-        Create and manage law firms. Edit updates the firm name; use ⋮ to
-        activate or deactivate. Assign people from Members.
+        Create and manage law firms. Allocate shared firm quotas for AI/RAG
+        requests, cases, and generated documents (admin + members share one
+        pool). Leave a quota blank for unlimited. Edit updates name and quotas;
+        use ⋮ to activate or deactivate. Assign people from Members.
       </p>
 
       {error && <p className={styles.formError}>{error}</p>}
@@ -1752,6 +1927,45 @@ export function AdminSajiloKanunPanel({
                   setEditFirmForm((f) => (f ? { ...f, name: e.target.value } : f))
                 }
                 required
+              />
+              <input
+                className={styles.filterInput}
+                type="number"
+                min={0}
+                step={1}
+                placeholder="AI requests limit (blank = ∞)"
+                value={editFirmForm.aiRequestsLimit}
+                onChange={(e) =>
+                  setEditFirmForm((f) =>
+                    f ? { ...f, aiRequestsLimit: e.target.value } : f
+                  )
+                }
+              />
+              <input
+                className={styles.filterInput}
+                type="number"
+                min={0}
+                step={1}
+                placeholder="Cases limit (blank = ∞)"
+                value={editFirmForm.casesLimit}
+                onChange={(e) =>
+                  setEditFirmForm((f) =>
+                    f ? { ...f, casesLimit: e.target.value } : f
+                  )
+                }
+              />
+              <input
+                className={styles.filterInput}
+                type="number"
+                min={0}
+                step={1}
+                placeholder="Documents limit (blank = ∞)"
+                value={editFirmForm.documentsLimit}
+                onChange={(e) =>
+                  setEditFirmForm((f) =>
+                    f ? { ...f, documentsLimit: e.target.value } : f
+                  )
+                }
               />
             </div>
             <div className={styles.skAddMemberFormActions}>
@@ -1790,6 +2004,33 @@ export function AdminSajiloKanunPanel({
                 className={styles.filterInput}
                 required
               />
+              <input
+                className={styles.filterInput}
+                type="number"
+                min={0}
+                step={1}
+                placeholder="AI requests limit (blank = ∞)"
+                value={createAiLimit}
+                onChange={(e) => setCreateAiLimit(e.target.value)}
+              />
+              <input
+                className={styles.filterInput}
+                type="number"
+                min={0}
+                step={1}
+                placeholder="Cases limit (blank = ∞)"
+                value={createCasesLimit}
+                onChange={(e) => setCreateCasesLimit(e.target.value)}
+              />
+              <input
+                className={styles.filterInput}
+                type="number"
+                min={0}
+                step={1}
+                placeholder="Documents limit (blank = ∞)"
+                value={createDocsLimit}
+                onChange={(e) => setCreateDocsLimit(e.target.value)}
+              />
             </div>
             <div className={styles.skAddMemberFormActions}>
               <button
@@ -1818,6 +2059,9 @@ export function AdminSajiloKanunPanel({
               <tr>
                 <th>Firm</th>
                 <th>People</th>
+                <th>AI requests</th>
+                <th>Cases</th>
+                <th>Documents</th>
                 <th>Created</th>
                 <th>Status</th>
                 <th>Usage</th>
@@ -1827,7 +2071,7 @@ export function AdminSajiloKanunPanel({
             <tbody>
               {teams.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className={styles.skEmptyCell}>
+                  <td colSpan={9} className={styles.skEmptyCell}>
                     No firms yet. Create one to get started.
                   </td>
                 </tr>
@@ -1849,6 +2093,30 @@ export function AdminSajiloKanunPanel({
                       </button>
                     </td>
                     <td>{team.memberCount ?? 0}</td>
+                    <td>
+                      {formatQuotaCell(
+                        team.firmQuota?.aiRequests.used ?? team.aiRequestsUsed ?? 0,
+                        team.firmQuota?.aiRequests.limit ?? team.aiRequestsLimit
+                      )}
+                      {isQuotaAtLimit(
+                        team.firmQuota?.aiRequests.used ?? team.aiRequestsUsed ?? 0,
+                        team.firmQuota?.aiRequests.limit ?? team.aiRequestsLimit
+                      ) ? (
+                        <span className={styles.skQuotaReached}> Quota Reached</span>
+                      ) : null}
+                    </td>
+                    <td>
+                      {formatQuotaCell(
+                        team.firmQuota?.cases.used ?? 0,
+                        team.firmQuota?.cases.limit ?? team.casesLimit
+                      )}
+                    </td>
+                    <td>
+                      {formatQuotaCell(
+                        team.firmQuota?.documents.used ?? 0,
+                        team.firmQuota?.documents.limit ?? team.documentsLimit
+                      )}
+                    </td>
                     <td>{formatCreatedAt(team.createdAt)}</td>
                     <td>
                       <span

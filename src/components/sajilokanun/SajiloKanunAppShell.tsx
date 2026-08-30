@@ -147,6 +147,8 @@ export function SajiloKanunAppShell({
   const { msg } = useLanguage();
   const [user, setUser] = useState<SajiloKanunUser | null>(null);
   const [billableTokens, setBillableTokens] = useState<number | null>(null);
+  const [tokenRole, setTokenRole] = useState<SajiloKanunUser["role"]>(null);
+  const [tokenTeamId, setTokenTeamId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSajiloKanunMe()
@@ -154,11 +156,16 @@ export function SajiloKanunAppShell({
       .catch(() => setUser(null));
   }, []);
 
-  const role = user?.role ?? getSkRoleFromToken();
+  useEffect(() => {
+    setTokenRole(getSkRoleFromToken());
+    setTokenTeamId(getSkTeamIdFromToken());
+  }, []);
+
+  const role = user?.role ?? tokenRole;
   const isCaseUser = role === "caseUser";
-  // Prefer JWT teamId so Dashboard doesn't flicker while /me reloads on each page.
-  const isFirmUser =
-    Boolean(user?.teamId ?? getSkTeamIdFromToken()) && !isCaseUser;
+  // JWT teamId after mount so Dashboard doesn't flicker while /me reloads —
+  // never read localStorage during SSR/hydration.
+  const isFirmUser = Boolean(user?.teamId ?? tokenTeamId) && !isCaseUser;
 
   useEffect(() => {
     if (!isCaseUser) return;
@@ -212,7 +219,7 @@ export function SajiloKanunAppShell({
         { href: CHAT, id: "chat", label: msg.sajilokanun.chat },
         { href: CASES, id: "cases", label: msg.sajilokanun.casesNav },
         ...(role === "admin"
-          ? [{ href: TEAM, id: "team" as const, label: "Team" }]
+          ? [{ href: TEAM, id: "team" as const, label: msg.sajilokanun.teamNav }]
           : []),
         { href: USAGE, id: "usage", label: msg.sajilokanun.usageNavShort },
         { href: UNICODE, id: "convert", label: msg.sajilokanun.converterShort },
@@ -267,9 +274,23 @@ export function SajiloKanunAppShell({
               <header className={styles.pageIntro}>
                 <div className={styles.pageIntroText}>
                   <h1>{title}</h1>
-                  {(subtitle || user?.teamName) && (
+                  {(subtitle || user?.teamName || user?.name) && (
                     <p>
-                      {subtitle ?? user?.teamName}
+                      {subtitle ? (
+                        <>
+                          {subtitle}
+                          {user?.teamName ? (
+                            <span className={styles.firmPill}>{user.teamName}</span>
+                          ) : null}
+                        </>
+                      ) : (
+                        <>
+                          {user?.teamName ? (
+                            <span className={styles.firmPill}>{user.teamName}</span>
+                          ) : null}
+                          {user?.name && !user?.teamName ? user.name : null}
+                        </>
+                      )}
                       {role ? <span className={styles.rolePill}>{role}</span> : null}
                     </p>
                   )}

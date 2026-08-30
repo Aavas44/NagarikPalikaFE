@@ -68,7 +68,7 @@ async function main() {
     );
   }
   if (provider === "gemini") {
-    const model = process.env.GEMINI_OCR_MODEL ?? process.env.GEMINI_CHAT_MODEL ?? "gemini-2.0-flash";
+    const model = process.env.DOCUMENT_EXTRACTION_MODEL ?? process.env.GEMINI_OCR_MODEL ?? process.env.GEMINI_CHAT_MODEL ?? "gemini-3.5-flash";
     const mode = process.env.GEMINI_OCR_MODE === "vision" ? "vision" : "hybrid";
     const rpm = process.env.GEMINI_OCR_RPM ?? "15";
     console.log(

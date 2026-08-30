@@ -2,6 +2,13 @@ node_modules/
 .next/
 *.log
 .DS_Store
+*.tsbuildinfo
+__pycache__/
+*.pyc
+
+# Local OCR sidecars / Tesseract models (regenerable; do not ship)
+Lawfiles/ocr/
+*.traineddata
 
 # Secrets — never commit (examples are allowed)
 .env

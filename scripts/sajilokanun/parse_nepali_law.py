@@ -88,6 +88,11 @@ BOOK_CONFIGS: dict[str, dict[str, str]] = {
         "document_category": "प्रक्रियात्मक कानून (Procedural Law)",
         "book_id": "criminal-procedure",
     },
+    "electronic-transactions": {
+        "document_title": "विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३",
+        "document_category": "सारभूत कानून (Substantive Law)",
+        "book_id": "electronic-transactions",
+    },
 }
 
 DEFAULT_BOOK_CONFIG = {
@@ -112,7 +117,7 @@ DAFA_RE = re.compile(
 DAFA_INLINE_RE = re.compile(r"^([\d०-९]{1,4}[क-ह]?)\.?\s+(.+)$")
 UPADafa_RE = re.compile(r"(?:^|[\s।])\(\s*([\d०-९]{1,2})\s*\)\s*(.*)$")
 KHANDA_RE = re.compile(r"(?:^|[\s।–\-])\(\s*([क-ह])\s*\)\s*(.*)$")
-SPASTIKARAN_RE = re.compile(r"^(स्पष्टीकरण[ः:])\s*(.*)$", re.IGNORECASE)
+SPASTIKARAN_RE = re.compile(r"^(स्पष्टीकरण)\s*[ः:]\s*(.*)$", re.IGNORECASE)
 TAR_RE = re.compile(r"^(तर[ः:]?)\s+(.+)$")
 
 HEADER_FOOTER_PATTERNS = [
@@ -170,6 +175,25 @@ def normalize_document_text(text: str) -> str:
         result,
     )
     return normalize_whitespace(result)
+
+
+def is_inline_parichhed_ref(line: str) -> bool:
+    """`परिच्छेद–९ मा उल्लेख` / `परिच्छेद–१ को दफा` — cross-reference, not a chapter header."""
+    s = line.strip()
+    if not re.match(r"^परिच्छेद\s*[–\-]", s):
+        return False
+    rest = re.sub(r"^परिच्छेद\s*[–\-]\s*[\d०-९]+\s*", "", s)
+    if not rest:
+        return False
+    if rest.startswith(","):
+        return True
+    if re.match(r"^र\s+[\d०-९]", rest):
+        return True
+    if re.match(r"^(को|का|की|मा)\s+", rest):
+        return True
+    if re.match(r"^[,.\s\d०-९]", rest):
+        return True
+    return False
 
 
 def extract_dafa_title(body: str) -> str:
@@ -471,6 +495,10 @@ def process_line(state: ParserState, line: str) -> None:
     # 2. परिच्छेद (Chapter)
     chapter_match = CHAPTER_RE.search(line)
     if chapter_match and "परिच्छेद" in line[:20]:
+        if is_inline_parichhed_ref(line):
+            if not state.append_to_last_chunk(line):
+                pass
+            return
         num = chapter_match.group(1)
         name = (chapter_match.group(2) or "").strip()
         display_num = to_devanagari_digits(to_arabic_digits(num))
@@ -624,6 +652,10 @@ def process_indented_block(state: ParserState, depth: int, text: str) -> None:
 
     # depth == 1 — परिच्छेद section title or उपदफा / स्पष्टीकरण / तर
     if CHAPTER_RE.search(text) and "परिच्छेद" in text[:20] and text.strip().startswith("परिच्छेद"):
+        if is_inline_parichhed_ref(text):
+            if not state.append_to_last_chunk(text):
+                pass
+            return
         process_line(state, text)
         return
 

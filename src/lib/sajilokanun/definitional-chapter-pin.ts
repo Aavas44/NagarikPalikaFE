@@ -41,6 +41,7 @@ export function isDefinitionalQuery(query: string): boolean {
   const q = query.trim();
   if (!q) return false;
   if (CITATION_LOOKUP_RE.test(q)) return false;
+  if (/भन्नाले\s*के\s*बुझिन्छ/u.test(q)) return true;
   return DEFINITIONAL_TRIGGERS.some((trigger) => q.includes(trigger));
 }
 

@@ -1,0 +1,99 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: rgba(15, 23, 42, 0.48);
+  cursor: pointer;
+}
+
+.dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 28rem);
+  padding: 1.25rem 1.35rem 1.15rem;
+  border-radius: 1rem;
+  border: 1px solid #f5d0a9;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff7ed 100%);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
+}
+
+.title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0 0 0.9rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #9a3412;
+  line-height: 1.3;
+}
+
+.titleNe {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #c2410c;
+}
+
+.bodyBlock,
+.contactBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.bodyEn {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: #431407;
+}
+
+.bodyNe {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #7c2d12;
+}
+
+.contactBlock {
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #fed7aa;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.closeBtn {
+  appearance: none;
+  border: 1px solid #ea580c;
+  border-radius: 0.65rem;
+  background: #ea580c;
+  color: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+}
+
+.closeBtn:hover {
+  background: #c2410c;
+  border-color: #c2410c;
+}

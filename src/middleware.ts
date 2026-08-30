@@ -30,8 +30,9 @@ function redirectForUserType(userType: string, request: NextRequest): NextRespon
     return NextResponse.redirect(new URL("/admin", request.url));
   }
   if (userType === "advocate") return NextResponse.redirect(new URL("/advocate", request.url));
+  if (userType === "wardOperator") return NextResponse.redirect(new URL("/ward", request.url));
   if (userType === "user") return NextResponse.redirect(new URL("/account", request.url));
-  const res = NextResponse.redirect(new URL("/login", request.url));
+  const res = NextResponse.redirect(new URL("/sajilokanun/login", request.url));
   return clearTokenCookie(res);
 }
 
@@ -42,16 +43,16 @@ export function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/admin")) {
     if (!token || !userType) {
-      const res = NextResponse.redirect(new URL("/login", request.url));
+      const res = NextResponse.redirect(new URL("/sajilokanun/login", request.url));
       return token && !userType ? clearTokenCookie(res) : res;
     }
     if (userType !== "admin" && userType !== "superadmin") {
-      return NextResponse.redirect(new URL("/login?error=admin_only", request.url));
+      return NextResponse.redirect(new URL("/sajilokanun/login?error=admin_only", request.url));
     }
   }
 
   if (pathname.startsWith("/consult")) {
-    const loginUrl = new URL("/login?intent=user", request.url);
+    const loginUrl = new URL("/sajilokanun/login?intent=user", request.url);
     if (!token) return NextResponse.redirect(loginUrl);
     if (!userType) {
       const res = NextResponse.redirect(loginUrl);
@@ -65,13 +66,13 @@ export function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith("/account")) {
-    if (!token) return NextResponse.redirect(new URL("/login?intent=user", request.url));
+    if (!token) return NextResponse.redirect(new URL("/sajilokanun/login?intent=user", request.url));
     if (!userType) {
-      const res = NextResponse.redirect(new URL("/login?intent=user", request.url));
+      const res = NextResponse.redirect(new URL("/sajilokanun/login?intent=user", request.url));
       return clearTokenCookie(res);
     }
     if (userType !== "user") {
-      const loginUrl = new URL("/login?intent=user", request.url);
+      const loginUrl = new URL("/sajilokanun/login?intent=user", request.url);
       loginUrl.searchParams.set("error", "citizen_only");
       const res = NextResponse.redirect(loginUrl);
       return clearTokenCookie(res);
@@ -98,7 +99,28 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  if (pathname === "/login" && token) {
+  if (pathname === "/ward/login") {
+    return NextResponse.redirect(new URL("/sajilokanun/login", request.url));
+  }
+
+  if (pathname.startsWith("/ward")) {
+    if (!token) return NextResponse.redirect(new URL("/sajilokanun/login", request.url));
+    if (!userType) {
+      const res = NextResponse.redirect(new URL("/sajilokanun/login", request.url));
+      return clearTokenCookie(res);
+    }
+    if (userType !== "wardOperator") {
+      return redirectForUserType(userType, request);
+    }
+  }
+
+  if (pathname === "/login") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/sajilokanun/login";
+    return NextResponse.redirect(url);
+  }
+
+  if (pathname === "/sajilokanun/login" && token) {
     const intent = request.nextUrl.searchParams.get("intent");
     if (intent === "user" && userType && userType !== "user") {
       return clearTokenCookie(NextResponse.next());
@@ -109,7 +131,15 @@ export function middleware(request: NextRequest) {
     if (!userType) {
       return clearTokenCookie(NextResponse.next());
     }
-    return redirectForUserType(userType, request);
+    if (userType === "admin" || userType === "superadmin") {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    if (userType === "advocate") {
+      return NextResponse.redirect(new URL("/advocate", request.url));
+    }
+    if (userType === "wardOperator") {
+      return NextResponse.redirect(new URL("/ward", request.url));
+    }
   }
 
   const isProtectedSajiloKanun =
@@ -123,7 +153,7 @@ export function middleware(request: NextRequest) {
   if (isProtectedSajiloKanun) {
     const skToken = request.cookies.get(SAJILO_KANUN_TOKEN_COOKIE)?.value;
     if (!skToken || getUserType(skToken) !== "sajilo_kanun") {
-      return NextResponse.redirect(new URL("/sajilokanun", request.url));
+      return NextResponse.redirect(new URL("/sajilokanun/login", request.url));
     }
     const skPayload = getSkTokenPayload(skToken);
     const isCaseUser = skPayload?.role === "caseUser";
@@ -145,9 +175,12 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/login",
+    "/sajilokanun/login",
     "/account/:path*",
     "/consult/:path*",
     "/advocate/:path*",
+    "/ward",
+    "/ward/:path*",
     "/sajilokanun/dashboard",
     "/sajilokanun/dashboard/:path*",
     "/sajilokanun/chat",

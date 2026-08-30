@@ -76,7 +76,7 @@ export interface Feedback {
   createdAt: string;
 }
 
-export type UserType = "user" | "advocate" | "admin" | "superadmin";
+export type UserType = "user" | "advocate" | "admin" | "superadmin" | "wardOperator";
 
 export type SajiloKanunAccountRole = "admin" | "member" | "caseUser";
 export type LegalCaseType =

@@ -212,6 +212,9 @@ export function preferredActToBookScope(preferredAct?: string): BookScope | null
   if (/अपराध.*संहिता|criminal code/i.test(preferredAct)) {
     return "criminal-code";
   }
+  if (/विद्युतीय|इलेक्ट्रोनिक|electronic transaction/i.test(preferredAct)) {
+    return "electronic-transactions";
+  }
   if (
     /देवानी.*संहित|civil code|नागरिक संहिता/i.test(preferredAct) &&
     !/कार्यविध|procedure/i.test(preferredAct)
@@ -293,6 +296,18 @@ export function dropIntroductoryDefinitionNoise(
 
     for (const chunk of bookChunks) {
       const root = sectionRootNum(chunk);
+      const matchesHint =
+        Boolean(scope) &&
+        sectionHints.some((h) => {
+          const hintScope = normalizeActToBookScope(h.act);
+          if (hintScope !== scope) return false;
+          const hintNum = Number(h.section.replace(/[^\d.]/g, ""));
+          return hintNum > 0 && hintNum === root;
+        });
+      if (matchesHint) {
+        kept.push(chunk);
+        continue;
+      }
       const header = `${chunk.chapter ?? ""} ${chunk.content.split("\n\n")[0] ?? ""}`;
       const isIntro =
         root <= 9 && root > 0 && INTRO_CHAPTER_RE.test(header);
@@ -475,6 +490,13 @@ export function queryHintToBookScope(query: string): BookScope | null {
   }
   if (/फौजदारी.*कार्यविधि|criminal procedure|अभियोग|जाहेरी|पक्राउ पुर्जी|पुर्पक्ष|साबिती|इजलास|बकपत्र/i.test(query)) {
     return "criminal-procedure";
+  }
+  if (
+    /विद्युतीय.*कारोबार|इलेक्ट्रोनिक.*कारोबार|electronic transaction|डिजिटल हस्ताक्षर|प्रमाणीकरण गर्ने निकाय|साइबर|कम्प्यूटर सम्बन्धी कसूर/i.test(
+      query
+    )
+  ) {
+    return "electronic-transactions";
   }
   if (/अपराध.*संहिता|criminal code|हत्या|चोरी|राजद्रोह|कीर्ते|ठगी|गाली|बेइमानी|अपहरण|गर्भपतन/i.test(query)) {
     return "criminal-code";

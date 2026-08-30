@@ -19,7 +19,7 @@ export default function AuthCallbackPage() {
       setSajiloKanunToken(sajiloToken);
       router.replace(redirect);
     } else {
-      router.replace("/login?error=oauth_failed");
+      router.replace("/sajilokanun/login?error=oauth_failed");
     }
   }, [router, searchParams]);
 

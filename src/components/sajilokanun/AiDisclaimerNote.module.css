@@ -1,0 +1,21 @@
+.note {
+  margin: 0.35rem 0 0.85rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.55rem;
+  border: 1px solid #f5d0a9;
+  background: #fffbeb;
+  color: #7c2d12;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.link {
+  color: #9a3412;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: #7c2d12;
+}

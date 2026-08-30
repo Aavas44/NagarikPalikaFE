@@ -10,22 +10,44 @@ import { AdminTemplatePanel } from "./AdminTemplatePanel";
 import { AdminFeedbackPanel } from "./AdminFeedbackPanel";
 import { AdminDemoRequestsPanel } from "./AdminDemoRequestsPanel";
 import { AdminSajiloKanunPanel } from "./AdminSajiloKanunPanel";
+import { AdminSajiloKanunRequestsPanel } from "./AdminSajiloKanunRequestsPanel";
 import { AdminGeminiKeysPanel } from "./AdminGeminiKeysPanel";
+import { AdminWardOperatorsPanel } from "./AdminWardOperatorsPanel";
+import { AdminWardTemplatesPanel } from "./AdminWardTemplatesPanel";
+import { AdminSajiloKanunTemplatesPanel } from "./AdminSajiloKanunTemplatesPanel";
 import styles from "@/app/admin.module.css";
 
-type SajiloSection = "firms" | "roles" | "members" | "gemini-keys" | null;
+type AdminSection =
+  | "firms"
+  | "usage"
+  | "roles"
+  | "members"
+  | "gemini-keys"
+  | "sajilo-kanun-templates"
+  | "ward-operators"
+  | "ward-templates"
+  | null;
 
-function hashToSajiloSection(hash: string): SajiloSection {
+function hashToAdminSection(hash: string): AdminSection {
   switch (hash.replace(/^#/, "")) {
     case "sajilo-kanun-teams":
     case "sajilo-kanun-firms":
       return "firms";
+    case "sajilo-kanun-requests":
+    case "sajilo-kanun-usage":
+      return "usage";
     case "sajilo-kanun-roles":
       return "roles";
     case "sajilo-kanun-members":
       return "members";
     case "sajilo-kanun-gemini-keys":
       return "gemini-keys";
+    case "sajilo-kanun-templates":
+      return "sajilo-kanun-templates";
+    case "ward-operators":
+      return "ward-operators";
+    case "ward-templates":
+      return "ward-templates";
     default:
       return null;
   }
@@ -58,7 +80,7 @@ export function AdminDashboard({
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   const [isSuperadmin, setIsSuperadmin] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
-  const [sajiloSection, setSajiloSection] = useState<SajiloSection>(null);
+  const [adminSection, setAdminSection] = useState<AdminSection>(null);
 
   useEffect(() => {
     fetchCurrentUser()
@@ -72,22 +94,46 @@ export function AdminDashboard({
   }, []);
 
   useEffect(() => {
-    const sync = () => setSajiloSection(hashToSajiloSection(window.location.hash));
+    const sync = () => setAdminSection(hashToAdminSection(window.location.hash));
     sync();
     window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
+    window.addEventListener("popstate", sync);
+    return () => {
+      window.removeEventListener("hashchange", sync);
+      window.removeEventListener("popstate", sync);
+    };
   }, []);
 
+  function goToSection(
+    event: React.MouseEvent<HTMLElement>,
+    hash: string
+  ) {
+    event.preventDefault();
+    const nextHash = `#${hash}`;
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
+    }
+    setAdminSection(hashToAdminSection(hash));
+  }
+
   const topbarTitle =
-    sajiloSection === "firms"
+    adminSection === "firms"
       ? "Sajilo Kanun — Firms"
-      : sajiloSection === "roles"
-        ? "Sajilo Kanun — Roles"
-        : sajiloSection === "members"
-          ? "Sajilo Kanun — Members"
-          : sajiloSection === "gemini-keys"
-            ? "Sajilo Kanun — Gemini keys"
-            : "Content management";
+      : adminSection === "usage"
+        ? "Sajilo Kanun — Token usage"
+        : adminSection === "roles"
+          ? "Sajilo Kanun — Roles"
+          : adminSection === "members"
+            ? "Sajilo Kanun — Members"
+            : adminSection === "gemini-keys"
+              ? "Sajilo Kanun — Gemini keys"
+              : adminSection === "sajilo-kanun-templates"
+                ? "Sajilo Kanun — Document templates"
+                : adminSection === "ward-operators"
+                ? "Ward — Operators"
+                : adminSection === "ward-templates"
+                  ? "Ward — Document templates"
+                  : "Content management";
 
   return (
     <div className={styles.adminWrap}>
@@ -98,7 +144,7 @@ export function AdminDashboard({
           onClick={() => {
             if (window.location.hash) {
               window.history.replaceState(null, "", "/admin");
-              setSajiloSection(null);
+              setAdminSection(null);
             }
           }}
         >
@@ -111,11 +157,11 @@ export function AdminDashboard({
           <div className={styles.navLabel}>Overview</div>
           <Link
             href="/admin"
-            className={navClass(sajiloSection === null)}
+            className={navClass(adminSection === null)}
             onClick={() => {
               if (window.location.hash) {
                 window.history.replaceState(null, "", "/admin");
-                setSajiloSection(null);
+                setAdminSection(null);
               }
             }}
           >
@@ -148,34 +194,78 @@ export function AdminDashboard({
         {isPlatformAdmin && (
           <div className={styles.navGroup}>
             <div className={styles.navLabel}>Sajilo Kanun</div>
-            <a
-              href="#sajilo-kanun-firms"
-              className={navClass(sajiloSection === "firms")}
+            <button
+              type="button"
+              className={navClass(adminSection === "firms")}
+              onClick={(event) => goToSection(event, "sajilo-kanun-firms")}
             >
               <span className="icon">🏢</span> Firms
-            </a>
-            <a
-              href="#sajilo-kanun-roles"
-              className={navClass(sajiloSection === "roles")}
+            </button>
+            <button
+              type="button"
+              className={navClass(adminSection === "usage")}
+              onClick={(event) => goToSection(event, "sajilo-kanun-usage")}
+            >
+              <span className="icon">📊</span> Token usage
+            </button>
+            <button
+              type="button"
+              className={navClass(adminSection === "roles")}
+              onClick={(event) => goToSection(event, "sajilo-kanun-roles")}
             >
               <span className="icon">🔐</span> Roles
-            </a>
-            <a
-              href="#sajilo-kanun-members"
-              className={navClass(sajiloSection === "members")}
+            </button>
+            <button
+              type="button"
+              className={navClass(adminSection === "members")}
+              onClick={(event) => goToSection(event, "sajilo-kanun-members")}
             >
               <span className="icon">👥</span> Members
-            </a>
+            </button>
             {isSuperadmin ? (
-              <a
-                href="#sajilo-kanun-gemini-keys"
-                className={navClass(sajiloSection === "gemini-keys")}
-              >
-                <span className="icon">🔑</span> Gemini keys
-              </a>
+              <>
+                <button
+                  type="button"
+                  className={navClass(adminSection === "gemini-keys")}
+                  onClick={(event) =>
+                    goToSection(event, "sajilo-kanun-gemini-keys")
+                  }
+                >
+                  <span className="icon">🔑</span> Gemini keys
+                </button>
+                <button
+                  type="button"
+                  className={navClass(adminSection === "sajilo-kanun-templates")}
+                  onClick={(event) =>
+                    goToSection(event, "sajilo-kanun-templates")
+                  }
+                >
+                  <span className="icon">📝</span> SK templates
+                </button>
+              </>
             ) : null}
           </div>
         )}
+
+        {isSuperadmin ? (
+          <div className={styles.navGroup}>
+            <div className={styles.navLabel}>Ward office</div>
+            <button
+              type="button"
+              className={navClass(adminSection === "ward-operators")}
+              onClick={(event) => goToSection(event, "ward-operators")}
+            >
+              <span className="icon">🏘️</span> Ward operators
+            </button>
+            <button
+              type="button"
+              className={navClass(adminSection === "ward-templates")}
+              onClick={(event) => goToSection(event, "ward-templates")}
+            >
+              <span className="icon">📝</span> Ward templates
+            </button>
+          </div>
+        ) : null}
 
         <AdminSidebarFooter />
       </aside>
@@ -192,7 +282,7 @@ export function AdminDashboard({
               just started, refresh the page.
             </p>
           ) : null}
-          {sajiloSection === null ? (
+          {adminSection === null ? (
             <>
               <div className={styles.metrics}>
                 <div className={styles.metric}>
@@ -222,7 +312,7 @@ export function AdminDashboard({
             </>
           ) : !authChecked ? (
             <p className={styles.panelDesc}>Loading…</p>
-          ) : sajiloSection === "gemini-keys" ? (
+          ) : adminSection === "gemini-keys" ? (
             isSuperadmin ? (
               <AdminGeminiKeysPanel />
             ) : (
@@ -230,11 +320,37 @@ export function AdminDashboard({
                 Superadmin access is required to manage Gemini API keys.
               </p>
             )
+          ) : adminSection === "sajilo-kanun-templates" ? (
+            isSuperadmin ? (
+              <AdminSajiloKanunTemplatesPanel />
+            ) : (
+              <p className={styles.formError}>
+                Superadmin access is required to manage Sajilo Kanun templates.
+              </p>
+            )
+          ) : adminSection === "ward-operators" ? (
+            isSuperadmin ? (
+              <AdminWardOperatorsPanel />
+            ) : (
+              <p className={styles.formError}>
+                Superadmin access is required to manage ward operators.
+              </p>
+            )
+          ) : adminSection === "ward-templates" ? (
+            isSuperadmin ? (
+              <AdminWardTemplatesPanel />
+            ) : (
+              <p className={styles.formError}>
+                Superadmin access is required to manage ward templates.
+              </p>
+            )
+          ) : isPlatformAdmin && adminSection === "usage" ? (
+            <AdminSajiloKanunRequestsPanel />
           ) : isPlatformAdmin &&
-            (sajiloSection === "firms" ||
-              sajiloSection === "roles" ||
-              sajiloSection === "members") ? (
-            <AdminSajiloKanunPanel section={sajiloSection} />
+            (adminSection === "firms" ||
+              adminSection === "roles" ||
+              adminSection === "members") ? (
+            <AdminSajiloKanunPanel section={adminSection} />
           ) : (
             <p className={styles.formError}>
               Platform admin access is required for Sajilo Kanun management.

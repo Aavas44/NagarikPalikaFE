@@ -65,6 +65,28 @@
 
 .quotaBanner span {
   color: #64748b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.quotaBannerOk {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.quotaBannerOk span {
+  color: #15803d;
+}
+
+.quotaBannerExhausted {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.quotaBannerExhausted span {
+  color: #b91c1c;
 }
 
 .chromeTop {
@@ -186,6 +208,19 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  vertical-align: middle;
+}
+
+.firmPill {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e8f1fb;
+  border: 1px solid #b5d4f4;
+  color: #185fa5;
+  font-size: 12px;
+  font-weight: 600;
   vertical-align: middle;
 }
 

@@ -106,13 +106,25 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isRetryableOcrError(error: unknown): boolean {
+  if (isQuotaError(error)) return true;
+  if (error && typeof error === "object" && "status" in error) {
+    const status = (error as { status: unknown }).status;
+    if (typeof status === "number" && [502, 503, 504].includes(status)) {
+      return true;
+    }
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  return /UNAVAILABLE|high demand|503/i.test(message);
+}
+
 async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
   const maxAttempts = 6;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error) {
-      if (!isQuotaError(error) || attempt === maxAttempts) throw error;
+      if (!isRetryableOcrError(error) || attempt === maxAttempts) throw error;
       const waitMs = Math.min(2000 * 2 ** (attempt - 1), 60000);
       console.warn(
         `  Rate limited on ${label}, retry in ${Math.round(waitMs / 1000)}s`

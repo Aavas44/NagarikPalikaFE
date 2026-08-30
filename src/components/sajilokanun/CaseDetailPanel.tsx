@@ -15,8 +15,17 @@ import {
   fetchCaseDetail,
   fetchCaseMessages,
   fetchCaseParticipants,
+  fetchCasePesiRows,
   fetchCaseUploads,
-  generateCaseDocument,
+  fetchSupremeCourtPesiForCase,
+  extractCaseDocumentFacts,
+  saveCaseDocumentExtraction,
+  fileToBase64Payload,
+  blobToBase64Payload,
+  fetchCaseUploadBlob,
+  fetchSkDocumentTemplates,
+  saveGeneratedDocumentToCaseFiles,
+  isFirmQuotaError,
   markCaseMessagesRead,
   removeCaseParticipant,
   renameCaseUpload,
@@ -26,11 +35,19 @@ import {
   type CaseActivityType,
   type CaseChatMessage,
   type CaseParticipantRecord,
+  type CasePesiColumn,
+  type CasePesiRowRecord,
+  type SkPublishedDocumentTemplate,
   type CaseUploadedDocumentRecord,
   type LegalCaseDetail,
-  type LegalCaseDocumentKind,
   type LegalCaseRecord,
 } from "@/lib/sajilokanun-access";
+import {
+  emptyExtractedCaseDocument,
+  emptyExtractedDefendant,
+  normalizeExtractedCaseDocument,
+  type ExtractedCaseDocument,
+} from "@/lib/sajilokanun/document-prompts";
 import {
   bsToAd,
   daysBetweenAd,
@@ -39,6 +56,8 @@ import {
   type BsDate,
 } from "@/lib/nepaliCalendar";
 import { toDevanagariDigits } from "@/lib/sajilokanun/nepali-digits";
+import { matchesNepaliRomanSearch } from "@/lib/sajilokanun/nepali-roman-search";
+import { COURT_TYPE_META } from "@/lib/sajilokanun/court-type";
 import { useLanguage } from "@/context/LanguageContext";
 import { NepaliDatePicker } from "@/components/sajilokanun/NepaliDatePicker";
 import { SheetSelect } from "@/components/sajilokanun/SheetSelect";
@@ -48,6 +67,10 @@ import shellStyles from "@/components/sajilokanun/SajiloKanunAppShell.module.css
 import chatStyles from "@/components/sajilokanun/ChatMessage.module.css";
 import caseChatStyles from "@/components/sajilokanun/CaseChat.module.css";
 import { CaseFilePreviewPanel } from "@/components/sajilokanun/CaseFilePreviewPanel";
+import { CaseDocumentModal } from "@/components/sajilokanun/CaseDocumentModal";
+import { CaseFamilyTree } from "@/components/sajilokanun/CaseFamilyTree";
+import { FirmQuotaReachedDialog } from "@/components/sajilokanun/FirmQuotaReachedDialog";
+import { StatusToast } from "@/components/sajilokanun/StatusToast";
 
 type CasesCopy = {
   backToList: string;
@@ -84,6 +107,7 @@ type CasesCopy = {
   chatFirm: string;
   chatClient: string;
   chatLoading: string;
+  chatLoadMore: string;
   cancelCreateUser: string;
   createUserButton: string;
   tabMessages: string;
@@ -93,6 +117,7 @@ type CasesCopy = {
   tabDocuments: string;
   tabDocumentGenerator: string;
   tabActivity: string;
+  tabFamilyTree: string;
   activityTitle: string;
   activityHint: string;
   activityTypeLabel: string;
@@ -101,6 +126,15 @@ type CasesCopy = {
   activityNotePlaceholder: string;
   addActivity: string;
   cancelAddActivity: string;
+  fetchPesi: string;
+  fetchPesiBusy: string;
+  fetchPesiHint: string;
+  fetchPesiNoCourt: string;
+  fetchPesiMatched: string;
+  fetchPesiNone: string;
+  pesiTableTitle: string;
+  pesiColDate: string;
+  noPesiRows: string;
   deleteActivityConfirm: string;
   noActivities: string;
   activityAddedBy: string;
@@ -160,6 +194,13 @@ type CasesCopy = {
   totalPaid: string;
   documentGeneratorTitle: string;
   documentGeneratorHint: string;
+  documentTemplatesSearch: string;
+  documentTemplatesEmpty: string;
+  documentTemplatesNoCourtType: string;
+  documentTemplatesLoading: string;
+  documentTemplatesSelected: string;
+  documentTemplatesFillSoon: string;
+  documentTemplatesCount: string;
   generateDocument: string;
   generating: string;
   noDocuments: string;
@@ -170,9 +211,130 @@ type CasesCopy = {
   docVakalatnama: string;
   docWarisnama: string;
   docNivedanAwedan: string;
+  docAdhikritWarisnama: string;
+  docSadharanWarisnama: string;
+  docManjurinama: string;
+  docSampattiRokkaNivedan: string;
+  docSampattiFukuwaNivedan: string;
+  docTayariFatbariNivedan: string;
+  docCourtFeeSubidhaNivedan: string;
+  docMilisJhikauneNivedan: string;
+  docPetboliManishBhujiNivedan: string;
+  docSakkalKagajPeshNivedan: string;
+  docHajirHunaAayekoNivedan: string;
   docGroupPleadings: string;
   docGroupGeneral: string;
+  docGroupPetitions: string;
   comingSoonAi: string;
+  documentExtractorTitle: string;
+  documentExtractorHint: string;
+  extractorPickUploads: string;
+  extractorAddFiles: string;
+  extractorNoFiles: string;
+  extractorGenerate: string;
+  extractorExtracting: string;
+  extractorResultTitle: string;
+  extractorCopyJson: string;
+  extractorCopied: string;
+  extractorClear: string;
+  extractorSave: string;
+  extractorSaving: string;
+  extractorSaved: string;
+  extractorSavedTitle: string;
+  extractorUnsavedTitle: string;
+  extractorEditHint: string;
+  extractorLastSaved: string;
+  extractorAddDefendant: string;
+  extractorRemoveDefendant: string;
+  extractorDefendantN: string;
+  familyTreeTitle: string;
+  familyTreeEmpty: string;
+  familyTreeGeneration: string;
+  familyTreeRelation: string;
+  familyTreeSidePlaintiff: string;
+  familyTreeSideDefendant: string;
+  familyTreeSideOther: string;
+  familyTreeSourceNote: string;
+  docFormTitle: string;
+  docFormHint: string;
+  docCourtName: string;
+  docPlaintiffName: string;
+  docDefendantName: string;
+  docCaseType: string;
+  docCaseNo: string;
+  docDefendantFullName: string;
+  docDefendantParents: string;
+  docDefendantAddress: string;
+  docDefendantAgeId: string;
+  docAllegationPoints: string;
+  docAllegationCharge: string;
+  docAllegationDefense: string;
+  docAddAllegation: string;
+  docRemoveAllegation: string;
+  docLegalGrounds: string;
+  docReliefClaimed: string;
+  docAttachedEvidence: string;
+  docDate: string;
+  docCancelDraft: string;
+  docGenerateReply: string;
+  docNivedanFormTitle: string;
+  docNivedanFormHint: string;
+  docNivedanPetitionType: string;
+  docNivedanInjunction: string;
+  docNivedanBail: string;
+  docNivedanStay: string;
+  docNivedanDeadline: string;
+  docPetitionerName: string;
+  docPetitionerParents: string;
+  docPetitionerAddress: string;
+  docPetitionerAgeId: string;
+  docOpponentName: string;
+  docOpponentAddress: string;
+  docFacts: string;
+  docGenerateNivedan: string;
+  docAdhikritFormTitle: string;
+  docAdhikritFormHint: string;
+  docSadharanFormTitle: string;
+  docSadharanFormHint: string;
+  docManjuriFormTitle: string;
+  docManjuriFormHint: string;
+  docPrincipalName: string;
+  docPrincipalAge: string;
+  docPrincipalParents: string;
+  docPrincipalAddress: string;
+  docPrincipalCitizenship: string;
+  docAttorneyName: string;
+  docAttorneyAge: string;
+  docAttorneyParents: string;
+  docAttorneyAddress: string;
+  docAttorneyCitizenship: string;
+  docRelationship: string;
+  docPurpose: string;
+  docPowers: string;
+  docPropertyDetails: string;
+  docAuthenticationPlace: string;
+  docValidityPeriod: string;
+  docWitness1: string;
+  docWitness2: string;
+  docWitnessName: string;
+  docWitnessAddress: string;
+  docWitnessCitizenship: string;
+  docConsenterName: string;
+  docConsenterAge: string;
+  docConsenterParents: string;
+  docConsenterAddress: string;
+  docConsenterCitizenship: string;
+  docBeneficiaryName: string;
+  docBeneficiaryAddress: string;
+  docConsentSubject: string;
+  docConsentConditions: string;
+  docGenerateAdhikrit: string;
+  docGenerateSadharan: string;
+  docGenerateManjuri: string;
+  saveToCaseFiles: string;
+  savingToCaseFiles: string;
+  savedToCaseFiles: string;
+  saveToCaseFilesAgain: string;
 };
 
 const ACTIVITY_LABEL_KEYS: Record<
@@ -190,22 +352,7 @@ const ACTIVITY_LABEL_KEYS: Record<
   witness_testimony: "activityWitnessTestimony",
 };
 
-const DOCUMENT_OPTIONS: {
-  kind: LegalCaseDocumentKind;
-  group: "pleadings" | "general";
-  labelKey:
-    | "docFiradpatra"
-    | "docPratiuttarapatra"
-    | "docVakalatnama"
-    | "docWarisnama"
-    | "docNivedanAwedan";
-}[] = [
-  { kind: "firadpatra", group: "pleadings", labelKey: "docFiradpatra" },
-  { kind: "pratiuttarapatra", group: "pleadings", labelKey: "docPratiuttarapatra" },
-  { kind: "vakalatnama", group: "general", labelKey: "docVakalatnama" },
-  { kind: "warisnama", group: "general", labelKey: "docWarisnama" },
-  { kind: "nivedan_awedan", group: "general", labelKey: "docNivedanAwedan" },
-];
+const TEMPLATE_PAGE_SIZE = 20;
 
 function todayInputValue() {
   const d = new Date();
@@ -240,6 +387,20 @@ function formatTime(value: string) {
   } catch {
     return value;
   }
+}
+
+function mergePesiRows(
+  existing: CasePesiRowRecord[],
+  incoming: CasePesiRowRecord[]
+): CasePesiRowRecord[] {
+  const byId = new Map<string, CasePesiRowRecord>();
+  for (const row of existing) byId.set(row.id, row);
+  for (const row of incoming) byId.set(row.id, row);
+  return [...byId.values()].sort((a, b) => {
+    const dateCmp = b.pesiDate.localeCompare(a.pesiDate);
+    if (dateCmp !== 0) return dateCmp;
+    return b.id.localeCompare(a.id);
+  });
 }
 
 function remainingDaysFromBs(bs: BsDate, todayBs: BsDate = getTodayBs()) {
@@ -286,23 +447,68 @@ export function CaseDetailPanel({
   onEdit: (legalCase: LegalCaseRecord) => void;
 }) {
   const t = labels;
-  const { locale } = useLanguage();
+  const { locale, msg } = useLanguage();
   const [detail, setDetail] = useState<LegalCaseDetail | null>(null);
   const [participants, setParticipants] = useState<CaseParticipantRecord[]>([]);
   const [messages, setMessages] = useState<CaseChatMessage[]>([]);
   const [unreadFromClient, setUnreadFromClient] = useState(0);
   const [activities, setActivities] = useState<CaseActivityRecord[]>([]);
+  const [pesiRows, setPesiRows] = useState<CasePesiRowRecord[]>([]);
+  const [pesiColumns, setPesiColumns] = useState<CasePesiColumn[]>([]);
+  const [fetchingPesi, setFetchingPesi] = useState(false);
+  const [pesiToast, setPesiToast] = useState<{
+    tone: "success" | "error";
+    message: string;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [chatLoading, setChatLoading] = useState(true);
   const [error, setError] = useState("");
+  const [quotaDialog, setQuotaDialog] = useState<{
+    kind: "cases" | "documents" | "ai";
+    used: number;
+    limit: number;
+  } | null>(null);
   const [busy, setBusy] = useState(false);
   const [sending, setSending] = useState(false);
   const [draft, setDraft] = useState("");
-  const [generatingKind, setGeneratingKind] = useState<LegalCaseDocumentKind | null>(
-    null
+  const [visibleMessageCount, setVisibleMessageCount] = useState(3);
+  const [courtTemplates, setCourtTemplates] = useState<SkPublishedDocumentTemplate[]>(
+    []
   );
+  const [courtTemplatesLoading, setCourtTemplatesLoading] = useState(false);
+  const [courtTemplatesError, setCourtTemplatesError] = useState("");
+  const [templateSearch, setTemplateSearch] = useState("");
+  const [templatePage, setTemplatePage] = useState(1);
+  const [activeFormTemplate, setActiveFormTemplate] =
+    useState<SkPublishedDocumentTemplate | null>(null);
+  const [savingDocId, setSavingDocId] = useState<string | null>(null);
+  const [extractSelectedUploadIds, setExtractSelectedUploadIds] = useState<string[]>(
+    []
+  );
+  const [extractLocalFiles, setExtractLocalFiles] = useState<File[]>([]);
+  const [extracting, setExtracting] = useState(false);
+  const [extractEditForm, setExtractEditForm] = useState<ExtractedCaseDocument>(
+    emptyExtractedCaseDocument()
+  );
+  const [extractHasDraft, setExtractHasDraft] = useState(false);
+  const [extractIsSaved, setExtractIsSaved] = useState(false);
+  const [extractDirty, setExtractDirty] = useState(false);
+  const [extractSaving, setExtractSaving] = useState(false);
+  const [extractMeta, setExtractMeta] = useState<{
+    model: string;
+    fileNames: string[];
+    updatedAt?: string;
+  } | null>(null);
+  const [extractCopied, setExtractCopied] = useState(false);
+  const extractFileInputRef = useRef<HTMLInputElement | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "messages" | "users" | "documents" | "generator" | "payments" | "activity"
+    | "messages"
+    | "users"
+    | "documents"
+    | "generator"
+    | "payments"
+    | "activity"
+    | "family"
   >("messages");
   const [showUserForm, setShowUserForm] = useState(false);
   const [showActivityForm, setShowActivityForm] = useState(false);
@@ -324,7 +530,10 @@ export function CaseDetailPanel({
     previewable: boolean;
     uploadId: string;
   } | null>(null);
+  const chatWindowRef = useRef<HTMLDivElement | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLFormElement | null>(null);
+  const stickMessagesToBottomRef = useRef(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const filePreviewUrlRef = useRef<string | null>(null);
 
@@ -460,11 +669,64 @@ export function CaseDetailPanel({
     }
   }
 
+  async function loadPesiRows() {
+    try {
+      const data = await fetchCasePesiRows(caseId);
+      setPesiRows(data.rows);
+      setPesiColumns(data.columns ?? []);
+    } catch {
+      // Keep any rows already on screen if a later reload fails
+    }
+  }
+
+  async function handleFetchPesi() {
+    if (!detail) return;
+    if (typeof detail.courtScDailyId !== "number") {
+      setError(t.fetchPesiNoCourt);
+      return;
+    }
+    setFetchingPesi(true);
+    setError("");
+    setPesiToast(null);
+    try {
+      const data = await fetchSupremeCourtPesiForCase(detail.id);
+      try {
+        const stored = await fetchCasePesiRows(detail.id);
+        setPesiRows(mergePesiRows(stored.rows, data.rows ?? []));
+        setPesiColumns(stored.columns ?? data.columns ?? []);
+      } catch {
+        setPesiRows((prev) => mergePesiRows(prev, data.rows ?? []));
+        if (data.columns?.length) setPesiColumns(data.columns);
+      }
+      if ((data.matchedCount ?? 0) > 0) {
+        setPesiToast({
+          tone: "success",
+          message: t.fetchPesiMatched
+            .replace("{n}", String(data.matchedCount))
+            .replace("{total}", String(data.totalRowsScanned ?? "—")),
+        });
+      } else {
+        setPesiToast({
+          tone: "error",
+          message: t.fetchPesiNone,
+        });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t.detailError;
+      setError(message);
+      setPesiToast({ tone: "error", message });
+    } finally {
+      setFetchingPesi(false);
+    }
+  }
+
   useEffect(() => {
     setActiveTab("messages");
     setShowUserForm(false);
     setShowActivityForm(false);
     setUnreadFromClient(0);
+    setVisibleMessageCount(3);
+    stickMessagesToBottomRef.current = true;
     setActivityForm({
       activityType: "case_registration",
       bsDate: getTodayBs(),
@@ -476,7 +738,67 @@ export function CaseDetailPanel({
     void loadMessages(isFirmUser);
     void loadUploads();
     void loadActivities();
+    void loadPesiRows();
+    setPesiToast(null);
+    setExtractEditForm(emptyExtractedCaseDocument());
+    setExtractHasDraft(false);
+    setExtractIsSaved(false);
+    setExtractDirty(false);
+    setExtractMeta(null);
+    setExtractLocalFiles([]);
+    setExtractSelectedUploadIds([]);
+    setCourtTemplates([]);
+    setCourtTemplatesError("");
+    setTemplateSearch("");
+    setTemplatePage(1);
+    setActiveFormTemplate(null);
   }, [caseId, isFirmUser]);
+
+  useEffect(() => {
+    if (!isFirmUser || !detail?.courtType) {
+      setCourtTemplates([]);
+      setCourtTemplatesLoading(false);
+      setCourtTemplatesError("");
+      return;
+    }
+    let cancelled = false;
+    setCourtTemplatesLoading(true);
+    setCourtTemplatesError("");
+    void fetchSkDocumentTemplates(detail.courtType)
+      .then((list) => {
+        if (cancelled) return;
+        setCourtTemplates(list);
+        setTemplatePage(1);
+        setActiveFormTemplate(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setCourtTemplates([]);
+        setCourtTemplatesError(
+          err instanceof Error ? err.message : t.detailError
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setCourtTemplatesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [detail?.courtType, detail?.id, isFirmUser, t.detailError]);
+
+  useEffect(() => {
+    const saved = detail?.documentExtraction;
+    if (!saved?.facts) return;
+    setExtractEditForm(normalizeExtractedCaseDocument(saved.facts));
+    setExtractHasDraft(true);
+    setExtractIsSaved(true);
+    setExtractDirty(false);
+    setExtractMeta({
+      model: saved.model || "",
+      fileNames: saved.sourceFileNames ?? [],
+      updatedAt: saved.updatedAt,
+    });
+  }, [detail?.id, detail?.documentExtraction?.updatedAt]);
 
   useEffect(() => {
     if (activeTab !== "messages" || !isFirmUser) return;
@@ -491,8 +813,26 @@ export function CaseDetailPanel({
   }, [activeTab, caseId, isFirmUser]);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length]);
+    if (activeTab === "messages") {
+      stickMessagesToBottomRef.current = true;
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== "messages" || chatLoading || !stickMessagesToBottomRef.current) {
+      return;
+    }
+    const windowEl = chatWindowRef.current;
+    if (windowEl) {
+      windowEl.scrollTop = windowEl.scrollHeight;
+    }
+    // Bring the composer / latest messages into view on the page.
+    const frame = window.requestAnimationFrame(() => {
+      composerRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, caseId, chatLoading, messages.length]);
 
   const totalPaid = useMemo(() => {
     if (!detail?.payments) return 0;
@@ -543,7 +883,9 @@ export function CaseDetailPanel({
     setError("");
     try {
       const message = await sendCaseMessage(detail.id, draft.trim());
+      stickMessagesToBottomRef.current = true;
       setMessages((prev) => [...prev, message]);
+      setVisibleMessageCount((count) => Math.max(count, 3));
       setDraft("");
       if (isFirmUser) {
         try {
@@ -659,17 +1001,91 @@ export function CaseDetailPanel({
     }
   }
 
-  async function handleGenerate(kind: LegalCaseDocumentKind) {
+  async function handleExtractDocuments() {
     if (!detail || !isFirmUser) return;
-    setGeneratingKind(kind);
+    if (extractSelectedUploadIds.length === 0 && extractLocalFiles.length === 0) {
+      setError(t.extractorNoFiles);
+      return;
+    }
+    setExtracting(true);
     setError("");
+    setExtractCopied(false);
     try {
-      const next = await generateCaseDocument(detail.id, kind);
-      setDetail(next);
+      const payloads = [];
+      for (const uploadId of extractSelectedUploadIds) {
+        const item = uploads.find((u) => u.id === uploadId);
+        if (!item) continue;
+        const blob = await fetchCaseUploadBlob(detail.id, item.id);
+        payloads.push(
+          await blobToBase64Payload(blob, item.fileName, item.mimeType)
+        );
+      }
+      for (const file of extractLocalFiles) {
+        payloads.push(await fileToBase64Payload(file));
+      }
+      const result = await extractCaseDocumentFacts({ files: payloads });
+      setExtractEditForm(normalizeExtractedCaseDocument(result.extracted));
+      setExtractHasDraft(true);
+      setExtractIsSaved(false);
+      setExtractDirty(true);
+      setExtractMeta({
+        model: result.model,
+        fileNames: result.fileNames,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : t.detailError);
     } finally {
-      setGeneratingKind(null);
+      setExtracting(false);
+    }
+  }
+
+  async function handleSaveExtraction() {
+    if (!detail || !isFirmUser || !extractHasDraft) return;
+    setExtractSaving(true);
+    setError("");
+    try {
+      const facts = normalizeExtractedCaseDocument(extractEditForm);
+      const next = await saveCaseDocumentExtraction(detail.id, {
+        facts,
+        sourceFileNames: extractMeta?.fileNames ?? [],
+        model: extractMeta?.model ?? "",
+      });
+      setDetail(next);
+      setExtractEditForm(
+        normalizeExtractedCaseDocument(next.documentExtraction?.facts ?? facts)
+      );
+      setExtractIsSaved(true);
+      setExtractDirty(false);
+      setExtractMeta({
+        model: next.documentExtraction?.model || extractMeta?.model || "",
+        fileNames:
+          next.documentExtraction?.sourceFileNames ?? extractMeta?.fileNames ?? [],
+        updatedAt: next.documentExtraction?.updatedAt,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.detailError);
+    } finally {
+      setExtractSaving(false);
+    }
+  }
+
+  function patchExtraction(updater: (current: ExtractedCaseDocument) => ExtractedCaseDocument) {
+    setExtractEditForm((current) => updater(current));
+    setExtractDirty(true);
+  }
+
+  async function handleSaveGeneratedToFiles(documentId: string) {
+    if (!detail || !isFirmUser) return;
+    setSavingDocId(documentId);
+    setError("");
+    try {
+      const next = await saveGeneratedDocumentToCaseFiles(detail.id, documentId);
+      setDetail(next);
+      await loadUploads();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.detailError);
+    } finally {
+      setSavingDocId(null);
     }
   }
 
@@ -774,6 +1190,35 @@ export function CaseDetailPanel({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
+  const filteredCourtTemplates = useMemo(() => {
+    const q = templateSearch.trim();
+    if (!q) return courtTemplates;
+    return courtTemplates.filter((template) =>
+      matchesNepaliRomanSearch(q, [
+        template.name.ne,
+        template.name.en,
+        template.name.roman,
+        template.documentKind,
+        template.documentKindTitle,
+        template.description?.ne,
+        template.description?.en,
+      ])
+    );
+  }, [courtTemplates, templateSearch]);
+
+  const templateTotalPages = Math.max(
+    1,
+    Math.ceil(filteredCourtTemplates.length / TEMPLATE_PAGE_SIZE) || 1
+  );
+  const activeTemplatePage = Math.min(templatePage, templateTotalPages);
+  const pagedCourtTemplates = filteredCourtTemplates.slice(
+    (activeTemplatePage - 1) * TEMPLATE_PAGE_SIZE,
+    activeTemplatePage * TEMPLATE_PAGE_SIZE
+  );
+  const courtTypeLabel = detail?.courtType
+    ? COURT_TYPE_META[detail.courtType].labelNe
+    : "";
+
   if (loading) {
     return (
       <div className={emiStyles.emiPanel}>
@@ -795,6 +1240,22 @@ export function CaseDetailPanel({
 
   return (
     <div className={shellStyles.panelStack}>
+      {quotaDialog ? (
+        <FirmQuotaReachedDialog
+          kind={quotaDialog.kind}
+          used={quotaDialog.used}
+          limit={quotaDialog.limit}
+          labels={msg.sajilokanun.quotaAlert}
+          onClose={() => setQuotaDialog(null)}
+        />
+      ) : null}
+      {pesiToast ? (
+        <StatusToast
+          message={pesiToast.message}
+          tone={pesiToast.tone}
+          onDismiss={() => setPesiToast(null)}
+        />
+      ) : null}
       {error && <p className={pageStyles.contactError}>{error}</p>}
 
       <div className={emiStyles.emiPanel}>
@@ -819,6 +1280,14 @@ export function CaseDetailPanel({
               {statusLabels[detail.status] ?? detail.status}
               {" · "}
               {partyLabels[detail.partySide ?? "plaintiff"]}
+              {detail.courtName || detail.courtNameEn ? (
+                <>
+                  {" · "}
+                  {detail.courtName && detail.courtNameEn
+                    ? `${detail.courtName} · ${detail.courtNameEn}`
+                    : detail.courtName || detail.courtNameEn}
+                </>
+              ) : null}
             </p>
           </div>
           {canEdit && (
@@ -928,6 +1397,19 @@ export function CaseDetailPanel({
               {t.tabDocumentGenerator}
             </button>
           )}
+          {isFirmUser && (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "family"}
+              className={`${caseChatStyles.tab} ${
+                activeTab === "family" ? caseChatStyles.tabActive : ""
+              }`}
+              onClick={() => setActiveTab("family")}
+            >
+              {t.tabFamilyTree}
+            </button>
+          )}
         </div>
 
         {activeTab === "messages" && (
@@ -935,47 +1417,80 @@ export function CaseDetailPanel({
             <h3 className={emiStyles.emiPanelTitle}>{t.chatTitle}</h3>
             <p className={emiStyles.emiFieldHint}>{t.chatHint}</p>
 
-            <div className={caseChatStyles.chatWindow}>
+            <div className={caseChatStyles.chatWindow} ref={chatWindowRef}>
               {chatLoading ? (
                 <p className={pageStyles.calculatorSubtitle}>{t.chatLoading}</p>
               ) : messages.length === 0 ? (
                 <p className={pageStyles.calculatorSubtitle}>{t.chatEmpty}</p>
               ) : (
-                messages.map((message) => {
-                  const mine = message.senderAccountId === currentUserId;
-                  return (
-                    <div
-                      key={message.id}
-                      className={`${chatStyles.row} ${mine ? chatStyles.rowUser : ""}`}
-                    >
-                      <div className={chatStyles.column}>
-                        <p className={chatStyles.role}>
-                          {mine
-                            ? t.chatYou
-                            : message.senderType === "firm"
-                              ? `${t.chatFirm} · ${message.senderName || message.senderUsername}`
-                              : `${t.chatClient} · ${message.senderName || message.senderUsername}`}
-                          <span className={caseChatStyles.time}>
-                            {" · "}
-                            {formatTime(message.createdAt)}
-                          </span>
-                        </p>
-                        <div
-                          className={`${chatStyles.bubble} ${
-                            mine ? chatStyles.bubbleUser : chatStyles.bubbleAssistant
-                          }`}
-                        >
-                          <p className={caseChatStyles.body}>{message.body}</p>
+                <>
+                  {messages.length > visibleMessageCount ? (
+                    <div className={caseChatStyles.chatLoadMore}>
+                      <button
+                        type="button"
+                        className={emiStyles.emiGlossaryLink}
+                        onClick={() => {
+                          const windowEl = chatWindowRef.current;
+                          const previousHeight = windowEl?.scrollHeight ?? 0;
+                          stickMessagesToBottomRef.current = false;
+                          setVisibleMessageCount((count) =>
+                            Math.min(messages.length, count + 10)
+                          );
+                          requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                              if (!windowEl) return;
+                              windowEl.scrollTop = Math.max(
+                                0,
+                                windowEl.scrollHeight - previousHeight
+                              );
+                            });
+                          });
+                        }}
+                      >
+                        {t.chatLoadMore}
+                      </button>
+                    </div>
+                  ) : null}
+                  {messages.slice(-visibleMessageCount).map((message) => {
+                    const mine = message.senderAccountId === currentUserId;
+                    return (
+                      <div
+                        key={message.id}
+                        className={`${chatStyles.row} ${mine ? chatStyles.rowUser : ""}`}
+                      >
+                        <div className={chatStyles.column}>
+                          <p className={chatStyles.role}>
+                            {mine
+                              ? t.chatYou
+                              : message.senderType === "firm"
+                                ? `${t.chatFirm} · ${message.senderName || message.senderUsername}`
+                                : `${t.chatClient} · ${message.senderName || message.senderUsername}`}
+                            <span className={caseChatStyles.time}>
+                              {" · "}
+                              {formatTime(message.createdAt)}
+                            </span>
+                          </p>
+                          <div
+                            className={`${chatStyles.bubble} ${
+                              mine ? chatStyles.bubbleUser : chatStyles.bubbleAssistant
+                            }`}
+                          >
+                            <p className={caseChatStyles.body}>{message.body}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })
+                    );
+                  })}
+                </>
               )}
               <div ref={chatEndRef} />
             </div>
 
-            <form onSubmit={handleSendMessage} className={caseChatStyles.composer}>
+            <form
+              ref={composerRef}
+              onSubmit={handleSendMessage}
+              className={caseChatStyles.composer}
+            >
               <textarea
                 className={emiStyles.emiNumberInput}
                 rows={2}
@@ -1369,21 +1884,107 @@ export function CaseDetailPanel({
                   {t.activityHint}
                 </p>
               </div>
-              {!showActivityForm && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
                 <button
                   type="button"
-                  className={pageStyles.contactSubmit}
+                  className={pageStyles.skGateDemoBtn}
                   style={{ padding: "0.45rem 1rem", fontSize: "0.875rem", margin: 0 }}
-                  onClick={() => {
-                    setActivityForm((f) => ({
-                      ...f,
-                      bsDate: getTodayBs(),
-                    }));
-                    setShowActivityForm(true);
-                  }}
+                  onClick={() => void handleFetchPesi()}
+                  disabled={fetchingPesi || busy}
+                  title={t.fetchPesiHint}
                 >
-                  {t.addActivity}
+                  {fetchingPesi ? t.fetchPesiBusy : t.fetchPesi}
                 </button>
+                {!showActivityForm && (
+                  <button
+                    type="button"
+                    className={pageStyles.contactSubmit}
+                    style={{ padding: "0.45rem 1rem", fontSize: "0.875rem", margin: 0 }}
+                    onClick={() => {
+                      setActivityForm((f) => ({
+                        ...f,
+                        bsDate: getTodayBs(),
+                      }));
+                      setShowActivityForm(true);
+                    }}
+                  >
+                    {t.addActivity}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <p className={emiStyles.emiFieldHint}>{t.fetchPesiHint}</p>
+
+            <div style={{ marginBottom: "1.25rem" }}>
+              <h4 className={emiStyles.emiPanelTitle} style={{ fontSize: "1rem" }}>
+                {t.pesiTableTitle}
+              </h4>
+              {pesiRows.length === 0 ? (
+                <p className={pageStyles.calculatorSubtitle}>{t.noPesiRows}</p>
+              ) : (
+                <div className={caseChatStyles.activityTableWrap}>
+                  <table className={caseChatStyles.activityTable}>
+                    <thead>
+                      <tr className="border-b border-[var(--border)] text-[var(--muted)]">
+                        <th className="pb-2 pr-3 font-medium">{t.pesiColDate}</th>
+                        {(pesiColumns.length
+                          ? pesiColumns
+                          : [
+                              { key: "sn", labelNe: "क्र स", labelEn: "S.N." },
+                              { key: "caseNoRaw", labelNe: "मुद्दा नं", labelEn: "Case no." },
+                              {
+                                key: "registrationDate",
+                                labelNe: "दर्ता मिती",
+                                labelEn: "Registration",
+                              },
+                              { key: "matter", labelNe: "मुद्दा", labelEn: "Matter" },
+                              {
+                                key: "parties",
+                                labelNe: "पक्ष || विपक्ष",
+                                labelEn: "Parties",
+                              },
+                              { key: "fantawala", labelNe: "फाँटवाला", labelEn: "Section" },
+                              { key: "signal", labelNe: "संकेत", labelEn: "Signal" },
+                              {
+                                key: "priority",
+                                labelNe: "प्राथमिकता",
+                                labelEn: "Priority",
+                              },
+                              { key: "remarks", labelNe: "कैफियत", labelEn: "Remarks" },
+                            ]
+                        ).map((col) => (
+                          <th key={col.key} className="pb-2 pr-3 font-medium">
+                            {locale === "ne" ? col.labelNe : col.labelEn}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pesiRows.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="border-b border-[var(--border)] align-top"
+                        >
+                          <td className="py-2.5 pr-3 whitespace-nowrap">{row.pesiDate}</td>
+                          <td className="py-2.5 pr-3">{row.sn}</td>
+                          <td className="py-2.5 pr-3 whitespace-pre-line font-mono text-xs">
+                            {row.caseNoRaw}
+                          </td>
+                          <td className="py-2.5 pr-3 whitespace-nowrap">
+                            {row.registrationDate}
+                          </td>
+                          <td className="py-2.5 pr-3">{row.matter}</td>
+                          <td className="py-2.5 pr-3">{row.parties}</td>
+                          <td className="py-2.5 pr-3">{row.fantawala}</td>
+                          <td className="py-2.5 pr-3">{row.signal}</td>
+                          <td className="py-2.5 pr-3">{row.priority}</td>
+                          <td className="py-2.5 pr-3">{row.remarks || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 
@@ -1802,51 +2403,835 @@ export function CaseDetailPanel({
           </>
         )}
 
+        {isFirmUser && activeTab === "family" && (
+          <CaseFamilyTree
+            tree={extractEditForm.वंशावली}
+            labels={{
+              title: t.familyTreeTitle,
+              empty: t.familyTreeEmpty,
+              generation: t.familyTreeGeneration,
+              relation: t.familyTreeRelation,
+              sidePlaintiff: t.familyTreeSidePlaintiff,
+              sideDefendant: t.familyTreeSideDefendant,
+              sideOther: t.familyTreeSideOther,
+              sourceNote: t.familyTreeSourceNote,
+            }}
+          />
+        )}
+
         {isFirmUser && activeTab === "generator" && (
           <>
+            <section style={{ marginBottom: "1.75rem" }}>
+              <h3 className={emiStyles.emiPanelTitle}>{t.documentExtractorTitle}</h3>
+              <p className={emiStyles.emiFieldHint}>{t.documentExtractorHint}</p>
+
+              <p className={emiStyles.emiFieldHint} style={{ marginBottom: "0.4rem" }}>
+                {t.extractorPickUploads}
+              </p>
+              {uploads.length === 0 ? (
+                <p className={pageStyles.calculatorSubtitle}>{t.noUploads}</p>
+              ) : (
+                <div className={shellStyles.panelStack} style={{ gap: "0.4rem", marginBottom: "0.85rem" }}>
+                  {uploads.map((item) => {
+                    const checked = extractSelectedUploadIds.includes(item.id);
+                    return (
+                      <label
+                        key={item.id}
+                        className={emiStyles.emiFadeCard}
+                        style={{
+                          padding: "0.65rem 0.85rem",
+                          display: "flex",
+                          gap: "0.65rem",
+                          alignItems: "flex-start",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            setExtractSelectedUploadIds((ids) =>
+                              checked
+                                ? ids.filter((id) => id !== item.id)
+                                : [...ids, item.id]
+                            )
+                          }
+                          style={{ marginTop: "0.2rem" }}
+                        />
+                        <span>
+                          <strong style={{ color: "#042c53" }}>{item.fileName}</strong>
+                          <span
+                            className={emiStyles.emiFieldHint}
+                            style={{ display: "block", margin: "0.1rem 0 0" }}
+                          >
+                            {formatFileSize(item.size)} · {formatDate(item.createdAt)}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div style={{ marginBottom: "0.85rem" }}>
+                <input
+                  ref={extractFileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.webp,.gif,image/*,application/pdf"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+                    const next = Array.from(e.target.files ?? []);
+                    setExtractLocalFiles((current) => [...current, ...next].slice(0, 8));
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  type="button"
+                  className={emiStyles.emiPreset}
+                  onClick={() => extractFileInputRef.current?.click()}
+                  disabled={extracting}
+                >
+                  {t.extractorAddFiles}
+                </button>
+                {extractLocalFiles.length > 0 ? (
+                  <ul
+                    style={{
+                      margin: "0.65rem 0 0",
+                      paddingLeft: "1.1rem",
+                      fontSize: "0.875rem",
+                      color: "#374151",
+                    }}
+                  >
+                    {extractLocalFiles.map((file, index) => (
+                      <li key={`${file.name}-${index}`}>
+                        {file.name}{" "}
+                        <button
+                          type="button"
+                          className={emiStyles.emiGlossaryLink}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            cursor: "pointer",
+                            padding: 0,
+                          }}
+                          onClick={() =>
+                            setExtractLocalFiles((files) =>
+                              files.filter((_, i) => i !== index)
+                            )
+                          }
+                        >
+                          ×
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+
+              <div className={caseChatStyles.formActions}>
+                <button
+                  type="button"
+                  className={pageStyles.contactSubmit}
+                  style={{ margin: 0 }}
+                  disabled={extracting || extractSaving}
+                  onClick={() => void handleExtractDocuments()}
+                >
+                  {extracting ? t.extractorExtracting : t.extractorGenerate}
+                </button>
+                {extractHasDraft ? (
+                  <button
+                    type="button"
+                    className={pageStyles.contactSubmit}
+                    style={{ margin: 0 }}
+                    disabled={extractSaving || (!extractDirty && extractIsSaved)}
+                    onClick={() => void handleSaveExtraction()}
+                  >
+                    {extractSaving
+                      ? t.extractorSaving
+                      : extractIsSaved && !extractDirty
+                        ? t.extractorSaved
+                        : t.extractorSave}
+                  </button>
+                ) : null}
+                {extractHasDraft && !extractIsSaved ? (
+                  <button
+                    type="button"
+                    className={emiStyles.emiGlossaryLink}
+                    style={{
+                      background: "none",
+                      border: "1px solid var(--border, #d7e3f4)",
+                      borderRadius: "0.5rem",
+                      cursor: "pointer",
+                      padding: "0.55rem 0.75rem",
+                    }}
+                    onClick={() => {
+                      setExtractEditForm(emptyExtractedCaseDocument());
+                      setExtractHasDraft(false);
+                      setExtractDirty(false);
+                      setExtractMeta(null);
+                      setExtractCopied(false);
+                    }}
+                  >
+                    {t.extractorClear}
+                  </button>
+                ) : null}
+              </div>
+
+              {extractHasDraft ? (
+                <article
+                  className={emiStyles.emiFadeCard}
+                  style={{ padding: "0.85rem", marginTop: "1rem" }}
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong style={{ color: "#042c53" }}>
+                      {extractIsSaved ? t.extractorSavedTitle : t.extractorUnsavedTitle}
+                    </strong>
+                    <button
+                      type="button"
+                      className={emiStyles.emiGlossaryLink}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: 0,
+                      }}
+                      onClick={() => {
+                        void navigator.clipboard
+                          .writeText(JSON.stringify(extractEditForm, null, 2))
+                          .then(() => {
+                            setExtractCopied(true);
+                            window.setTimeout(() => setExtractCopied(false), 2000);
+                          });
+                      }}
+                    >
+                      {extractCopied ? t.extractorCopied : t.extractorCopyJson}
+                    </button>
+                  </div>
+                  <p className={emiStyles.emiFieldHint}>{t.extractorEditHint}</p>
+                  {extractMeta?.updatedAt ? (
+                    <p className={emiStyles.emiFieldHint} style={{ marginTop: 0 }}>
+                      {t.extractorLastSaved}: {formatTime(extractMeta.updatedAt)}
+                      {extractMeta.fileNames.length
+                        ? ` · ${extractMeta.fileNames.join(", ")}`
+                        : ""}
+                    </p>
+                  ) : extractMeta?.fileNames?.length ? (
+                    <p className={emiStyles.emiFieldHint} style={{ marginTop: 0 }}>
+                      {extractMeta.fileNames.join(", ")}
+                    </p>
+                  ) : null}
+
+                  <div className={emiStyles.emiRow}>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-court">अदालतको नाम</label>
+                      <input
+                        id="ex-court"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.अदालत_विवरण.अदालतको_नाम ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            अदालत_विवरण: {
+                              ...f.अदालत_विवरण,
+                              अदालतको_नाम: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-case-no">मुद्दा नं.</label>
+                      <input
+                        id="ex-case-no"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.अदालत_विवरण.मुद्दा_नं ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            अदालत_विवरण: {
+                              ...f.अदालत_विवरण,
+                              मुद्दा_नं: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className={emiStyles.emiRow}>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-reg-date">दर्ता मिति (वि.सं.)</label>
+                      <input
+                        id="ex-reg-date"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.अदालत_विवरण.दर्ता_मिति_वि_सं ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            अदालत_विवरण: {
+                              ...f.अदालत_विवरण,
+                              दर्ता_मिति_वि_सं: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-subject">मुद्दाको विषय</label>
+                      <input
+                        id="ex-subject"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.अदालत_विवरण.मुद्दाको_विषय ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            अदालत_विवरण: {
+                              ...f.अदालत_विवरण,
+                              मुद्दाको_विषय: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className={emiStyles.emiRow}>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-plaintiff">वादीको नाम</label>
+                      <input
+                        id="ex-plaintiff"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.वादी_विवरण.पूरा_नाम ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            वादी_विवरण: {
+                              ...f.वादी_विवरण,
+                              पूरा_नाम: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-plaintiff-teen">वादी तीनपुस्ते</label>
+                      <input
+                        id="ex-plaintiff-teen"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.वादी_विवरण.तीनपुस्ते ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            वादी_विवरण: {
+                              ...f.वादी_विवरण,
+                              तीनपुस्ते: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className={emiStyles.emiRow}>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-plaintiff-addr">वादी ठेगाना</label>
+                      <input
+                        id="ex-plaintiff-addr"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.वादी_विवरण.ठेगाना ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            वादी_विवरण: {
+                              ...f.वादी_विवरण,
+                              ठेगाना: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-citizenship">वादी नागरिकता नं.</label>
+                      <input
+                        id="ex-citizenship"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.वादी_विवरण.नागरिकता_नं ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            वादी_विवरण: {
+                              ...f.वादी_विवरण,
+                              नागरिकता_नं: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: "0.85rem" }}>
+                    <div
+                      className="flex flex-wrap items-center justify-between gap-2"
+                      style={{ marginBottom: "0.5rem" }}
+                    >
+                      <strong style={{ color: "#042c53", fontSize: "0.9rem" }}>
+                        प्रतिवादीहरू
+                      </strong>
+                      <button
+                        type="button"
+                        className={emiStyles.emiPreset}
+                        onClick={() =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            प्रतिवादी_विवरण: [
+                              ...f.प्रतिवादी_विवरण,
+                              emptyExtractedDefendant(),
+                            ],
+                          }))
+                        }
+                      >
+                        {t.extractorAddDefendant}
+                      </button>
+                    </div>
+                    {extractEditForm.प्रतिवादी_विवरण.map((defendant, index) => (
+                      <div
+                        key={`defendant-${index}`}
+                        style={{
+                          border: "1px solid var(--border, #d7e3f4)",
+                          borderRadius: "0.5rem",
+                          padding: "0.75rem",
+                          marginBottom: "0.65rem",
+                        }}
+                      >
+                        <div
+                          className="flex flex-wrap items-center justify-between gap-2"
+                          style={{ marginBottom: "0.5rem" }}
+                        >
+                          <span className={emiStyles.emiFieldHint} style={{ margin: 0 }}>
+                            {t.extractorDefendantN.replace("{n}", String(index + 1))}
+                          </span>
+                          {extractEditForm.प्रतिवादी_विवरण.length > 1 ? (
+                            <button
+                              type="button"
+                              className={emiStyles.emiGlossaryLink}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 0,
+                              }}
+                              onClick={() =>
+                                patchExtraction((f) => ({
+                                  ...f,
+                                  प्रतिवादी_विवरण: f.प्रतिवादी_विवरण.filter(
+                                    (_, i) => i !== index
+                                  ),
+                                }))
+                              }
+                            >
+                              {t.extractorRemoveDefendant}
+                            </button>
+                          ) : null}
+                        </div>
+                        <div className={emiStyles.emiRow}>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-def-name-${index}`}>पूरा नाम</label>
+                            <input
+                              id={`ex-def-name-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={defendant.पूरा_नाम ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.प्रतिवादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    पूरा_नाम: e.target.value || null,
+                                  };
+                                  return { ...f, प्रतिवादी_विवरण: next };
+                                })
+                              }
+                            />
+                          </div>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-def-teen-${index}`}>तीनपुस्ते</label>
+                            <input
+                              id={`ex-def-teen-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={defendant.तीनपुस्ते ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.प्रतिवादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    तीनपुस्ते: e.target.value || null,
+                                  };
+                                  return { ...f, प्रतिवादी_विवरण: next };
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className={emiStyles.emiRow}>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-def-addr-${index}`}>ठेगाना</label>
+                            <input
+                              id={`ex-def-addr-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={defendant.ठेगाना ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.प्रतिवादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    ठेगाना: e.target.value || null,
+                                  };
+                                  return { ...f, प्रतिवादी_विवरण: next };
+                                })
+                              }
+                            />
+                          </div>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-def-cit-${index}`}>नागरिकता नं.</label>
+                            <input
+                              id={`ex-def-cit-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={defendant.नागरिकता_नं ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.प्रतिवादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    नागरिकता_नं: e.target.value || null,
+                                  };
+                                  return { ...f, प्रतिवादी_विवरण: next };
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className={emiStyles.emiRow}>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-bigo">बिगो रकम (रु.)</label>
+                      <input
+                        id="ex-bigo"
+                        type="number"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.आर्थिक_तथा_तथ्य.बिगो_रकम_रु ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            आर्थिक_तथा_तथ्य: {
+                              ...f.आर्थिक_तथा_तथ्य,
+                              बिगो_रकम_रु:
+                                e.target.value.trim() === ""
+                                  ? null
+                                  : Number(e.target.value),
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className={emiStyles.emiField}>
+                      <label htmlFor="ex-incident">घटना मिति (वि.सं.)</label>
+                      <input
+                        id="ex-incident"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.आर्थिक_तथा_तथ्य.घटना_मिति_वि_सं ?? ""}
+                        onChange={(e) =>
+                          patchExtraction((f) => ({
+                            ...f,
+                            आर्थिक_तथा_तथ्य: {
+                              ...f.आर्थिक_तथा_तथ्य,
+                              घटना_मिति_वि_सं: e.target.value || null,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="ex-facts">तथ्य सारांश</label>
+                    <textarea
+                      id="ex-facts"
+                      className={emiStyles.emiNumberInput}
+                      rows={3}
+                      value={extractEditForm.आर्थिक_तथा_तथ्य.तथ्य_सारांश ?? ""}
+                      onChange={(e) =>
+                        patchExtraction((f) => ({
+                          ...f,
+                          आर्थिक_तथा_तथ्य: {
+                            ...f.आर्थिक_तथा_तथ्य,
+                            तथ्य_सारांश: e.target.value || null,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="ex-sections">उद्धृत दफाहरू (एक पङ्क्तिमा एक)</label>
+                    <textarea
+                      id="ex-sections"
+                      className={emiStyles.emiNumberInput}
+                      rows={3}
+                      value={extractEditForm.कानूनी_आधार.उद्धृत_दफाहरू.join("\n")}
+                      onChange={(e) =>
+                        patchExtraction((f) => ({
+                          ...f,
+                          कानूनी_आधार: {
+                            ...f.कानूनी_आधार,
+                            उद्धृत_दफाहरू: e.target.value
+                              .split("\n")
+                              .map((line) => line.trim())
+                              .filter(Boolean),
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="ex-limitation">हदम्याद स्थिति</label>
+                    <input
+                      id="ex-limitation"
+                      className={emiStyles.emiNumberInput}
+                      value={extractEditForm.कानूनी_आधार.हदम्याद_स्थिति ?? ""}
+                      onChange={(e) =>
+                        patchExtraction((f) => ({
+                          ...f,
+                          कानूनी_आधार: {
+                            ...f.कानूनी_आधार,
+                            हदम्याद_स्थिति: e.target.value || null,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="ex-claim">मुख्य दाबी</label>
+                    <textarea
+                      id="ex-claim"
+                      className={emiStyles.emiNumberInput}
+                      rows={2}
+                      value={extractEditForm.माग_दाबी.मुख्य_दाबी ?? ""}
+                      onChange={(e) =>
+                        patchExtraction((f) => ({
+                          ...f,
+                          माग_दाबी: {
+                            ...f.माग_दाबी,
+                            मुख्य_दाबी: e.target.value || null,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="ex-fee">अदालत शुल्क दाबी</label>
+                    <textarea
+                      id="ex-fee"
+                      className={emiStyles.emiNumberInput}
+                      rows={2}
+                      value={extractEditForm.माग_दाबी.अदालत_शुल्क_दाबी ?? ""}
+                      onChange={(e) =>
+                        patchExtraction((f) => ({
+                          ...f,
+                          माग_दाबी: {
+                            ...f.माग_दाबी,
+                            अदालत_शुल्क_दाबी: e.target.value || null,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="ex-evidence">प्रमाणहरू (एक पङ्क्तिमा एक)</label>
+                    <textarea
+                      id="ex-evidence"
+                      className={emiStyles.emiNumberInput}
+                      rows={3}
+                      value={extractEditForm.प्रमाणहरू.join("\n")}
+                      onChange={(e) =>
+                        patchExtraction((f) => ({
+                          ...f,
+                          प्रमाणहरू: e.target.value
+                            .split("\n")
+                            .map((line) => line.trim())
+                            .filter(Boolean),
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className={emiStyles.emiField}>
+                    <label htmlFor="ex-witnesses">साक्षीहरू (एक पङ्क्तिमा एक)</label>
+                    <textarea
+                      id="ex-witnesses"
+                      className={emiStyles.emiNumberInput}
+                      rows={3}
+                      value={extractEditForm.साक्षीहरू.join("\n")}
+                      onChange={(e) =>
+                        patchExtraction((f) => ({
+                          ...f,
+                          साक्षीहरू: e.target.value
+                            .split("\n")
+                            .map((line) => line.trim())
+                            .filter(Boolean),
+                        }))
+                      }
+                    />
+                  </div>
+
+                  <div className={caseChatStyles.formActions} style={{ marginTop: "0.75rem" }}>
+                    <button
+                      type="button"
+                      className={pageStyles.contactSubmit}
+                      style={{ margin: 0 }}
+                      disabled={extractSaving || (!extractDirty && extractIsSaved)}
+                      onClick={() => void handleSaveExtraction()}
+                    >
+                      {extractSaving
+                        ? t.extractorSaving
+                        : extractIsSaved && !extractDirty
+                          ? t.extractorSaved
+                          : t.extractorSave}
+                    </button>
+                  </div>
+                </article>
+              ) : null}
+            </section>
+
             <h3 className={emiStyles.emiPanelTitle}>{t.documentGeneratorTitle}</h3>
             <p className={emiStyles.emiFieldHint}>{t.documentGeneratorHint}</p>
-            <p className={pageStyles.calculatorSubtitle} style={{ marginTop: 0 }}>
-              {t.comingSoonAi}
-            </p>
-
-            <div style={{ marginBottom: "1rem" }}>
-              <p className={emiStyles.emiFieldHint} style={{ marginBottom: "0.4rem" }}>
-                {t.docGroupPleadings}
+            {detail.courtType ? (
+              <p className={pageStyles.calculatorSubtitle} style={{ marginTop: 0 }}>
+                {t.documentTemplatesCount
+                  .replace("{court}", courtTypeLabel)
+                  .replace("{n}", String(courtTemplates.length))}
               </p>
-              <div className={emiStyles.emiPresets}>
-                {DOCUMENT_OPTIONS.filter((d) => d.group === "pleadings").map((doc) => (
-                  <button
-                    key={doc.kind}
-                    type="button"
-                    className={emiStyles.emiPreset}
-                    disabled={generatingKind !== null}
-                    onClick={() => void handleGenerate(doc.kind)}
-                  >
-                    {generatingKind === doc.kind ? t.generating : t[doc.labelKey]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div style={{ marginBottom: "1rem" }}>
-              <p className={emiStyles.emiFieldHint} style={{ marginBottom: "0.4rem" }}>
-                {t.docGroupGeneral}
+            ) : (
+              <p className={pageStyles.calculatorSubtitle} style={{ marginTop: 0 }}>
+                {t.documentTemplatesNoCourtType}
               </p>
-              <div className={emiStyles.emiPresets}>
-                {DOCUMENT_OPTIONS.filter((d) => d.group === "general").map((doc) => (
-                  <button
-                    key={doc.kind}
-                    type="button"
-                    className={emiStyles.emiPreset}
-                    disabled={generatingKind !== null}
-                    onClick={() => void handleGenerate(doc.kind)}
-                  >
-                    {generatingKind === doc.kind ? t.generating : t[doc.labelKey]}
-                  </button>
-                ))}
+            )}
+
+            {detail.courtType ? (
+              <div style={{ marginBottom: "1rem" }}>
+                <div className={emiStyles.emiField} style={{ marginBottom: "0.75rem" }}>
+                  <label htmlFor="sk-template-search">{t.documentTemplatesSearch}</label>
+                  <input
+                    id="sk-template-search"
+                    className={emiStyles.emiNumberInput}
+                    value={templateSearch}
+                    onChange={(e) => {
+                      setTemplateSearch(e.target.value);
+                      setTemplatePage(1);
+                    }}
+                    placeholder={t.documentTemplatesSearch}
+                  />
+                </div>
+
+                {courtTemplatesLoading ? (
+                  <p className={pageStyles.calculatorSubtitle}>
+                    {t.documentTemplatesLoading}
+                  </p>
+                ) : courtTemplatesError ? (
+                  <p className={pageStyles.contactError}>{courtTemplatesError}</p>
+                ) : filteredCourtTemplates.length === 0 ? (
+                  <p className={pageStyles.calculatorSubtitle}>
+                    {t.documentTemplatesEmpty}
+                  </p>
+                ) : (
+                  <>
+                    <div className={emiStyles.emiPresets}>
+                      {pagedCourtTemplates.map((template) => {
+                        const primary =
+                          locale === "ne"
+                            ? template.name.ne || template.name.en
+                            : template.name.en || template.name.ne;
+                        const roman = template.name.roman?.trim() || "";
+                        return (
+                          <button
+                            key={template.id}
+                            type="button"
+                            className={emiStyles.emiPreset}
+                            aria-pressed={activeFormTemplate?.id === template.id}
+                            onClick={() => {
+                              setActiveFormTemplate(template);
+                              setError("");
+                            }}
+                          >
+                            <span style={{ display: "block" }}>{primary}</span>
+                            {roman ? (
+                              <span
+                                style={{
+                                  display: "block",
+                                  marginTop: "0.15rem",
+                                  fontSize: "0.72em",
+                                  opacity: 0.75,
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {roman}
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {filteredCourtTemplates.length > TEMPLATE_PAGE_SIZE ? (
+                      <div
+                        className="flex flex-wrap items-center justify-between gap-2"
+                        style={{ marginTop: "0.75rem" }}
+                      >
+                        <span className={emiStyles.emiFieldHint} style={{ margin: 0 }}>
+                          {`${(activeTemplatePage - 1) * TEMPLATE_PAGE_SIZE + 1}–${Math.min(
+                            activeTemplatePage * TEMPLATE_PAGE_SIZE,
+                            filteredCourtTemplates.length
+                          )} / ${filteredCourtTemplates.length}`}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className={pageStyles.skGateDemoBtn}
+                            style={{
+                              padding: "0.35rem 0.7rem",
+                              fontSize: "0.75rem",
+                              margin: 0,
+                            }}
+                            disabled={activeTemplatePage <= 1}
+                            onClick={() =>
+                              setTemplatePage((page) => Math.max(1, page - 1))
+                            }
+                          >
+                            Prev
+                          </button>
+                          <button
+                            type="button"
+                            className={pageStyles.skGateDemoBtn}
+                            style={{
+                              padding: "0.35rem 0.7rem",
+                              fontSize: "0.75rem",
+                              margin: 0,
+                            }}
+                            disabled={activeTemplatePage >= templateTotalPages}
+                            onClick={() =>
+                              setTemplatePage((page) =>
+                                Math.min(templateTotalPages, page + 1)
+                              )
+                            }
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
               </div>
-            </div>
+            ) : null}
 
             <div className={shellStyles.panelStack} style={{ gap: "0.65rem" }}>
               {(detail.documents?.length ?? 0) === 0 && (
@@ -1865,6 +3250,7 @@ export function CaseDetailPanel({
                       <strong style={{ color: "#042c53" }}>{doc.title}</strong>
                       <span className={emiStyles.emiFieldHint} style={{ margin: 0 }}>
                         {doc.status === "ready" ? t.docReadyBadge : t.docPlaceholderBadge}
+                        {doc.savedUploadId ? ` · ${t.savedToCaseFiles}` : ""}
                         {" · "}
                         {formatDate(doc.createdAt)}
                       </span>
@@ -1881,12 +3267,50 @@ export function CaseDetailPanel({
                         {doc.content}
                       </pre>
                     )}
+                    {isFirmUser && doc.status === "ready" && doc.content.trim() ? (
+                      <div className={caseChatStyles.formActions} style={{ marginTop: "0.65rem" }}>
+                        <button
+                          type="button"
+                          className={pageStyles.skGateDemoBtn}
+                          style={{ padding: "0.4rem 0.85rem", fontSize: "0.8125rem", margin: 0 }}
+                          disabled={savingDocId !== null}
+                          onClick={() => void handleSaveGeneratedToFiles(doc.id)}
+                        >
+                          {savingDocId === doc.id
+                            ? t.savingToCaseFiles
+                            : doc.savedUploadId
+                              ? t.saveToCaseFilesAgain
+                              : t.saveToCaseFiles}
+                        </button>
+                      </div>
+                    ) : null}
                   </article>
                 ))}
             </div>
           </>
         )}
       </div>
+
+      {activeFormTemplate && detail ? (
+        <CaseDocumentModal
+          caseId={detail.id}
+          template={activeFormTemplate}
+          locale={locale}
+          onClose={() => setActiveFormTemplate(null)}
+          onSaved={(upload) => {
+            setUploads((prev) => [upload, ...prev]);
+            setActiveTab("documents");
+            setActiveFormTemplate(null);
+          }}
+          onQuotaError={(quota) => {
+            setQuotaDialog({
+              kind: "documents",
+              used: quota.used,
+              limit: quota.limit,
+            });
+          }}
+        />
+      ) : null}
 
       {filePreview && detail && (
         <CaseFilePreviewPanel

@@ -16,7 +16,9 @@ export const EMBEDDING_MODEL =
 export const CHAT_MODEL = process.env.GEMINI_CHAT_MODEL ?? "gemini-2.0-flash";
 
 export const GEMINI_OCR_MODEL =
-  process.env.GEMINI_OCR_MODEL ?? CHAT_MODEL;
+  process.env.DOCUMENT_EXTRACTION_MODEL?.trim() ||
+  process.env.GEMINI_OCR_MODEL?.trim() ||
+  "gemini-3.5-flash";
 
 /** Free tier is ~15 RPM for Flash — stay under with a serial queue. */
 const geminiOcrQueue = new MinIntervalQueue(
@@ -557,6 +559,46 @@ export async function completeChat(
       config: {
         systemInstruction: systemPrompt,
         temperature: 0,
+      },
+    });
+    fromGeminiUsage(response.usageMetadata, {
+      operation,
+      provider: "gemini",
+      model,
+    });
+    const text = extractGeminiResponseText(response);
+    if (!text) {
+      throw new Error("Empty completion from Gemini");
+    }
+    return text;
+  });
+}
+
+export type GeminiContentPart =
+  | { text: string }
+  | { inlineData: { mimeType: string; data: string } };
+
+/** Multimodal generateContent (images / PDF + text). Uses superadmin Gemini key pool. */
+export async function completeMultimodal(
+  systemPrompt: string,
+  parts: GeminiContentPart[],
+  model = GEMINI_OCR_MODEL,
+  operation: UsageOperation = "analysis",
+  options?: { maxOutputTokens?: number }
+): Promise<string> {
+  if (!parts.length) {
+    throw new Error("At least one content part is required");
+  }
+  const maxOutputTokens = options?.maxOutputTokens ?? 8192;
+  return withGeminiClientRotation(`completeMultimodal:${operation}`, async (client) => {
+    const response = await client.models.generateContent({
+      model,
+      contents: [{ role: "user", parts }],
+      config: {
+        systemInstruction: systemPrompt,
+        temperature: 0,
+        responseMimeType: "application/json",
+        maxOutputTokens,
       },
     });
     fromGeminiUsage(response.usageMetadata, {

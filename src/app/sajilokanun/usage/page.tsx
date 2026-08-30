@@ -28,7 +28,7 @@ export default function SajiloKanunUsagePage() {
           : msg.sajilokanun.usageLog.subtitle
       }
     >
-      <TokenUsageLogPanel />
+      <TokenUsageLogPanel hideRecentRequests={scope === "team"} />
       <p className={emiStyles.emiDisclaimer} style={{ marginTop: "1rem" }}>
         Estimates only — billing depends on provider pricing and cache rates.
       </p>

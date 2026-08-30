@@ -35,6 +35,25 @@ export function resolveAdvocateAnalysisModel(): string {
   return "gemini-2.5-pro";
 }
 
+/** Model for case document drafting (Gemini by default; uses superadmin key pool). */
+export function resolveDocumentGenerationModel(): string {
+  const configured = process.env.DOCUMENT_GENERATION_MODEL?.trim();
+  if (configured) return configured;
+  return resolveAdvocateAnalysisModel();
+}
+
+/**
+ * Model for document text extraction / OCR (Gemini by default; uses superadmin key pool).
+ * Prefers DOCUMENT_EXTRACTION_MODEL, then legacy GEMINI_OCR_MODEL.
+ */
+export function resolveDocumentExtractionModel(): string {
+  const configured =
+    process.env.DOCUMENT_EXTRACTION_MODEL?.trim() ||
+    process.env.GEMINI_OCR_MODEL?.trim();
+  if (configured) return configured;
+  return "gemini-3.5-flash";
+}
+
 function resolveCompleteChatModel(
   model: string | undefined,
   operation: UsageOperation
@@ -91,8 +110,9 @@ export async function streamLlmChat(
 
 /**
  * Complete a chat turn. Gemini model names always go to Gemini
- * (GEMINI_API_KEY → GEMINI_API_KEY_FALLBACK), even when LLM_PROVIDER=openai.
- * Advocate narrative defaults to ADVOCATE_ANALYSIS_MODEL (gemini-3.5-flash-lite).
+ * (superadmin key pool → GEMINI_API_KEY → GEMINI_API_KEY_FALLBACK), even when
+ * LLM_PROVIDER=openai. Advocate narrative defaults to ADVOCATE_ANALYSIS_MODEL;
+ * document drafting should pass resolveDocumentGenerationModel().
  */
 export async function completeChat(
   systemPrompt: string,
@@ -111,5 +131,19 @@ export async function completeChat(
     resolved,
     operation,
     cacheOptions
+  );
+}
+
+/** Document extraction always uses Gemini + DOCUMENT_EXTRACTION_MODEL (key pool). */
+export async function completeDocumentExtraction(
+  systemPrompt: string,
+  parts: gemini.GeminiContentPart[]
+): Promise<string> {
+  return gemini.completeMultimodal(
+    systemPrompt,
+    parts,
+    resolveDocumentExtractionModel(),
+    "analysis",
+    { maxOutputTokens: 8192 }
   );
 }

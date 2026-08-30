@@ -18,11 +18,68 @@ export interface SajiloKanunUser {
 }
 
 export interface SajiloKanunDailyQuota {
-  limit: number;
+  limit: number | null;
   used: number;
-  remaining: number;
-  resetAt: string;
+  remaining: number | null;
+  resetAt?: string;
   questionId?: string | null;
+}
+
+export function isQuotaExhausted(quota: SajiloKanunDailyQuota | null | undefined): boolean {
+  if (!quota) return false;
+  if (quota.limit == null || quota.remaining == null) return false;
+  return quota.remaining <= 0;
+}
+
+export type FirmQuotaErrorCode =
+  | "firm_case_quota"
+  | "firm_documents_quota"
+  | "firm_ai_quota";
+
+export class FirmQuotaError extends Error {
+  code: FirmQuotaErrorCode;
+  used: number;
+  limit: number;
+
+  constructor(input: {
+    message: string;
+    code: FirmQuotaErrorCode;
+    used: number;
+    limit: number;
+  }) {
+    super(input.message);
+    this.name = "FirmQuotaError";
+    this.code = input.code;
+    this.used = input.used;
+    this.limit = input.limit;
+  }
+}
+
+export function isFirmQuotaError(err: unknown): err is FirmQuotaError {
+  return err instanceof FirmQuotaError;
+}
+
+function throwIfFirmQuotaResponse(res: Response, data: {
+  error?: string;
+  code?: string;
+  used?: number;
+  limit?: number;
+}): void {
+  if (
+    res.status === 429 &&
+    (data.code === "firm_case_quota" ||
+      data.code === "firm_documents_quota" ||
+      data.code === "firm_ai_quota") &&
+    typeof data.used === "number" &&
+    typeof data.limit === "number"
+  ) {
+    throw new FirmQuotaError({
+      message: data.error ?? "Firm quota reached",
+      code: data.code,
+      used: data.used,
+      limit: data.limit,
+    });
+  }
 }
 
 export function setSajiloKanunToken(token: string): void {
@@ -73,6 +130,7 @@ export async function fetchSajiloKanunMe(): Promise<SajiloKanunUser> {
 export async function fetchSajiloKanunQuota(): Promise<{
   plan: "individual" | "firm";
   quota: SajiloKanunDailyQuota | null;
+  firmQuota?: FirmQuotaSnapshot;
 }> {
   const res = await skAuthedFetch("/api/sajilokanun-auth/quota");
   const data = await res.json();
@@ -96,6 +154,13 @@ export function getSkRoleFromToken(): "admin" | "member" | "caseUser" | null {
   } catch {
     return null;
   }
+}
+
+export function sajiloKanunPostLoginPath(): string {
+  const role = getSkRoleFromToken();
+  if (role === "caseUser") return "/sajilokanun/cases";
+  if (role === "admin" || role === "member") return "/sajilokanun/dashboard";
+  return "/sajilokanun/chat";
 }
 
 /** Firm id from JWT — available immediately on navigation (before /me resolves). */
@@ -194,6 +259,11 @@ export interface DirectoryPerson {
   assignedCases?: DirectoryAssignedCase[];
 }
 
+export type CourtCategoryId =
+  | "special_courts"
+  | "high_courts"
+  | "district_courts";
+
 export interface LegalCaseRecord {
   id: string;
   teamId: string;
@@ -203,6 +273,14 @@ export interface LegalCaseRecord {
   status: "open" | "pending" | "closed";
   partySide: "plaintiff" | "defendant" | "other";
   notes: string;
+  courtId?: string | null;
+  courtCode?: string | null;
+  courtName?: string | null;
+  courtNameEn?: string | null;
+  courtScDailyId?: number | null;
+  courtCategory?: CourtCategoryId | null;
+  /** district | high | supreme | special */
+  courtType?: import("@/lib/sajilokanun/court-type").CourtType | null;
   assignedMemberIds: string[];
   createdBy: string;
   createdAt: string;
@@ -210,6 +288,8 @@ export interface LegalCaseRecord {
   testimonialCount?: number;
   paymentCount?: number;
   documentCount?: number;
+  hasDocumentExtraction?: boolean;
+  hasFamilyTree?: boolean;
 }
 
 export type LegalCaseDocumentKind =
@@ -217,7 +297,18 @@ export type LegalCaseDocumentKind =
   | "pratiuttarapatra"
   | "vakalatnama"
   | "warisnama"
-  | "nivedan_awedan";
+  | "nivedan_awedan"
+  | "adhikrit_warisnama"
+  | "sadharan_warisnama"
+  | "manjurinama"
+  | "sampatti_rokka_nivedan"
+  | "sampatti_fukuwa_nivedan"
+  | "tayari_fatbari_nivedan"
+  | "court_fee_subidha_nivedan"
+  | "milis_jhikaune_nivedan"
+  | "petboli_manish_bhuji_nivedan"
+  | "sakkal_kagaj_pesh_nivedan"
+  | "hajir_huna_aayeko_nivedan";
 
 export interface CaseTestimonial {
   id: string;
@@ -248,12 +339,24 @@ export interface CaseGeneratedDocument {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  savedUploadId?: string | null;
+}
+
+export interface CaseDocumentExtractionRecord {
+  facts: import("@/lib/sajilokanun/document-prompts").ExtractedCaseDocument;
+  sourceFileNames: string[];
+  model: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface LegalCaseDetail extends LegalCaseRecord {
   testimonials?: CaseTestimonial[];
   payments?: CasePayment[];
   documents?: CaseGeneratedDocument[];
+  documentExtraction?: CaseDocumentExtractionRecord | null;
+  hasDocumentExtraction?: boolean;
 }
 
 export interface CaseParticipantRecord {
@@ -285,11 +388,29 @@ export interface CaseChatMessage {
   updatedAt: string;
 }
 
+export interface FirmQuotaBucket {
+  limit: number | null;
+  used: number;
+  remaining: number | null;
+}
+
+export interface FirmQuotaSnapshot {
+  plan: "firm";
+  aiRequests: FirmQuotaBucket;
+  cases: FirmQuotaBucket;
+  documents: FirmQuotaBucket;
+}
+
 export interface AdminTeam {
   id: string;
   name: string;
   active: boolean;
   memberCount?: number;
+  aiRequestsLimit?: number | null;
+  casesLimit?: number | null;
+  documentsLimit?: number | null;
+  aiRequestsUsed?: number;
+  firmQuota?: FirmQuotaSnapshot;
   createdAt: string;
 }
 
@@ -390,14 +511,25 @@ export async function createCase(input: {
   status?: LegalCaseRecord["status"];
   partySide?: LegalCaseRecord["partySide"];
   notes?: string;
+  courtType: import("@/lib/sajilokanun/court-type").CourtType;
+  courtId?: string;
+  courtCode?: string;
   assignedMemberIds?: string[];
+  documentExtraction?: {
+    facts: import("@/lib/sajilokanun/document-prompts").ExtractedCaseDocument;
+    sourceFileNames?: string[];
+    model?: string;
+  };
 }): Promise<LegalCaseRecord> {
   const res = await skAuthedFetch("/api/sajilokanun-auth/cases", {
     method: "POST",
     body: JSON.stringify(input),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to create case");
+  if (!res.ok) {
+    throwIfFirmQuotaResponse(res, data);
+    throw new Error(data.error ?? "Failed to create case");
+  }
   return data as LegalCaseRecord;
 }
 
@@ -410,6 +542,9 @@ export async function updateCase(
     status: LegalCaseRecord["status"];
     partySide: LegalCaseRecord["partySide"];
     notes: string;
+    courtType: import("@/lib/sajilokanun/court-type").CourtType;
+    courtId: string;
+    courtCode: string;
     assignedMemberIds: string[];
   }>
 ): Promise<LegalCaseRecord> {
@@ -763,6 +898,65 @@ export async function fetchCaseActivities(
   return (data.activities ?? []) as CaseActivityRecord[];
 }
 
+export interface CasePesiColumn {
+  key: string;
+  labelNe: string;
+  labelEn: string;
+}
+
+export interface CasePesiRowRecord {
+  id: string;
+  caseId: string;
+  teamId: string;
+  courtScDailyId: number;
+  pesiDate: string;
+  sn: string;
+  caseNoRaw: string;
+  registrationDate: string;
+  matter: string;
+  parties: string;
+  fantawala: string;
+  signal: string;
+  priority: string;
+  remarks: string;
+  cells: string[];
+  fetchedAt: string;
+  fetchedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CasePesiListResponse {
+  columns: CasePesiColumn[];
+  courtScDailyId: number | null;
+  caseNo: string;
+  rows: CasePesiRowRecord[];
+  totalRowsScanned?: number;
+  matchedCount?: number;
+  fetchedAt?: string;
+}
+
+export async function fetchCasePesiRows(
+  caseId: string
+): Promise<CasePesiListResponse> {
+  const res = await skAuthedFetch(`/api/sajilokanun-auth/cases/${caseId}/pesi`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load pesi rows");
+  return data as CasePesiListResponse;
+}
+
+export async function fetchSupremeCourtPesiForCase(
+  caseId: string
+): Promise<CasePesiListResponse> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/cases/${caseId}/pesi/fetch`,
+    { method: "POST" }
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to fetch pesi");
+  return data as CasePesiListResponse;
+}
+
 export type DashboardActivityUrgency =
   | "overdue"
   | "today"
@@ -777,6 +971,25 @@ export interface DashboardActivityRecord extends CaseActivityRecord {
   caseStatus: LegalCaseRecord["status"];
   caseType: LegalCaseRecord["type"];
   partySide: LegalCaseRecord["partySide"];
+  courtName: string;
+  courtNameEn: string;
+}
+
+export interface DashboardPesiRecord extends CasePesiRowRecord {
+  urgency: DashboardActivityUrgency;
+  bsYear: number;
+  bsMonth: number;
+  bsDay: number;
+  activityType: "hearing_date";
+  labelEn: string;
+  labelNe: string;
+  caseTitle: string;
+  caseNo: string;
+  caseStatus: LegalCaseRecord["status"];
+  caseType: LegalCaseRecord["type"];
+  partySide: LegalCaseRecord["partySide"];
+  courtName: string;
+  courtNameEn: string;
 }
 
 export interface FirmActivityDashboard {
@@ -789,6 +1002,7 @@ export interface FirmActivityDashboard {
     openCases: number;
   };
   activities: DashboardActivityRecord[];
+  pesiRows: DashboardPesiRecord[];
 }
 
 export interface UnreadClientThread {
@@ -812,7 +1026,29 @@ export async function fetchFirmActivityDashboard(): Promise<FirmActivityDashboar
   const res = await skAuthedFetch("/api/sajilokanun-auth/dashboard/activities");
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Failed to load dashboard");
-  return data as FirmActivityDashboard;
+  const payload = data as FirmActivityDashboard;
+  return {
+    ...payload,
+    activities: payload.activities ?? [],
+    pesiRows: payload.pesiRows ?? [],
+  };
+}
+
+export interface FirmPesiRefreshResult {
+  casesProcessed: number;
+  casesSkipped: number;
+  matchedCount: number;
+  courtsFetched: number;
+  errors: { caseId: string; caseNo: string; error: string }[];
+}
+
+export async function refreshFirmDashboardPesi(): Promise<FirmPesiRefreshResult> {
+  const res = await skAuthedFetch("/api/sajilokanun-auth/dashboard/pesi/fetch", {
+    method: "POST",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to refresh court pesi");
+  return data as FirmPesiRefreshResult;
 }
 
 export async function fetchFirmUnreadMessages(): Promise<FirmUnreadMessages> {
@@ -820,6 +1056,39 @@ export async function fetchFirmUnreadMessages(): Promise<FirmUnreadMessages> {
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Failed to load unread messages");
   return data as FirmUnreadMessages;
+}
+
+export interface CourtRecord {
+  id: string;
+  code: string;
+  category: CourtCategoryId;
+  categoryLabelEn: string;
+  categoryLabelNe: string;
+  name: string;
+  nameEn: string | null;
+  scDailyId: number | null;
+  scDailyUrl: string | null;
+  sortOrder: number;
+  active: boolean;
+}
+
+export interface CourtCategoryGroup {
+  id: CourtCategoryId;
+  labelEn: string;
+  labelNe: string;
+  courts: CourtRecord[];
+}
+
+export interface CourtsCatalog {
+  categories: CourtCategoryGroup[];
+  courts: CourtRecord[];
+}
+
+export async function fetchCourtsCatalog(): Promise<CourtsCatalog> {
+  const res = await skAuthedFetch("/api/sajilokanun-auth/courts");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load courts");
+  return data as CourtsCatalog;
 }
 
 export async function createCaseActivity(
@@ -912,40 +1181,356 @@ export async function deleteCasePayment(
   return data as LegalCaseDetail;
 }
 
+export async function draftCaseDocument(options: {
+  kind: LegalCaseDocumentKind;
+  inputs: unknown;
+}): Promise<{ kind: LegalCaseDocumentKind; content: string }> {
+  const res = await fetch("/api/sajilokanun/generate-document", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      kind: options.kind,
+      inputs: options.inputs,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error ?? "Failed to draft document");
+  }
+  return data as { kind: LegalCaseDocumentKind; content: string };
+}
+
+export type ExtractDocumentFilePayload = {
+  fileName: string;
+  mimeType: string;
+  /** Raw base64 (no data: prefix required). */
+  data: string;
+};
+
+export async function extractCaseDocumentFacts(options: {
+  files: ExtractDocumentFilePayload[];
+}): Promise<{
+  extracted: import("@/lib/sajilokanun/document-prompts").ExtractedCaseDocument;
+  model: string;
+  fileNames: string[];
+}> {
+  const res = await fetch("/api/sajilokanun/extract-document", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ files: options.files }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error ?? "Failed to extract document facts");
+  }
+  return data;
+}
+
+export async function saveCaseDocumentExtraction(
+  caseId: string,
+  options: {
+    facts: import("@/lib/sajilokanun/document-prompts").ExtractedCaseDocument;
+    sourceFileNames?: string[];
+    model?: string;
+  }
+): Promise<LegalCaseDetail> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/cases/${caseId}/extraction`,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        facts: options.facts,
+        sourceFileNames: options.sourceFileNames ?? [],
+        model: options.model ?? "",
+      }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error ?? "Failed to save extraction");
+  }
+  return data as LegalCaseDetail;
+}
+
+export async function fileToBase64Payload(file: File): Promise<ExtractDocumentFilePayload> {
+  const buffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return {
+    fileName: file.name,
+    mimeType: file.type || "application/octet-stream",
+    data: btoa(binary),
+  };
+}
+
+export async function blobToBase64Payload(
+  blob: Blob,
+  fileName: string,
+  mimeType?: string
+): Promise<ExtractDocumentFilePayload> {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return {
+    fileName,
+    mimeType: mimeType || blob.type || "application/octet-stream",
+    data: btoa(binary),
+  };
+}
+
+export type SkPublishedDocumentTemplate = {
+  id: string;
+  slug: string;
+  name: { en: string; ne: string; roman?: string };
+  description: { en: string; ne: string };
+  courtType: import("@/lib/sajilokanun/court-type").CourtType;
+  documentKind: string;
+  documentKindTitle: string;
+  variables: Array<{
+    key: string;
+    label: { en: string; ne: string };
+    type: "text" | "date" | "number";
+    required: boolean;
+  }>;
+  fileType: "docx" | "pdf";
+  originalFileName: string;
+  status: "draft" | "published";
+  hasFile: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** Published templates for the given court tier (firm Document Generator). */
+export async function fetchSkDocumentTemplates(
+  courtType: import("@/lib/sajilokanun/court-type").CourtType
+): Promise<SkPublishedDocumentTemplate[]> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/document-templates?courtType=${encodeURIComponent(courtType)}`
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error ?? "Failed to load document templates");
+  }
+  return data as SkPublishedDocumentTemplate[];
+}
+
+export type SkTemplateFormField = {
+  key: string;
+  label: { en: string; ne: string };
+  type: "text" | "date" | "number";
+  required: boolean;
+};
+
+export async function fetchSkTemplateFields(templateId: string): Promise<{
+  placeholderKeys: string[];
+  userFields: SkTemplateFormField[];
+}> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/document-templates/${templateId}/fields`
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load template fields");
+  return data as { placeholderKeys: string[]; userFields: SkTemplateFormField[] };
+}
+
+async function fetchSkDocumentBlob(
+  path: string,
+  body: unknown
+): Promise<{ blob: Blob; fileName: string }> {
+  const token = getSajiloKanunToken();
+  if (!token) throw new Error("Not signed in");
+  const res = await fetch(path, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throwIfFirmQuotaResponse(res, data);
+    throw new Error(data.error ?? "Failed to generate document");
+  }
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/i);
+  const fileName = match?.[1]
+    ? decodeURIComponent(match[1])
+    : "document.docx";
+  return { blob: await res.blob(), fileName };
+}
+
+export async function previewSkCaseDocument(input: {
+  caseId: string;
+  templateId: string;
+  variables: Record<string, string>;
+}): Promise<{ blob: Blob; fileName: string }> {
+  return fetchSkDocumentBlob(
+    `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/preview`,
+    { templateId: input.templateId, variables: input.variables }
+  );
+}
+
+export async function generateSkCaseDocument(input: {
+  caseId: string;
+  templateId: string;
+  variables: Record<string, string>;
+}): Promise<{ blob: Blob; fileName: string }> {
+  return fetchSkDocumentBlob(
+    `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/generate`,
+    { templateId: input.templateId, variables: input.variables }
+  );
+}
+
+export async function saveSkCaseDocument(input: {
+  caseId: string;
+  templateId: string;
+  variables: Record<string, string>;
+}): Promise<{ upload: CaseUploadedDocumentRecord; fileName: string }> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/save`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        templateId: input.templateId,
+        variables: input.variables,
+      }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    throwIfFirmQuotaResponse(res, data);
+    throw new Error(data.error ?? "Failed to save document to case files");
+  }
+  return {
+    upload: data.upload as CaseUploadedDocumentRecord,
+    fileName: String(data.fileName ?? "document.docx"),
+  };
+}
+
 export async function generateCaseDocument(
   caseId: string,
-  kind: LegalCaseDocumentKind
+  kind: LegalCaseDocumentKind,
+  options?: { content?: string }
 ): Promise<LegalCaseDetail> {
   const res = await skAuthedFetch(
     `/api/sajilokanun-auth/cases/${caseId}/documents/generate`,
     {
       method: "POST",
-      body: JSON.stringify({ kind }),
+      body: JSON.stringify({
+        kind,
+        ...(options?.content ? { content: options.content } : {}),
+      }),
     }
   );
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to generate document");
+  if (!res.ok) {
+    throwIfFirmQuotaResponse(res, data);
+    throw new Error(data.error ?? "Failed to generate document");
+  }
   return data as LegalCaseDetail;
 }
+
+export async function saveGeneratedDocumentToCaseFiles(
+  caseId: string,
+  documentId: string
+): Promise<LegalCaseDetail> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/cases/${caseId}/documents/${documentId}/save-to-files`,
+    { method: "POST" }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    throwIfFirmQuotaResponse(res, data);
+    throw new Error(data.error ?? "Failed to save draft to case files");
+  }
+  return data as LegalCaseDetail;
+}
+
+export async function exportCaseFilesZip(
+  caseId: string
+): Promise<{ blob: Blob; fileName: string }> {
+  const res = await skAuthedFetch(`/api/sajilokanun-auth/cases/${caseId}/export`);
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(
+      (data as { error?: string }).error ?? "Failed to export case files"
+    );
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const asciiMatch = disposition.match(/filename="([^"]+)"/i);
+  const fileName = utfMatch
+    ? decodeURIComponent(utfMatch[1])
+    : asciiMatch?.[1] ?? "case-files.zip";
+  return { blob, fileName };
+}
+
+function shareInflight<T>(
+  holder: { current: Promise<T> | null },
+  run: () => Promise<T>
+): Promise<T> {
+  if (!holder.current) {
+    holder.current = run().finally(() => {
+      holder.current = null;
+    });
+  }
+  return holder.current;
+}
+
+const teamsListInflight: { current: Promise<AdminTeam[]> | null } = {
+  current: null,
+};
+const directoryInflight: { current: Promise<DirectoryPerson[]> | null } = {
+  current: null,
+};
+const geminiKeysInflight: { current: Promise<GeminiApiKeyRecord[]> | null } = {
+  current: null,
+};
 
 export async function adminFetchTeams(options?: {
   search?: string;
 }): Promise<AdminTeam[]> {
-  const { authedFetch } = await import("@/lib/auth");
-  const params = new URLSearchParams();
-  if (options?.search?.trim()) params.set("search", options.search.trim());
-  const query = params.toString();
-  const res = await authedFetch(`/admin/teams${query ? `?${query}` : ""}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to load teams");
-  return data as AdminTeam[];
+  const search = options?.search?.trim();
+  const run = async () => {
+    const { authedFetch } = await import("@/lib/auth");
+    const params = new URLSearchParams();
+    if (search) params.set("search", search);
+    const query = params.toString();
+    const res = await authedFetch(`/admin/teams${query ? `?${query}` : ""}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Failed to load teams");
+    return data as AdminTeam[];
+  };
+  return search ? run() : shareInflight(teamsListInflight, run);
 }
 
-export async function adminCreateTeam(name: string): Promise<AdminTeam> {
+export async function adminCreateTeam(
+  name: string,
+  quotas?: {
+    aiRequestsLimit?: number | null;
+    casesLimit?: number | null;
+    documentsLimit?: number | null;
+  }
+): Promise<AdminTeam> {
   const { authedFetch } = await import("@/lib/auth");
   const res = await authedFetch("/admin/teams", {
     method: "POST",
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({
+      name,
+      aiRequestsLimit: quotas?.aiRequestsLimit ?? null,
+      casesLimit: quotas?.casesLimit ?? null,
+      documentsLimit: quotas?.documentsLimit ?? null,
+    }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Failed to create team");
@@ -954,7 +1539,13 @@ export async function adminCreateTeam(name: string): Promise<AdminTeam> {
 
 export async function adminUpdateTeam(
   id: string,
-  input: { name?: string; active?: boolean }
+  input: {
+    name?: string;
+    active?: boolean;
+    aiRequestsLimit?: number | null;
+    casesLimit?: number | null;
+    documentsLimit?: number | null;
+  }
 ): Promise<AdminTeam> {
   const { authedFetch } = await import("@/lib/auth");
   const res = await authedFetch(`/admin/teams/${id}`, {
@@ -974,6 +1565,28 @@ export async function adminFetchTeamAccounts(teamId: string): Promise<TeamMember
   return data as TeamMember[];
 }
 
+export async function adminFetchTeamUsage(
+  teamId: string,
+  options?: { limit?: number; offset?: number; userId?: string }
+): Promise<UsageLogResponse> {
+  const { authedFetch } = await import("@/lib/auth");
+  const params = new URLSearchParams();
+  if (options?.limit != null) params.set("limit", String(options.limit));
+  if (options?.offset != null) params.set("offset", String(options.offset));
+  if (options?.userId?.trim()) params.set("userId", options.userId.trim());
+  const query = params.toString();
+  const res = await authedFetch(
+    `/admin/teams/${teamId}/usage${query ? `?${query}` : ""}`
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load team usage");
+  return {
+    summary: data.summary ?? data.usage,
+    requests: data.requests ?? [],
+    hasMore: Boolean(data.hasMore),
+  } as UsageLogResponse;
+}
+
 export async function adminFetchAllAccounts(options?: {
   role?: "admin" | "member";
 }): Promise<TeamMember[]> {
@@ -988,11 +1601,13 @@ export async function adminFetchAllAccounts(options?: {
 }
 
 export async function adminFetchDirectory(): Promise<DirectoryPerson[]> {
-  const { authedFetch } = await import("@/lib/auth");
-  const res = await authedFetch("/admin/directory");
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to load members directory");
-  return data as DirectoryPerson[];
+  return shareInflight(directoryInflight, async () => {
+    const { authedFetch } = await import("@/lib/auth");
+    const res = await authedFetch("/admin/directory");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Failed to load members directory");
+    return Array.isArray(data) ? data : [];
+  });
 }
 
 export async function adminFetchRolePolicies(): Promise<{
@@ -1103,10 +1718,15 @@ export async function adminUpdateAccount(
   return data as TeamMember;
 }
 
+export type SajiloKanunLoginResult =
+  | { kind: "sajilo_kanun"; token: string; user: SajiloKanunUser }
+  | { kind: "platform"; token: string; redirect: string }
+  | { kind: "citizen"; redirect: string };
+
 export async function loginSajiloKanun(
   username: string,
   password: string
-): Promise<{ token: string; user: SajiloKanunUser }> {
+): Promise<SajiloKanunLoginResult> {
   const res = await fetch("/api/sajilokanun-auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -1118,8 +1738,28 @@ export async function loginSajiloKanun(
     throw new Error(data.error ?? "Login failed");
   }
 
+  if (data.kind === "platform" && typeof data.token === "string") {
+    const { setToken } = await import("@/lib/auth");
+    setToken(data.token);
+    return {
+      kind: "platform",
+      token: data.token,
+      redirect: typeof data.redirect === "string" ? data.redirect : "/admin",
+    };
+  }
+
+  if (data.kind === "citizen" && typeof data.token === "string" && typeof data.sajiloKanunToken === "string") {
+    const { setToken } = await import("@/lib/auth");
+    setToken(data.token);
+    setSajiloKanunToken(data.sajiloKanunToken);
+    return {
+      kind: "citizen",
+      redirect: typeof data.redirect === "string" ? data.redirect : "/sajilokanun/chat",
+    };
+  }
+
   setSajiloKanunToken(data.token);
-  return data as { token: string; user: SajiloKanunUser };
+  return data as { kind: "sajilo_kanun"; token: string; user: SajiloKanunUser };
 }
 
 export async function fetchSajiloKanunUsage(): Promise<UsageSummary> {
@@ -1228,14 +1868,17 @@ export interface GeminiApiKeyRecord {
 export async function adminFetchGeminiKeys(options?: {
   revealId?: string;
 }): Promise<GeminiApiKeyRecord[]> {
-  const { authedFetch } = await import("@/lib/auth");
-  const qs = options?.revealId
-    ? `?reveal=${encodeURIComponent(options.revealId)}`
-    : "";
-  const res = await authedFetch(`/admin/gemini-keys${qs}`);
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error ?? "Failed to load Gemini keys");
-  return (data.keys ?? []) as GeminiApiKeyRecord[];
+  const run = async () => {
+    const { authedFetch } = await import("@/lib/auth");
+    const qs = options?.revealId
+      ? `?reveal=${encodeURIComponent(options.revealId)}`
+      : "";
+    const res = await authedFetch(`/admin/gemini-keys${qs}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error ?? "Failed to load Gemini keys");
+    return (data.keys ?? []) as GeminiApiKeyRecord[];
+  };
+  return options?.revealId ? run() : shareInflight(geminiKeysInflight, run);
 }
 
 export async function adminCreateGeminiKey(input: {

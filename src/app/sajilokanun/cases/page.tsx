@@ -1,21 +1,44 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CaseDetailPanel } from "@/components/sajilokanun/CaseDetailPanel";
+import { CaseRowMenu } from "@/components/sajilokanun/CaseRowMenu";
+import { SheetSelect } from "@/components/sajilokanun/SheetSelect";
 import { SajiloKanunAppShell } from "@/components/sajilokanun/SajiloKanunAppShell";
 import shellStyles from "@/components/sajilokanun/SajiloKanunAppShell.module.css";
 import { useLanguage } from "@/context/LanguageContext";
 import {
   createCase,
+  exportCaseFilesZip,
+  extractCaseDocumentFacts,
   fetchCases,
+  fetchCourtsCatalog,
   fetchSajiloKanunMe,
   fetchTeamMembers,
+  fileToBase64Payload,
+  isFirmQuotaError,
   updateCase,
+  uploadCaseDocument,
+  type CourtCategoryGroup,
+  type ExtractDocumentFilePayload,
   type LegalCaseRecord,
   type SajiloKanunUser,
   type TeamMember,
 } from "@/lib/sajilokanun-access";
+import { FirmQuotaReachedDialog } from "@/components/sajilokanun/FirmQuotaReachedDialog";
+import { CaseFamilyTree } from "@/components/sajilokanun/CaseFamilyTree";
+import {
+  normalizeExtractedCaseDocument,
+  type ExtractedCaseDocument,
+} from "@/lib/sajilokanun/document-prompts";
+import { mapExtractionToCaseDraft } from "@/lib/sajilokanun/map-extraction-to-case";
+import {
+  COURT_TYPE_META,
+  COURT_TYPES,
+  courtTypeFromCategory,
+  type CourtType,
+} from "@/lib/sajilokanun/court-type";
 import emiStyles from "@/components/user/emi.module.css";
 import pageStyles from "@/app/user.module.css";
 
@@ -35,13 +58,15 @@ const emptyForm = {
   status: "open" as LegalCaseRecord["status"],
   partySide: "plaintiff" as LegalCaseRecord["partySide"],
   notes: "",
+  courtType: "" as CourtType | "",
+  courtId: "",
   assignedMemberIds: [] as string[],
 };
 
 const CASES_PATH = "/sajilokanun/cases";
 
 export default function SajiloKanunCasesPage() {
-  const { msg } = useLanguage();
+  const { locale, msg } = useLanguage();
   const t = msg.sajilokanun.cases;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,6 +76,7 @@ export default function SajiloKanunCasesPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [courtCategories, setCourtCategories] = useState<CourtCategoryGroup[]>([]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -67,8 +93,72 @@ export default function SajiloKanunCasesPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
+  const [exportingCaseId, setExportingCaseId] = useState<string | null>(null);
+  const [quotaDialog, setQuotaDialog] = useState<{
+    kind: "cases" | "documents" | "ai";
+    used: number;
+    limit: number;
+  } | null>(null);
+  const [ocrExtracting, setOcrExtracting] = useState(false);
+  const [pendingExtraction, setPendingExtraction] = useState<{
+    facts: ExtractedCaseDocument;
+    sourceFileNames: string[];
+    model: string;
+    files: ExtractDocumentFilePayload[];
+  } | null>(null);
+  const ocrFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isAdmin = user?.role === "admin";
+
+  const courtOptions = useMemo(() => {
+    const catalogCategory = form.courtType
+      ? COURT_TYPE_META[form.courtType].catalogCategory
+      : null;
+    return courtCategories
+      .filter((group) =>
+        catalogCategory ? group.id === catalogCategory : true
+      )
+      .flatMap((group) => {
+        const groupLabel =
+          locale === "ne"
+            ? `${group.labelNe} · ${group.labelEn}`
+            : `${group.labelEn} · ${group.labelNe}`;
+        return group.courts.map((court) => ({
+          value: court.id,
+          label: court.name,
+          secondary: court.nameEn ?? undefined,
+          group: groupLabel,
+          searchText: [court.name, court.nameEn, group.labelEn, group.labelNe]
+            .filter(Boolean)
+            .join(" "),
+        }));
+      });
+  }, [courtCategories, form.courtType, locale]);
+
+  function formatCourtTypeLabel(courtType: CourtType | null | undefined) {
+    if (!courtType) return null;
+    const meta = COURT_TYPE_META[courtType];
+    return locale === "ne" ? meta.labelNe : meta.labelEn;
+  }
+
+  function formatCourtLabel(legalCase: LegalCaseRecord) {
+    const typeLabel = formatCourtTypeLabel(
+      legalCase.courtType ?? courtTypeFromCategory(legalCase.courtCategory)
+    );
+    if (!legalCase.courtName && !legalCase.courtNameEn) {
+      return typeLabel;
+    }
+    const name =
+      legalCase.courtName && legalCase.courtNameEn
+        ? locale === "ne"
+          ? `${legalCase.courtName} · ${legalCase.courtNameEn}`
+          : `${legalCase.courtNameEn} · ${legalCase.courtName}`
+        : legalCase.courtName || legalCase.courtNameEn || null;
+    if (typeLabel && name && !name.includes(typeLabel)) {
+      return `${typeLabel} — ${name}`;
+    }
+    return name || typeLabel;
+  }
 
   useEffect(() => {
     const caseId = searchParams.get("case");
@@ -122,8 +212,12 @@ export default function SajiloKanunCasesPage() {
         const me = await fetchSajiloKanunMe();
         setUser(me);
         if (me.role === "admin") {
-          const teamMembers = await fetchTeamMembers();
+          const [teamMembers, courtsCatalog] = await Promise.all([
+            fetchTeamMembers(),
+            fetchCourtsCatalog(),
+          ]);
           setMembers(teamMembers.filter((m) => m.role === "member" && m.active));
+          setCourtCategories(courtsCatalog.categories);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : t.initError);
@@ -160,12 +254,14 @@ export default function SajiloKanunCasesPage() {
   function resetForm() {
     setEditingId(null);
     setForm(emptyForm);
+    setPendingExtraction(null);
     setShowForm(false);
   }
 
   function openAddForm() {
     setEditingId(null);
     setForm(emptyForm);
+    setPendingExtraction(null);
     setError("");
     setSelectedCaseId(null);
     setShowForm(true);
@@ -176,6 +272,7 @@ export default function SajiloKanunCasesPage() {
 
   function startEdit(legalCase: LegalCaseRecord) {
     setEditingId(legalCase.id);
+    setPendingExtraction(null);
     setForm({
       title: legalCase.title,
       caseNo: legalCase.caseNo,
@@ -184,6 +281,11 @@ export default function SajiloKanunCasesPage() {
       partySide:
         legalCase.partySide === "defendant" ? "defendant" : "plaintiff",
       notes: legalCase.notes,
+      courtType:
+        legalCase.courtType ??
+        courtTypeFromCategory(legalCase.courtCategory) ??
+        "",
+      courtId: legalCase.courtId ?? "",
       assignedMemberIds: legalCase.assignedMemberIds,
     });
     setError("");
@@ -194,10 +296,63 @@ export default function SajiloKanunCasesPage() {
     }
   }
 
+  async function handleOcrFiles(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    setError("");
+    setOcrExtracting(true);
+    try {
+      const files = await Promise.all(
+        Array.from(fileList).slice(0, 8).map((file) => fileToBase64Payload(file))
+      );
+      const result = await extractCaseDocumentFacts({ files });
+      const facts = normalizeExtractedCaseDocument(result.extracted);
+      const draft = mapExtractionToCaseDraft(facts, courtCategories);
+      setForm((f) => ({
+        ...f,
+        title: draft.title ?? f.title,
+        caseNo: draft.caseNo ?? f.caseNo,
+        notes: draft.notes ?? f.notes,
+        courtType: draft.courtType ?? f.courtType,
+        courtId: draft.courtId ?? (draft.courtType === "supreme" ? "" : f.courtId),
+      }));
+      setPendingExtraction({
+        facts,
+        sourceFileNames: result.fileNames,
+        model: result.model,
+        files,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.saveError);
+    } finally {
+      setOcrExtracting(false);
+      if (ocrFileInputRef.current) ocrFileInputRef.current.value = "";
+    }
+  }
+
   function openCaseDetail(legalCase: LegalCaseRecord) {
     setShowForm(false);
     setSelectedCaseId(legalCase.id);
     router.push(`${CASES_PATH}?case=${encodeURIComponent(legalCase.id)}`);
+  }
+
+  async function handleExportCase(caseId: string) {
+    setExportingCaseId(caseId);
+    setError("");
+    try {
+      const { blob, fileName } = await exportCaseFilesZip(caseId);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.detailError);
+    } finally {
+      setExportingCaseId(null);
+    }
   }
 
   function toggleAssignee(memberId: string) {
@@ -213,15 +368,60 @@ export default function SajiloKanunCasesPage() {
     e.preventDefault();
     if (!isAdmin) return;
     setError("");
+    if (!form.courtType) {
+      setError(t.courtTypeRequired);
+      return;
+    }
+    if (form.courtType !== "supreme" && !form.courtId.trim()) {
+      setError(t.courtRequired);
+      return;
+    }
     try {
+      const payload = {
+        ...form,
+        courtType: form.courtType,
+        courtId: form.courtType === "supreme" ? undefined : form.courtId,
+        ...(editingId || !pendingExtraction
+          ? {}
+          : {
+              documentExtraction: {
+                facts: pendingExtraction.facts,
+                sourceFileNames: pendingExtraction.sourceFileNames,
+                model: pendingExtraction.model,
+              },
+            }),
+      };
       if (editingId) {
-        await updateCase(editingId, form);
+        await updateCase(editingId, payload);
       } else {
-        await createCase(form);
+        const created = await createCase(payload);
+        if (pendingExtraction?.files.length) {
+          const uploadErrors: string[] = [];
+          for (const file of pendingExtraction.files) {
+            try {
+              await uploadCaseDocument(created.id, file);
+            } catch (uploadErr) {
+              uploadErrors.push(
+                uploadErr instanceof Error ? uploadErr.message : file.fileName
+              );
+            }
+          }
+          if (uploadErrors.length) {
+            console.warn("[create-case] OCR source upload issues:", uploadErrors);
+          }
+        }
       }
       resetForm();
       await loadCases();
     } catch (err) {
+      if (isFirmQuotaError(err) && err.code === "firm_case_quota") {
+        setQuotaDialog({
+          kind: "cases",
+          used: err.used,
+          limit: err.limit,
+        });
+        return;
+      }
       setError(err instanceof Error ? err.message : t.saveError);
     }
   }
@@ -258,6 +458,15 @@ export default function SajiloKanunCasesPage() {
       title={t.title}
       subtitle={isAdmin ? t.subtitleAdmin : t.subtitleMember}
     >
+      {quotaDialog ? (
+        <FirmQuotaReachedDialog
+          kind={quotaDialog.kind}
+          used={quotaDialog.used}
+          limit={quotaDialog.limit}
+          labels={msg.sajilokanun.quotaAlert}
+          onClose={() => setQuotaDialog(null)}
+        />
+      ) : null}
       <div className={shellStyles.panelStack}>
         {error && <p className={pageStyles.contactError}>{error}</p>}
 
@@ -294,6 +503,68 @@ export default function SajiloKanunCasesPage() {
               </button>
             </div>
 
+            {!editingId ? (
+              <div className={emiStyles.emiField}>
+                <label>{t.ocrUploadLabel}</label>
+                <p className={emiStyles.emiFieldHint} style={{ marginTop: 0 }}>
+                  {t.ocrUploadHint}
+                </p>
+                <input
+                  ref={ocrFileInputRef}
+                  type="file"
+                  accept="image/*,application/pdf"
+                  multiple
+                  hidden
+                  onChange={(e) => void handleOcrFiles(e.target.files)}
+                />
+                <div className={emiStyles.emiPresets} style={{ marginTop: "0.35rem" }}>
+                  <button
+                    type="button"
+                    className={emiStyles.emiPreset}
+                    disabled={ocrExtracting}
+                    onClick={() => ocrFileInputRef.current?.click()}
+                  >
+                    {ocrExtracting ? t.ocrExtracting : t.ocrUploadButton}
+                  </button>
+                  {pendingExtraction ? (
+                    <button
+                      type="button"
+                      className={emiStyles.emiPreset}
+                      onClick={() => setPendingExtraction(null)}
+                    >
+                      {t.ocrClear}
+                    </button>
+                  ) : null}
+                </div>
+                {pendingExtraction ? (
+                  <p className={emiStyles.emiFieldHint} style={{ marginTop: "0.5rem" }}>
+                    {t.ocrSuccess}{" "}
+                    {t.ocrFilesSelected.replace(
+                      "{n}",
+                      String(pendingExtraction.sourceFileNames.length)
+                    )}
+                  </p>
+                ) : null}
+                {pendingExtraction?.facts.वंशावली.व्यक्तिहरू.length ? (
+                  <div style={{ marginTop: "0.75rem" }}>
+                    <CaseFamilyTree
+                      tree={pendingExtraction.facts.वंशावली}
+                      labels={{
+                        title: t.familyTreeTitle,
+                        empty: t.familyTreeEmpty,
+                        generation: t.familyTreeGeneration,
+                        relation: t.familyTreeRelation,
+                        sidePlaintiff: t.familyTreeSidePlaintiff,
+                        sideDefendant: t.familyTreeSideDefendant,
+                        sideOther: t.familyTreeSideOther,
+                        sourceNote: t.familyTreeSourceNote,
+                      }}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className={emiStyles.emiField}>
               <label htmlFor="case-title">{t.titleLabel}</label>
               <input
@@ -316,6 +587,54 @@ export default function SajiloKanunCasesPage() {
                 required
               />
             </div>
+            <div className={emiStyles.emiField}>
+              <label htmlFor="case-court-type">{t.courtTypeLabel}</label>
+              <select
+                id="case-court-type"
+                className={emiStyles.emiNumberInput}
+                value={form.courtType}
+                required
+                onChange={(e) => {
+                  const courtType = e.target.value as CourtType | "";
+                  setForm((f) => ({
+                    ...f,
+                    courtType,
+                    courtId: "",
+                  }));
+                }}
+              >
+                <option value="">{t.courtTypePlaceholder}</option>
+                {COURT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {locale === "ne"
+                      ? COURT_TYPE_META[type].labelNe
+                      : `${COURT_TYPE_META[type].labelNe} (${COURT_TYPE_META[type].labelEn})`}
+                  </option>
+                ))}
+              </select>
+              <p className={emiStyles.emiFieldHint}>{t.courtTypeHint}</p>
+            </div>
+            {form.courtType && form.courtType !== "supreme" ? (
+              <div className={emiStyles.emiField}>
+                <SheetSelect
+                  label={t.courtLabel}
+                  name="courtId"
+                  required
+                  searchable
+                  value={form.courtId}
+                  options={courtOptions}
+                  placeholder={t.courtPlaceholder}
+                  searchPlaceholder={t.courtSearchPlaceholder}
+                  emptySearchLabel={t.courtSearchEmpty}
+                  onChange={(courtId) => setForm((f) => ({ ...f, courtId }))}
+                />
+                <p className={emiStyles.emiFieldHint}>{t.courtHint}</p>
+              </div>
+            ) : form.courtType === "supreme" ? (
+              <p className={emiStyles.emiFieldHint}>
+                {t.supremeCourtFixedHint}
+              </p>
+            ) : null}
             <div className={emiStyles.emiField}>
               <label>{t.partySideLabel}</label>
               <p className={emiStyles.emiFieldHint} style={{ marginTop: 0 }}>
@@ -557,6 +876,14 @@ export default function SajiloKanunCasesPage() {
                         <span className="font-medium">
                           {partyLabels[legalCase.partySide ?? "plaintiff"]}
                         </span>
+                        {legalCase.courtName || legalCase.courtNameEn ? (
+                          <>
+                            {" · "}
+                            <span className="font-medium">
+                              {formatCourtLabel(legalCase)}
+                            </span>
+                          </>
+                        ) : null}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -581,6 +908,14 @@ export default function SajiloKanunCasesPage() {
                           {t.edit}
                         </button>
                       )}
+                      <CaseRowMenu
+                        menuLabel={t.caseMenu}
+                        exportLabel={t.exportCase}
+                        exportingLabel={t.exportingCase}
+                        exporting={exportingCaseId === legalCase.id}
+                        disabled={exportingCaseId !== null}
+                        onExport={() => void handleExportCase(legalCase.id)}
+                      />
                     </div>
                   </div>
                   {legalCase.notes && (

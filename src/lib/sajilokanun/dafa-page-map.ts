@@ -2,6 +2,7 @@ import civilCode from "@/data/sajilokanun/dafa-page-map/civil-code.json";
 import civilProcedure from "@/data/sajilokanun/dafa-page-map/civil-procedure.json";
 import criminalCode from "@/data/sajilokanun/dafa-page-map/criminal-code.json";
 import criminalProcedure from "@/data/sajilokanun/dafa-page-map/criminal-procedure.json";
+import electronicTransactions from "@/data/sajilokanun/dafa-page-map/electronic-transactions.json";
 import { toArabicDigits } from "./nepali-digits";
 
 type DafaPageMapFile = {
@@ -14,6 +15,7 @@ const PAGE_MAPS: Record<string, Record<string, number>> = {
   "civil-procedure": (civilProcedure as DafaPageMapFile).map,
   "criminal-code": (criminalCode as DafaPageMapFile).map,
   "criminal-procedure": (criminalProcedure as DafaPageMapFile).map,
+  "electronic-transactions": (electronicTransactions as DafaPageMapFile).map,
 };
 
 export function lookupDafaPage(

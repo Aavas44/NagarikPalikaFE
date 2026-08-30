@@ -179,7 +179,11 @@ function RequestCard({
   );
 }
 
-export function TokenUsageLogPanel() {
+export function TokenUsageLogPanel({
+  hideRecentRequests = false,
+}: {
+  hideRecentRequests?: boolean;
+} = {}) {
   const { locale, msg } = useLanguage();
   const labels = msg.sajilokanun.usageLog;
   const [log, setLog] = useState<UsageLogResponse | null>(null);
@@ -192,9 +196,12 @@ export function TokenUsageLogPanel() {
       if (append) setLoadingMore(true);
       else setLoading(true);
 
-      const next = await fetchSajiloKanunUsageLog({ limit: 30, offset });
+      const next = await fetchSajiloKanunUsageLog({
+        limit: hideRecentRequests ? 1 : 30,
+        offset: hideRecentRequests ? 0 : offset,
+      });
       setLog((current) =>
-        append && current
+        append && current && !hideRecentRequests
           ? {
               ...next,
               requests: [...current.requests, ...next.requests],
@@ -208,7 +215,7 @@ export function TokenUsageLogPanel() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [labels.loadError]);
+  }, [hideRecentRequests, labels.loadError]);
 
   useEffect(() => {
     void load();
@@ -319,42 +326,48 @@ export function TokenUsageLogPanel() {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold text-[var(--foreground)]">{labels.recentRequests}</h2>
-        <Link
-          href="/sajilokanun/chat"
-          className="text-xs font-medium text-[var(--primary)] hover:underline"
-        >
-          {labels.backToChat}
-        </Link>
-      </div>
+      {!hideRecentRequests && (
+        <>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold text-[var(--foreground)]">
+              {labels.recentRequests}
+            </h2>
+            <Link
+              href="/sajilokanun/chat"
+              className="text-xs font-medium text-[var(--primary)] hover:underline"
+            >
+              {labels.backToChat}
+            </Link>
+          </div>
 
-      {requests.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-10 text-center text-sm text-[var(--muted)]">
-          {labels.empty}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {requests.map((request) => (
-            <RequestCard
-              key={request.requestId}
-              request={request}
-              locale={locale}
-              labels={labels}
-            />
-          ))}
-        </div>
-      )}
+          {requests.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] px-4 py-10 text-center text-sm text-[var(--muted)]">
+              {labels.empty}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {requests.map((request) => (
+                <RequestCard
+                  key={request.requestId}
+                  request={request}
+                  locale={locale}
+                  labels={labels}
+                />
+              ))}
+            </div>
+          )}
 
-      {log?.hasMore && (
-        <button
-          type="button"
-          onClick={() => void load(requests.length, true)}
-          disabled={loadingMore}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--surface-muted)] disabled:opacity-60"
-        >
-          {loadingMore ? labels.loadingMore : labels.loadMore}
-        </button>
+          {log?.hasMore && (
+            <button
+              type="button"
+              onClick={() => void load(requests.length, true)}
+              disabled={loadingMore}
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-sm font-medium text-[var(--primary)] transition-colors hover:bg-[var(--surface-muted)] disabled:opacity-60"
+            >
+              {loadingMore ? labels.loadingMore : labels.loadMore}
+            </button>
+          )}
+        </>
       )}
     </div>
   );

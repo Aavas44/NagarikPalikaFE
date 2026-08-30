@@ -8,11 +8,11 @@ import {
 export type NormalizeBookRequest = {
   /** Single book id, or "auto" for all indexed books. */
   bookScope: BookScope;
-  /** All book ids in scope (4 when auto). */
+  /** All book ids in scope (every indexed book when auto). */
   bookIds: string[];
 };
 
-/** Parse normalize-query `book` / `books` — auto expands to all 4 lawComission books. */
+/** Parse normalize-query `book` / `books` — auto expands to all indexed lawComission books. */
 export function parseNormalizeBookRequest(
   book: unknown,
   books?: unknown

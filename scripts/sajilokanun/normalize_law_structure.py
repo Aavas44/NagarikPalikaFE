@@ -8,8 +8,8 @@ Depth convention (2 spaces per level):
   2 — खण्ड
 
 Usage:
-  python scripts/normalize_law_structure.py --book criminal-procedure --write
-  python scripts/normalize_law_structure.py --all --check
+  python scripts/sajilokanun/normalize_law_structure.py --book criminal-procedure --write
+  python scripts/sajilokanun/normalize_law_structure.py --all --check
 """
 
 from __future__ import annotations
@@ -37,13 +37,14 @@ from parse_nepali_law import (
     TAR_RE,
     UPADafa_RE,
     extract_dafa_title,
+    is_inline_parichhed_ref,
     iter_logical_lines,
     normalize_whitespace,
     to_arabic_digits,
     to_devanagari_digits,
 )
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent.parent.parent
 LAWFILES = ROOT / "Lawfiles"
 STRUCTURED_DIR = LAWFILES / "lawComission" / ".structured"
 REPORTS_DIR = STRUCTURED_DIR / "reports"
@@ -53,6 +54,7 @@ BOOK_SOURCES: dict[str, str] = {
     "civil-procedure": "lawComission/मुलुकी देवानी कार्यविधि (संहिता), २०७४.txt",
     "criminal-code": "lawComission/मुलुकी अपराध संहिता, २०७४.txt",
     "criminal-procedure": "lawComission/मुलुकी फौजदारी कार्यविधि संहिता, २०७४.txt",
+    "electronic-transactions": "lawComission/विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३.txt",
 }
 
 INDENT = "  "
@@ -105,27 +107,6 @@ def is_inline_bhag_ref(line: str) -> bool:
     if re.match(r"^भाग\s*[–\-]\s*[\d०-९]+\s+को", s):
         return True
     if re.match(r"^भाग\s+[\d०-९]+\s+को", s):
-        return True
-    return False
-
-
-def is_inline_parichhed_ref(line: str) -> bool:
-    """`परिच्छेद–१,` / `परिच्छेद–१८ को दफा` — enumeration, not a chapter header."""
-    s = line.strip()
-    if not re.match(r"^परिच्छेद\s*[–\-]", s):
-        return False
-    rest = re.sub(r"^परिच्छेद\s*[–\-]\s*[\d०-९]+\s*", "", s)
-    if not rest:
-        return False
-    if rest.startswith(","):
-        return True
-    if re.match(r"^र\s+[\d०-९]", rest):
-        return True
-    if re.match(r"^को\s+(दफा|उपदफा|प्रयोजन)", rest):
-        return True
-    if re.match(r"^को\s+", rest):
-        return True
-    if re.match(r"^[,.\s\d०-९]", rest):
         return True
     return False
 

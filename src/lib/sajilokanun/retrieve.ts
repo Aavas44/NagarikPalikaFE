@@ -3059,6 +3059,7 @@ export async function hydrateAdvocateSectionChunks(
   for (const { section, scope, boost } of targets.values()) {
     const raw = await retrieveScopedSectionsBatch([section], scope);
     const parts = dedupeAdvocateSectionParts(repairMisplacedUpadafaParts(raw));
+    if (parts.length === 0) continue;
     hydratedSectionKeys.add(`${scope}|${section}`);
     for (const part of parts) {
       if (!filenameMatchesScope(part.filename, scope)) continue;

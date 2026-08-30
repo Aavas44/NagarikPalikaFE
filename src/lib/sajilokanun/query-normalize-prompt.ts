@@ -1,5 +1,7 @@
 import { createHash } from "crypto";
 import {
+  ACT_ENGLISH_NAMES,
+  bookIdForNormalizeAct,
   formatDafaTaxonomyForPrompt,
   taxonomyPromptFingerprint,
   type NormalizeActId,
@@ -7,14 +9,7 @@ import {
 
 export type { NormalizeActId };
 
-export const NORMALIZE_PROMPT_VERSION = "v31-logical-conclusion";
-
-const ACT_ENGLISH_NAMES: Record<NormalizeActId, string> = {
-  devani: "Muluki Devani Samhita 2074",
-  devani_karyavidhi: "Muluki Devani Karyavidhi Samhita 2074",
-  aparadh: "Muluki Aparadh Samhita 2074",
-  faujdari_karyavidhi: "Muluki Faujdari Karyavidhi Samhita 2074",
-};
+export const NORMALIZE_PROMPT_VERSION = "v32-electronic-transactions";
 
 const COLOQUIAL_MAPPINGS = `### Colloquial to Legal Mappings:
 - "jaggah micheko" / "जग्गा मिच्यो" -> जग्गा खिचोला, साँध सिमाना विवाद, सम्पत्ति सम्बन्धी व्यवस्था
@@ -28,7 +23,7 @@ const COLOQUIAL_MAPPINGS = `### Colloquial to Legal Mappings:
 - "false complaint" -> झुठ्ठा उजुरी
 - "bail" / "dharauti" -> धरौट/जमानत`;
 
-const PROMPT_CORE = `You are an expert Nepalese Legal AI Classifier specializing in the four fundamental Muluki Codes (2074). 
+const PROMPT_CORE = `You are an expert Nepalese Legal AI Classifier specializing in the Muluki Codes (2074) and the Electronic Transactions Act 2063.
 Your task is to take a user's natural language query (which may be in Romanized Nepali, colloquial Nepali, or English) and accurately map it to the precise governing act and specific section (दफा) for a dual-search Ensemble Retrieval System.
 
 ### Core Objectives:
@@ -47,7 +42,8 @@ ${COLOQUIAL_MAPPINGS}
 - "Muluki Devani Samhita 2074" (मुलुकी देवानी संहिता, २०७४) — Substantive civil matters (Property, contracts, family, torts).
 - "Muluki Devani Karyavidhi Samhita 2074" (मुलुकी देवानी कार्यविधि संहिता, २०७४) — Procedural civil matters (Filings, court fees, deadlines, limitations).
 - "Muluki Aparadh Samhita 2074" (मुलुकी अपराध संहिता, २०७४) — Substantive criminal matters (Offenses, public nuisance, theft, punishments).
-- "Muluki Faujdari Karyavidhi Samhita 2074" (मुलुकी फौजदारी कार्यविधि संहिता, २०७४) — Procedural criminal matters (FIR, investigation, arrest warrants, bail).`;
+- "Muluki Faujdari Karyavidhi Samhita 2074" (मुलुकी फौजदारी कार्यविधि संहिता, २०७४) — Procedural criminal matters (FIR, investigation, arrest warrants, bail).
+- "Electronic Transactions Act 2063" (विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३) — Electronic records, digital signatures, certifying authorities, computer/cyber offences, IT Tribunal.`;
 
 const SLIM_GUARDRAILS_AND_OUTPUT = `### CRITICAL EXECUTION RULES:
 1. FILL OUT THE "legal_analysis_workspace" FIRST. Document your step-by-step reasoning about the legal nature of the dispute, identify the governing statute, and evaluate the specific section context before setting the final parameters.
@@ -67,7 +63,7 @@ Output ONLY a single valid JSON object following this scheme. Do NOT wrap your o
   "legal_analysis_workspace": "Detailed look-up tracing matching input text to the estimated legal concepts and Act selection.",
   "optimized_query": "Formal error-free Devanagari translation of the question only (No English/Latin words, no legal jargon appended to the end)",
   "search_keywords": ["शब्द१", "शब्द२", "शब्द३"],
-  "act": "Exactly one of the four English Act names listed above",
+  "act": "Exactly one of the English Act names listed above",
   "matching_dafa_names": ["दफा ७३. आवश्यक वस्तु तोडफोड वा हानि, नोक्सानी गर्नपाउने नहुने ः"],
   "exact_dafa_guess": [73],
   "excluded_dafa_guess": [206, 227]
@@ -90,7 +86,7 @@ Output ONLY a single valid JSON object following this scheme. Do NOT wrap your o
   "legal_analysis_workspace": "Detailed look-up tracing matching input text to the provided taxonomy terms.",
   "optimized_query": "Formal error-free Devanagari translation of the question only (No English/Latin words, no legal jargon appended to the end)",
   "search_keywords": ["शब्द१", "शब्द२", "शब्द३"],
-  "act": "Exactly one of the four English Act names listed above",
+  "act": "Exactly one of the English Act names listed above",
   "matching_dafa_names": ["२४९. ठगी गर्न नहुने", "२५०. आपराधिक विश्वासघात गर्न नहुने"],
   "exact_dafa_guess": [249, 250],
   "excluded_dafa_guess": [206, 227]
@@ -142,15 +138,7 @@ ${SLIM_GUARDRAILS_AND_OUTPUT}`;
   }
 
   const taxonomy = formatDafaTaxonomyForPrompt(
-    bookScope ?? (bookAct === "devani"
-      ? "civil-code"
-      : bookAct === "devani_karyavidhi"
-        ? "civil-procedure"
-        : bookAct === "aparadh"
-          ? "criminal-code"
-          : bookAct === "faujdari_karyavidhi"
-            ? "criminal-procedure"
-            : "auto")
+    bookScope ?? (bookAct ? bookIdForNormalizeAct(bookAct) : "auto")
   );
 
   let prompt = `${PROMPT_CORE}

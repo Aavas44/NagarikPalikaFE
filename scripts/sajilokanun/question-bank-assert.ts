@@ -39,6 +39,8 @@ const BOOK_FILES: Record<string, string> = {
   "civil-code": "Lawfiles/lawComission/मुलुकी देवानी संहिता, २०७४.txt",
   "civil-procedure":
     "Lawfiles/lawComission/मुलुकी देवानी कार्यविधि (संहिता), २०७४.txt",
+  "electronic-transactions":
+    "Lawfiles/lawComission/विद्युतीय (इलेक्ट्रोनिक) कारोबार ऐन, २०६३.txt",
 };
 
 type ParsedQuestion = {
