@@ -9,6 +9,14 @@ const ALIGNMENT_STYLE_MAP = [
   "p[style-name='align-both'] => p.text-justify:fresh",
 ] as const;
 
+type MammothDocumentElement = {
+  type?: string;
+  alignment?: string | null;
+  styleName?: string | null;
+  children?: MammothDocumentElement[];
+  [key: string]: unknown;
+};
+
 function alignmentStyleName(alignment: string): string | null {
   if (alignment === "center" || alignment === "right" || alignment === "left") {
     return `align-${alignment}`;
@@ -19,25 +27,34 @@ function alignmentStyleName(alignment: string): string | null {
   return null;
 }
 
+/** Apply alignment-derived style names so mammoth styleMap can emit CSS classes. */
+function transformDocumentForAlignment(
+  element: MammothDocumentElement
+): MammothDocumentElement {
+  const children = element.children?.map(transformDocumentForAlignment);
+  const next: MammothDocumentElement = children
+    ? { ...element, children }
+    : { ...element };
+
+  if (next.type === "paragraph" && next.alignment) {
+    const styleName = alignmentStyleName(next.alignment);
+    if (styleName) {
+      return { ...next, styleName };
+    }
+  }
+
+  return next;
+}
+
 /**
  * Convert a filled DOCX blob to HTML for in-app preview, preserving paragraph alignment.
  */
 export async function docxToPreviewHtml(blob: Blob): Promise<string> {
   const arrayBuffer = await blob.arrayBuffer();
-  const transformDocument = mammoth.transforms.paragraph((element) => {
-    const styleName = element.alignment
-      ? alignmentStyleName(element.alignment)
-      : null;
-    if (styleName) {
-      return { ...element, styleName };
-    }
-    return element;
-  });
-
   const result = await mammoth.convertToHtml(
     { arrayBuffer },
     {
-      transformDocument,
+      transformDocument: transformDocumentForAlignment,
       styleMap: [...ALIGNMENT_STYLE_MAP],
     }
   );
