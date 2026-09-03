@@ -1,5 +1,10 @@
 import type { CourtType } from "@/lib/sajilokanun/court-type";
-import type { ExtractedCaseDocument } from "@/lib/sajilokanun/document-prompts/extract-case-document";
+import {
+  defendantParties,
+  plaintiffParties,
+  type ExtractedCaseDocument,
+  type ExtractedPartyDetails,
+} from "@/lib/sajilokanun/document-prompts/extract-case-document";
 import type { CourtCategoryGroup } from "@/lib/sajilokanun-access";
 
 export type CaseFormDraftFromExtraction = {
@@ -36,7 +41,6 @@ function scoreCourtMatch(query: string, candidate: string): number {
   if (!q || !c) return 0;
   if (q === c) return 100;
   if (c.includes(q) || q.includes(c)) return 80;
-  // token overlap for multi-word Nepali names
   const qParts = query.split(/\s+/).map(normalizeMatchText).filter((p) => p.length > 1);
   const hits = qParts.filter((p) => c.includes(p)).length;
   if (hits === 0) return 0;
@@ -68,6 +72,20 @@ export function matchCourtIdFromName(
   return best && best.score >= 40 ? best.id : null;
 }
 
+function formatPartyLine(label: string, party: ExtractedPartyDetails, index: number): string[] {
+  if (!party.पूरा_नाम) return [];
+  const lines = [
+    `${label} ${index + 1}: ${party.पूरा_नाम}${
+      party.तीनपुस्ते ? ` (${party.तीनपुस्ते})` : ""
+    }`,
+  ];
+  if (party.ठेगाना) lines.push(`${label} ${index + 1} ठेगाना: ${party.ठेगाना}`);
+  if (party.नागरिकता_नं) {
+    lines.push(`${label} ${index + 1} नागरिकता: ${party.नागरिकता_नं}`);
+  }
+  return lines;
+}
+
 /** Build notes from extracted vitals that do not map to dedicated case fields. */
 export function buildNotesFromExtraction(extracted: ExtractedCaseDocument): string {
   const lines: string[] = [];
@@ -75,19 +93,11 @@ export function buildNotesFromExtraction(extracted: ExtractedCaseDocument): stri
   if (court.दर्ता_मिति_वि_सं) {
     lines.push(`दर्ता मिति (वि.सं.): ${court.दर्ता_मिति_वि_सं}`);
   }
-  const plaintiff = extracted.वादी_विवरण;
-  if (plaintiff.पूरा_नाम) {
-    lines.push(
-      `वादी: ${plaintiff.पूरा_नाम}${plaintiff.तीनपुस्ते ? ` (${plaintiff.तीनपुस्ते})` : ""}`
-    );
-  }
-  if (plaintiff.ठेगाना) lines.push(`वादी ठेगाना: ${plaintiff.ठेगाना}`);
-  extracted.प्रतिवादी_विवरण.forEach((d, i) => {
-    if (!d.पूरा_नाम) return;
-    lines.push(
-      `प्रतिवादी ${i + 1}: ${d.पूरा_नाम}${d.तीनपुस्ते ? ` (${d.तीनपुस्ते})` : ""}`
-    );
-    if (d.ठेगाना) lines.push(`प्रतिवादी ${i + 1} ठेगाना: ${d.ठेगाना}`);
+  plaintiffParties(extracted).forEach((p, i) => {
+    lines.push(...formatPartyLine("वादी/निवेदक", p, i));
+  });
+  defendantParties(extracted).forEach((d, i) => {
+    lines.push(...formatPartyLine("प्रतिवादी/विपक्षी", d, i));
   });
   const facts = extracted.आर्थिक_तथा_तथ्य;
   if (facts.बिगो_रकम_रु != null) {
@@ -119,8 +129,8 @@ export function mapExtractionToCaseDraft(
       ? matchCourtIdFromName(courtName, courtCategories, courtType) ?? undefined
       : undefined;
 
-  const plaintiff = extracted.वादी_विवरण.पूरा_नाम?.trim();
-  const defendant = extracted.प्रतिवादी_विवरण.find((d) => d.पूरा_नाम)?.पूरा_नाम?.trim();
+  const plaintiff = plaintiffParties(extracted).find((p) => p.पूरा_नाम)?.पूरा_नाम?.trim();
+  const defendant = defendantParties(extracted).find((d) => d.पूरा_नाम)?.पूरा_नाम?.trim();
   const title =
     subject ||
     (plaintiff && defendant

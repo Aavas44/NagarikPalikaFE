@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import mammoth from "mammoth";
+import { docxToPreviewHtml } from "@/lib/sajilokanun/docx-to-preview-html";
 import {
   adminFetchSkTemplateFile,
   adminSaveSkTemplateContent,
@@ -50,9 +50,7 @@ export function AdminSajiloKanunTemplateEditor({
     setLoadError("");
     try {
       const blob = await adminFetchSkTemplateFile(template.id);
-      const arrayBuffer = await blob.arrayBuffer();
-      const result = await mammoth.convertToHtml({ arrayBuffer });
-      const value = result.value || "<p></p>";
+      const value = await docxToPreviewHtml(blob);
       setDraft(value);
       setBaseline(value);
       setLoaded(true);

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
-import { formatNpr } from "@/lib/emi";
+import { formatNpr, formatNprAmount } from "@/lib/emi";
 import {
   calculateSalaryTax,
   formatRate,
@@ -58,6 +58,7 @@ export function SalaryTaxCalculator() {
     createPeriodRow("65000", "5"),
   ]);
   const [bonus, setBonus] = useState("0");
+  const [otherTaxExemptAmount, setOtherTaxExemptAmount] = useState("0");
   const [ssf, setSsf] = useState("0");
   const [epf, setEpf] = useState("0");
   const [cit, setCit] = useState("0");
@@ -84,8 +85,20 @@ export function SalaryTaxCalculator() {
       incomeMode === "variable"
         ? (periodTotals?.totalSalaryIncome ?? 0)
         : parseAmount(monthlySalary) * effectiveMonths;
-    return salaryIncome + parseAmount(allowance) + parseAmount(bonus);
-  }, [incomeMode, periodTotals, monthlySalary, effectiveMonths, allowance, bonus]);
+    const gross = salaryIncome + parseAmount(allowance) + parseAmount(bonus);
+    const exempt =
+      fiscalYear === "2083-84" ? parseAmount(otherTaxExemptAmount) : 0;
+    return Math.max(0, gross - exempt);
+  }, [
+    incomeMode,
+    periodTotals,
+    monthlySalary,
+    effectiveMonths,
+    allowance,
+    bonus,
+    fiscalYear,
+    otherTaxExemptAmount,
+  ]);
 
   const result = useMemo(
     () =>
@@ -99,6 +112,8 @@ export function SalaryTaxCalculator() {
         months: effectiveMonths,
         salaryPeriods: incomeMode === "variable" ? parsedPeriods : undefined,
         bonus: parseAmount(bonus),
+        otherTaxExemptAmount:
+          fiscalYear === "2083-84" ? parseAmount(otherTaxExemptAmount) : 0,
         ssf: parseAmount(ssf),
         epf: parseAmount(epf),
         cit: parseAmount(cit),
@@ -116,6 +131,7 @@ export function SalaryTaxCalculator() {
       allowance,
       effectiveMonths,
       bonus,
+      otherTaxExemptAmount,
       ssf,
       epf,
       cit,
@@ -160,7 +176,11 @@ export function SalaryTaxCalculator() {
                 id="fiscal-year"
                 className={styles.emiNumberInput}
                 value={fiscalYear}
-                onChange={(e) => setFiscalYear(e.target.value as FiscalYear)}
+                onChange={(e) => {
+                  const nextYear = e.target.value as FiscalYear;
+                  setFiscalYear(nextYear);
+                  if (nextYear !== "2083-84") setOtherTaxExemptAmount("0");
+                }}
               >
                 <option value="2083-84">FY 2083/84</option>
                 <option value="2082-83">FY 2082/83</option>
@@ -353,6 +373,21 @@ export function SalaryTaxCalculator() {
               </div>
             </div>
 
+            {fiscalYear === "2083-84" ? (
+              <div className={styles.emiField}>
+                <label htmlFor="other-tax-exempt">{t.otherTaxExemptAmount}</label>
+                <p className={styles.emiFieldHint}>{t.otherTaxExemptAmountHint}</p>
+                <input
+                  id="other-tax-exempt"
+                  type="number"
+                  min="0"
+                  className={styles.emiNumberInput}
+                  value={otherTaxExemptAmount}
+                  onChange={(e) => setOtherTaxExemptAmount(e.target.value)}
+                />
+              </div>
+            ) : null}
+
             <div className={styles.emiComputedRow}>
               <span>{t.totalSalary}</span>
               <strong>{formatNpr(totalSalary)}</strong>
@@ -435,7 +470,7 @@ export function SalaryTaxCalculator() {
 
             <div className={`${styles.emiStat} ${styles.emiFadeCard} ${styles.emiStatAssessable}`}>
               <span className={styles.emiStatLabel}>{t.netAssessable}</span>
-              <span className={styles.emiStatValue}>{formatNpr(result.netAssessable)}</span>
+              <span className={styles.emiStatValue}>{formatNprAmount(result.netAssessable)}</span>
             </div>
 
             <div className={styles.emiTaxLiabilitySection}>
@@ -443,12 +478,14 @@ export function SalaryTaxCalculator() {
               <div className={styles.emiTaxLiabilityGrid}>
                 <div className={`${styles.emiTaxLiabilityBox} ${styles.emiFadeCard}`}>
                   <span className={styles.emiTaxLiabilityPeriod}>{t.annualTax}</span>
-                  <span className={styles.emiTaxLiabilityAmount}>{formatNpr(result.netTax)}</span>
+                  <span className={styles.emiTaxLiabilityAmount}>
+                    {formatNprAmount(result.netTax)}
+                  </span>
                 </div>
                 <div className={`${styles.emiTaxLiabilityBox} ${styles.emiFadeCard}`}>
                   <span className={styles.emiTaxLiabilityPeriod}>{t.monthlyTax}</span>
                   <span className={styles.emiTaxLiabilityAmount}>
-                    {formatNpr(result.monthlyTax)}
+                    {formatNprAmount(result.monthlyTax)}
                   </span>
                 </div>
               </div>
@@ -457,35 +494,43 @@ export function SalaryTaxCalculator() {
             <div className={styles.emiStatGrid}>
               <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
                 <span className={styles.emiStatLabel}>{t.totalIncome}</span>
-                <span className={styles.emiStatValue}>{formatNpr(result.totalIncome)}</span>
+                <span className={styles.emiStatValue}>{formatNprAmount(result.totalIncome)}</span>
               </div>
+              {result.appliedOtherTaxExempt > 0 ? (
+                <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
+                  <span className={styles.emiStatLabel}>{t.otherTaxExemptApplied}</span>
+                  <span className={styles.emiStatValue}>
+                    -{formatNprAmount(result.appliedOtherTaxExempt)}
+                  </span>
+                </div>
+              ) : null}
               <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
                 <span className={styles.emiStatLabel}>{t.totalDeduction}</span>
-                <span className={styles.emiStatValue}>{formatNpr(result.totalDeduction)}</span>
+                <span className={styles.emiStatValue}>{formatNprAmount(result.totalDeduction)}</span>
               </div>
               <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
                 <span className={styles.emiStatLabel}>{t.retirementApplied}</span>
                 <span className={styles.emiStatValue}>
-                  {formatNpr(result.appliedRetirement)}
+                  {formatNprAmount(result.appliedRetirement)}
                 </span>
               </div>
               <div className={`${styles.emiStat} ${styles.emiFadeCard}`}>
                 <span className={styles.emiStatLabel}>{t.lifeInsuranceApplied}</span>
                 <span className={styles.emiStatValue}>
-                  {formatNpr(result.appliedLifeInsurance)}
+                  {formatNprAmount(result.appliedLifeInsurance)}
                 </span>
               </div>
               <div className={`${styles.emiStat} ${styles.emiFadeCard} ${styles.emiStatFull}`}>
                 <span className={styles.emiStatLabel}>{t.medicalInsuranceApplied}</span>
                 <span className={styles.emiStatValue}>
-                  {formatNpr(result.appliedMedicalInsurance)}
+                  {formatNprAmount(result.appliedMedicalInsurance)}
                 </span>
               </div>
             </div>
 
             {result.femaleRebate > 0 && (
               <div className={styles.emiRebateNote}>
-                {t.femaleRebateApplied}: {formatNpr(result.femaleRebate)}
+                {t.femaleRebateApplied}: {formatNprAmount(result.femaleRebate)}
               </div>
             )}
           </div>

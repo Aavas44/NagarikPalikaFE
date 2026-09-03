@@ -21,6 +21,8 @@ export interface SalaryTaxInput {
   cit: number;
   lifeInsurance: number;
   medicalInsurance: number;
+  /** FY 2083/84 only — e.g. donations to PM National Relief Fund */
+  otherTaxExemptAmount?: number;
 }
 
 export function sumSalaryPeriods(periods: SalaryPeriod[]): {
@@ -72,6 +74,7 @@ export interface TaxSlabBreakdown {
 
 export interface SalaryTaxResult {
   totalIncome: number;
+  appliedOtherTaxExempt: number;
   appliedRetirement: number;
   appliedLifeInsurance: number;
   appliedMedicalInsurance: number;
@@ -204,7 +207,13 @@ function calculateSlabTax(
 
 export function calculateSalaryTax(input: SalaryTaxInput): SalaryTaxResult {
   const { salaryIncome, monthCount } = resolveSalaryIncome(input);
-  const totalIncome = Math.max(0, salaryIncome + input.allowance + input.bonus);
+  const grossIncome = Math.max(0, salaryIncome + input.allowance + input.bonus);
+
+  const appliedOtherTaxExempt =
+    input.fiscalYear === "2083-84"
+      ? Math.min(Math.max(0, input.otherTaxExemptAmount ?? 0), grossIncome)
+      : 0;
+  const totalIncome = Math.max(0, grossIncome - appliedOtherTaxExempt);
 
   const retirementCap = input.isSsfContributor ? 500_000 : 300_000;
   const retirementLimit = Math.min(retirementCap, totalIncome / 3);
@@ -241,6 +250,7 @@ export function calculateSalaryTax(input: SalaryTaxInput): SalaryTaxResult {
 
   return {
     totalIncome,
+    appliedOtherTaxExempt,
     appliedRetirement,
     appliedLifeInsurance,
     appliedMedicalInsurance,

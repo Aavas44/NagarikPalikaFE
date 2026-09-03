@@ -44,7 +44,7 @@ import {
 } from "@/lib/sajilokanun-access";
 import {
   emptyExtractedCaseDocument,
-  emptyExtractedDefendant,
+  emptyExtractedParty,
   normalizeExtractedCaseDocument,
   type ExtractedCaseDocument,
 } from "@/lib/sajilokanun/document-prompts";
@@ -247,6 +247,11 @@ type CasesCopy = {
   extractorAddDefendant: string;
   extractorRemoveDefendant: string;
   extractorDefendantN: string;
+  extractorAddPlaintiff: string;
+  extractorRemovePlaintiff: string;
+  extractorPlaintiffN: string;
+  extractorPlaintiffsTitle: string;
+  extractorDefendantsTitle: string;
   familyTreeTitle: string;
   familyTreeEmpty: string;
   familyTreeGeneration: string;
@@ -2695,77 +2700,167 @@ export function CaseDetailPanel({
                     </div>
                   </div>
 
-                  <div className={emiStyles.emiRow}>
-                    <div className={emiStyles.emiField}>
-                      <label htmlFor="ex-plaintiff">वादीको नाम</label>
-                      <input
-                        id="ex-plaintiff"
-                        className={emiStyles.emiNumberInput}
-                        value={extractEditForm.वादी_विवरण.पूरा_नाम ?? ""}
-                        onChange={(e) =>
-                          patchExtraction((f) => ({
-                            ...f,
-                            वादी_विवरण: {
-                              ...f.वादी_विवरण,
-                              पूरा_नाम: e.target.value || null,
-                            },
-                          }))
+                  <div style={{ marginTop: "0.85rem" }}>
+                    <div
+                      className="flex flex-wrap items-center justify-between gap-2"
+                      style={{ marginBottom: "0.5rem" }}
+                    >
+                      <strong style={{ color: "#042c53", fontSize: "0.9rem" }}>
+                        {t.extractorPlaintiffsTitle}
+                      </strong>
+                      <button
+                        type="button"
+                        className={emiStyles.emiPreset}
+                        onClick={() =>
+                          patchExtraction((f) => {
+                            const next = [...f.वादी_विवरण, emptyExtractedParty()];
+                            return {
+                              ...f,
+                              वादी_विवरण: next,
+                              निवेदक_विवरण: next.map((p) => ({ ...p })),
+                            };
+                          })
                         }
-                      />
+                      >
+                        {t.extractorAddPlaintiff}
+                      </button>
                     </div>
-                    <div className={emiStyles.emiField}>
-                      <label htmlFor="ex-plaintiff-teen">वादी तीनपुस्ते</label>
-                      <input
-                        id="ex-plaintiff-teen"
-                        className={emiStyles.emiNumberInput}
-                        value={extractEditForm.वादी_विवरण.तीनपुस्ते ?? ""}
-                        onChange={(e) =>
-                          patchExtraction((f) => ({
-                            ...f,
-                            वादी_विवरण: {
-                              ...f.वादी_विवरण,
-                              तीनपुस्ते: e.target.value || null,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-                  <div className={emiStyles.emiRow}>
-                    <div className={emiStyles.emiField}>
-                      <label htmlFor="ex-plaintiff-addr">वादी ठेगाना</label>
-                      <input
-                        id="ex-plaintiff-addr"
-                        className={emiStyles.emiNumberInput}
-                        value={extractEditForm.वादी_विवरण.ठेगाना ?? ""}
-                        onChange={(e) =>
-                          patchExtraction((f) => ({
-                            ...f,
-                            वादी_विवरण: {
-                              ...f.वादी_विवरण,
-                              ठेगाना: e.target.value || null,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
-                    <div className={emiStyles.emiField}>
-                      <label htmlFor="ex-citizenship">वादी नागरिकता नं.</label>
-                      <input
-                        id="ex-citizenship"
-                        className={emiStyles.emiNumberInput}
-                        value={extractEditForm.वादी_विवरण.नागरिकता_नं ?? ""}
-                        onChange={(e) =>
-                          patchExtraction((f) => ({
-                            ...f,
-                            वादी_विवरण: {
-                              ...f.वादी_विवरण,
-                              नागरिकता_नं: e.target.value || null,
-                            },
-                          }))
-                        }
-                      />
-                    </div>
+                    {extractEditForm.वादी_विवरण.map((plaintiff, index) => (
+                      <div
+                        key={`plaintiff-${index}`}
+                        style={{
+                          border: "1px solid var(--border, #d7e3f4)",
+                          borderRadius: "0.5rem",
+                          padding: "0.75rem",
+                          marginBottom: "0.65rem",
+                        }}
+                      >
+                        <div
+                          className="flex flex-wrap items-center justify-between gap-2"
+                          style={{ marginBottom: "0.5rem" }}
+                        >
+                          <span className={emiStyles.emiFieldHint} style={{ margin: 0 }}>
+                            {t.extractorPlaintiffN.replace("{n}", String(index + 1))}
+                          </span>
+                          {extractEditForm.वादी_विवरण.length > 1 ? (
+                            <button
+                              type="button"
+                              className={emiStyles.emiGlossaryLink}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                padding: 0,
+                              }}
+                              onClick={() =>
+                                patchExtraction((f) => {
+                                  const next = f.वादी_विवरण.filter((_, i) => i !== index);
+                                  return {
+                                    ...f,
+                                    वादी_विवरण: next,
+                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
+                                  };
+                                })
+                              }
+                            >
+                              {t.extractorRemovePlaintiff}
+                            </button>
+                          ) : null}
+                        </div>
+                        <div className={emiStyles.emiRow}>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-pl-name-${index}`}>पूरा नाम</label>
+                            <input
+                              id={`ex-pl-name-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={plaintiff.पूरा_नाम ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.वादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    पूरा_नाम: e.target.value || null,
+                                  };
+                                  return {
+                                    ...f,
+                                    वादी_विवरण: next,
+                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
+                                  };
+                                })
+                              }
+                            />
+                          </div>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-pl-teen-${index}`}>तीनपुस्ते</label>
+                            <input
+                              id={`ex-pl-teen-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={plaintiff.तीनपुस्ते ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.वादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    तीनपुस्ते: e.target.value || null,
+                                  };
+                                  return {
+                                    ...f,
+                                    वादी_विवरण: next,
+                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
+                                  };
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className={emiStyles.emiRow}>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-pl-addr-${index}`}>ठेगाना</label>
+                            <input
+                              id={`ex-pl-addr-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={plaintiff.ठेगाना ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.वादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    ठेगाना: e.target.value || null,
+                                  };
+                                  return {
+                                    ...f,
+                                    वादी_विवरण: next,
+                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
+                                  };
+                                })
+                              }
+                            />
+                          </div>
+                          <div className={emiStyles.emiField}>
+                            <label htmlFor={`ex-pl-cit-${index}`}>नागरिकता नं.</label>
+                            <input
+                              id={`ex-pl-cit-${index}`}
+                              className={emiStyles.emiNumberInput}
+                              value={plaintiff.नागरिकता_नं ?? ""}
+                              onChange={(e) =>
+                                patchExtraction((f) => {
+                                  const next = [...f.वादी_विवरण];
+                                  next[index] = {
+                                    ...next[index],
+                                    नागरिकता_नं: e.target.value || null,
+                                  };
+                                  return {
+                                    ...f,
+                                    वादी_विवरण: next,
+                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
+                                  };
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   <div style={{ marginTop: "0.85rem" }}>
@@ -2774,19 +2869,20 @@ export function CaseDetailPanel({
                       style={{ marginBottom: "0.5rem" }}
                     >
                       <strong style={{ color: "#042c53", fontSize: "0.9rem" }}>
-                        प्रतिवादीहरू
+                        {t.extractorDefendantsTitle}
                       </strong>
                       <button
                         type="button"
                         className={emiStyles.emiPreset}
                         onClick={() =>
-                          patchExtraction((f) => ({
-                            ...f,
-                            प्रतिवादी_विवरण: [
-                              ...f.प्रतिवादी_विवरण,
-                              emptyExtractedDefendant(),
-                            ],
-                          }))
+                          patchExtraction((f) => {
+                            const next = [...f.प्रतिवादी_विवरण, emptyExtractedParty()];
+                            return {
+                              ...f,
+                              प्रतिवादी_विवरण: next,
+                              विपक्षी_विवरण: next.map((p) => ({ ...p })),
+                            };
+                          })
                         }
                       >
                         {t.extractorAddDefendant}
@@ -2820,12 +2916,16 @@ export function CaseDetailPanel({
                                 padding: 0,
                               }}
                               onClick={() =>
-                                patchExtraction((f) => ({
-                                  ...f,
-                                  प्रतिवादी_विवरण: f.प्रतिवादी_विवरण.filter(
+                                patchExtraction((f) => {
+                                  const next = f.प्रतिवादी_विवरण.filter(
                                     (_, i) => i !== index
-                                  ),
-                                }))
+                                  );
+                                  return {
+                                    ...f,
+                                    प्रतिवादी_विवरण: next,
+                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
+                                  };
+                                })
                               }
                             >
                               {t.extractorRemoveDefendant}
@@ -2846,7 +2946,11 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     पूरा_नाम: e.target.value || null,
                                   };
-                                  return { ...f, प्रतिवादी_विवरण: next };
+                                  return {
+                                    ...f,
+                                    प्रतिवादी_विवरण: next,
+                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
+                                  };
                                 })
                               }
                             />
@@ -2864,7 +2968,11 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     तीनपुस्ते: e.target.value || null,
                                   };
-                                  return { ...f, प्रतिवादी_विवरण: next };
+                                  return {
+                                    ...f,
+                                    प्रतिवादी_विवरण: next,
+                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
+                                  };
                                 })
                               }
                             />
@@ -2884,7 +2992,11 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     ठेगाना: e.target.value || null,
                                   };
-                                  return { ...f, प्रतिवादी_विवरण: next };
+                                  return {
+                                    ...f,
+                                    प्रतिवादी_विवरण: next,
+                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
+                                  };
                                 })
                               }
                             />
@@ -2902,7 +3014,11 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     नागरिकता_नं: e.target.value || null,
                                   };
-                                  return { ...f, प्रतिवादी_विवरण: next };
+                                  return {
+                                    ...f,
+                                    प्रतिवादी_विवरण: next,
+                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
+                                  };
                                 })
                               }
                             />
@@ -2912,7 +3028,7 @@ export function CaseDetailPanel({
                     ))}
                   </div>
 
-                  <div className={emiStyles.emiRow}>
+                  <div className={emiStyles.emiRow} style={{ marginTop: "0.85rem" }}>
                     <div className={emiStyles.emiField}>
                       <label htmlFor="ex-bigo">बिगो रकम (रु.)</label>
                       <input

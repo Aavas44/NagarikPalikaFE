@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import mammoth from "mammoth";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  fetchCaseDetail,
   fetchSkTemplateFields,
-  generateSkCaseDocument,
+  generateSkCaseDocumentWithAi,
   isFirmQuotaError,
   previewSkCaseDocument,
   saveSkCaseDocument,
@@ -12,9 +12,13 @@ import {
   type SkPublishedDocumentTemplate,
   type SkTemplateFormField,
 } from "@/lib/sajilokanun-access";
+import {
+  normalizeExtractedCaseDocument,
+  type ExtractedCaseDocument,
+} from "@/lib/sajilokanun/document-prompts";
+import { mapExtractionToSkValues } from "@/lib/sajilokanun/map-extraction-to-sk-values";
+import { docxToPreviewHtml } from "@/lib/sajilokanun/docx-to-preview-html";
 import styles from "./CaseDocumentModal.module.css";
-
-type FlowStep = "fill" | "preview";
 
 type CaseDocumentModalProps = {
   caseId: string;
@@ -29,11 +33,46 @@ type CaseDocumentModalProps = {
   }) => void;
 };
 
-function fieldLabel(field: SkTemplateFormField, locale: "en" | "ne"): string {
-  if (locale === "ne") {
-    return field.label.ne || field.label.en || field.key;
+function fieldLabel(field: SkTemplateFormField): string {
+  const ne = field.label.ne?.trim() || "";
+  const en = field.label.en?.trim() || "";
+  if (ne && en && ne !== en) {
+    return `${ne} (${en})`;
   }
-  return field.label.en || field.label.ne || field.key;
+  return ne || en || field.key;
+}
+
+function sectionTitle(section: string): string {
+  if (!section) return "";
+  if (section.startsWith("plaintiff") || section.startsWith("petitioner")) {
+    return "वादी / निवेदक (Plaintiff)";
+  }
+  if (section.startsWith("defendant") || section.startsWith("respondent")) {
+    return "प्रतिवादी / विपक्षी (Defendant)";
+  }
+  if (section === "court") return "अदालत (Court)";
+  if (section === "case") return "मुद्दा (Case)";
+  if (section === "facts") return "तथ्य (Facts)";
+  if (section === "claims") return "दाबी (Claims)";
+  if (section === "evidence") return "प्रमाण (Evidence)";
+  if (section === "other") return "अन्य (Other)";
+  return section;
+}
+
+function orderFieldsByTemplate(
+  userFields: SkTemplateFormField[],
+  placeholderKeys: string[]
+): SkTemplateFormField[] {
+  const byKey = new Map(userFields.map((field) => [field.key, field]));
+  const ordered: SkTemplateFormField[] = [];
+  for (const key of placeholderKeys) {
+    const field = byKey.get(key);
+    if (field) ordered.push(field);
+  }
+  for (const field of userFields) {
+    if (!placeholderKeys.includes(field.key)) ordered.push(field);
+  }
+  return ordered;
 }
 
 export function CaseDocumentModal({
@@ -44,33 +83,79 @@ export function CaseDocumentModal({
   onSaved,
   onQuotaError,
 }: CaseDocumentModalProps) {
-  const [step, setStep] = useState<FlowStep>("fill");
   const [userFields, setUserFields] = useState<SkTemplateFormField[]>([]);
+  const [placeholderKeys, setPlaceholderKeys] = useState<string[]>([]);
   const [fieldsLoading, setFieldsLoading] = useState(true);
   const [values, setValues] = useState<Record<string, string>>({});
   const [previewHtml, setPreviewHtml] = useState("");
-  const [previewFileName, setPreviewFileName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [autofillBanner, setAutofillBanner] = useState("");
+  const [caseVitals, setCaseVitals] = useState<ExtractedCaseDocument | null>(null);
+  const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
+  const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null);
+  const [generatedFileName, setGeneratedFileName] = useState("");
+  const previewDocRef = useRef<HTMLDivElement | null>(null);
 
   const title =
     locale === "ne"
       ? template.name.ne || template.name.en
       : template.name.en || template.name.ne;
 
+  const hasGenerated = Boolean(generatedBlob);
+
+  const orderedFields = useMemo(
+    () => orderFieldsByTemplate(userFields, placeholderKeys),
+    [userFields, placeholderKeys]
+  );
+
   useEffect(() => {
     let cancelled = false;
-    async function loadFields() {
+    async function load() {
       setFieldsLoading(true);
       setError("");
+      setAutofillBanner("");
+      setCaseVitals(null);
+      setGeneratedBlob(null);
+      setGeneratedFileName("");
       try {
-        const fields = await fetchSkTemplateFields(template.id);
+        const [fields, detail] = await Promise.all([
+          fetchSkTemplateFields(template.id),
+          fetchCaseDetail(caseId).catch(() => null),
+        ]);
         if (cancelled) return;
         setUserFields(fields.userFields);
+        setPlaceholderKeys(fields.placeholderKeys);
+
         const initial: Record<string, string> = {};
         for (const field of fields.userFields) {
           initial[field.key] = "";
         }
+
+        const rawFacts = detail?.documentExtraction?.facts;
+        if (rawFacts && typeof rawFacts === "object") {
+          const extracted = normalizeExtractedCaseDocument(rawFacts);
+          setCaseVitals(extracted);
+          const mapped = mapExtractionToSkValues(extracted, fields.userFields);
+          for (const [key, value] of Object.entries(mapped.values)) {
+            if (key in initial) initial[key] = value;
+          }
+          if (mapped.filledCount > 0) {
+            setAutofillBanner(
+              locale === "ne"
+                ? `यस मुद्दाको OCR बाट ${mapped.filledCount} फिल्ड भरियो — Generate थिचेर Gemini ले टेम्प्लेट भर्छ।`
+                : `Filled ${mapped.filledCount} fields from this case’s OCR — click Generate for Gemini to fill the template.`
+            );
+          } else {
+            setAutofillBanner(
+              locale === "ne"
+                ? "यस मुद्दामा OCR छ, तर यस फारमका फिल्डसँग मिल्ने कुञ्जी भेटिएन।"
+                : "This case has OCR vitals, but no keys matched this form yet."
+            );
+          }
+        }
+
         setValues(initial);
       } catch (err) {
         if (!cancelled) {
@@ -82,26 +167,22 @@ export function CaseDocumentModal({
         if (!cancelled) setFieldsLoading(false);
       }
     }
-    void loadFields();
+    void load();
     return () => {
       cancelled = true;
     };
-  }, [template.id]);
+  }, [template.id, caseId, locale]);
 
   const refreshPreview = useCallback(async () => {
     setBusy(true);
     setError("");
     try {
-      const { blob, fileName } = await previewSkCaseDocument({
+      const { blob } = await previewSkCaseDocument({
         caseId,
         templateId: template.id,
         variables: values,
       });
-      const arrayBuffer = await blob.arrayBuffer();
-      const result = await mammoth.convertToHtml({ arrayBuffer });
-      setPreviewHtml(result.value);
-      setPreviewFileName(fileName);
-      setStep("preview");
+      setPreviewHtml(await docxToPreviewHtml(blob));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to preview document");
     } finally {
@@ -109,37 +190,86 @@ export function CaseDocumentModal({
     }
   }, [caseId, template.id, values]);
 
-  async function handleFillSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    await refreshPreview();
+  useEffect(() => {
+    if (fieldsLoading || userFields.length === 0) return;
+    void refreshPreview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fieldsLoading, template.id, caseId]);
+
+  useEffect(() => {
+    const container = previewDocRef.current;
+    if (!container) return;
+
+    container.querySelectorAll("[data-sk-field].sk-preview-field-active").forEach((node) => {
+      node.classList.remove("sk-preview-field-active");
+    });
+
+    if (!activeFieldKey) return;
+
+    const targets = container.querySelectorAll(
+      `[data-sk-field="${CSS.escape(activeFieldKey)}"]`
+    );
+    if (targets.length === 0) return;
+
+    targets.forEach((node) => {
+      node.classList.add("sk-preview-field-active");
+    });
+    targets[0].scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [activeFieldKey, previewHtml]);
+
+  function handleFieldFocus(fieldKey: string) {
+    setActiveFieldKey(fieldKey);
   }
 
-  async function handleDownload() {
-    setBusy(true);
+  function invalidateGenerated() {
+    if (generatedBlob) {
+      setGeneratedBlob(null);
+      setGeneratedFileName("");
+    }
+  }
+
+  async function handleGenerate() {
+    setGenerating(true);
     setError("");
     try {
-      const { blob, fileName } = await generateSkCaseDocument({
+      const result = await generateSkCaseDocumentWithAi({
         caseId,
         templateId: template.id,
         variables: values,
       });
-      const url = URL.createObjectURL(blob);
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = fileName;
-      anchor.click();
-      URL.revokeObjectURL(url);
+      setValues((prev) => ({ ...prev, ...result.values }));
+      setGeneratedBlob(result.blob);
+      setGeneratedFileName(result.fileName);
+      setPreviewHtml(await docxToPreviewHtml(result.blob));
+      setAutofillBanner(
+        locale === "ne"
+          ? `Gemini ले ${result.filledCount} फिल्ड भर्‍यो — डाउनलोड वा केस कागजातमा सेभ गर्न सकिन्छ।`
+          : `Gemini filled ${result.filledCount} fields — you can download or save to case documents.`
+      );
     } catch (err) {
       if (isFirmQuotaError(err) && err.code === "firm_documents_quota") {
         onQuotaError?.({ code: err.code, used: err.used, limit: err.limit });
       }
-      setError(err instanceof Error ? err.message : "Failed to download document");
+      setError(
+        err instanceof Error ? err.message : "Failed to generate document with AI"
+      );
     } finally {
-      setBusy(false);
+      setGenerating(false);
     }
   }
 
-  async function handleSaveToCase() {
+  function handleDownloadGenerated() {
+    if (!generatedBlob) return;
+    const url = URL.createObjectURL(generatedBlob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = generatedFileName || "document.docx";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  async function handleSaveGenerated() {
+    if (!generatedBlob) return;
     setBusy(true);
     setError("");
     try {
@@ -162,6 +292,24 @@ export function CaseDocumentModal({
     }
   }
 
+  function reapplyOcr() {
+    if (!caseVitals) return;
+    const mapped = mapExtractionToSkValues(caseVitals, userFields);
+    setValues((prev) => {
+      const next = { ...prev };
+      for (const [key, value] of Object.entries(mapped.values)) {
+        if (value) next[key] = value;
+      }
+      return next;
+    });
+    invalidateGenerated();
+    setAutofillBanner(
+      locale === "ne"
+        ? `OCR बाट फेरि ${mapped.filledCount} फिल्ड भरियो।`
+        : `Re-applied ${mapped.filledCount} OCR fields.`
+    );
+  }
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -173,7 +321,7 @@ export function CaseDocumentModal({
   return (
     <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
       <div
-        className={styles.modal}
+        className={`${styles.modal} ${styles.modalWide}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="case-doc-modal-title"
@@ -188,9 +336,9 @@ export function CaseDocumentModal({
               </p>
             ) : null}
             <p className={styles.muted}>
-              {step === "fill"
-                ? "Fill the form fields, then preview the filled petition."
-                : "Review the preview, edit fields if needed, then download or save to case Documents."}
+              {locale === "ne"
+                ? "बायाँ: फिल्ड जाँच · Generate: Gemini ले टेम्प्लेट भर्छ"
+                : "Left: review fields · Generate: Gemini fills the DOCX template"}
             </p>
           </div>
           <button type="button" className={styles.modalClose} onClick={onClose}>
@@ -199,142 +347,201 @@ export function CaseDocumentModal({
         </header>
 
         {error ? <p className={styles.error}>{error}</p> : null}
+        {autofillBanner ? (
+          <p className={styles.autofillBanner} role="status">
+            {autofillBanner}
+          </p>
+        ) : null}
 
         {fieldsLoading ? (
           <div className={styles.modalBody}>
             <p className={styles.muted}>Loading template fields…</p>
           </div>
-        ) : step === "fill" ? (
-          <form onSubmit={handleFillSubmit} className={styles.modalBody}>
-            <section className={styles.modalSection}>
-              <h3>Form fields</h3>
-              {userFields.length === 0 ? (
-                <p className={styles.muted}>
-                  This template has no fillable placeholders.
-                </p>
-              ) : (
-                <div className={styles.form}>
-                  {userFields.map((field) => (
-                    <label key={field.key} className={styles.field}>
-                      <span>
-                        {fieldLabel(field, locale)}
-                        {field.required ? " *" : ""}
-                      </span>
-                      <input
-                        type={
-                          field.type === "number"
-                            ? "number"
-                            : field.type === "date"
-                              ? "date"
-                              : "text"
-                        }
-                        value={values[field.key] ?? ""}
-                        onChange={(e) =>
-                          setValues((prev) => ({
-                            ...prev,
-                            [field.key]: e.target.value,
-                          }))
-                        }
-                        required={field.required}
-                        placeholder={fieldLabel(field, locale)}
-                      />
-                    </label>
-                  ))}
+        ) : (
+          <div className={styles.modalBody}>
+            <div className={styles.splitLayout}>
+              <aside className={styles.editPane}>
+                <div className={styles.paneHeader}>
+                  <h3>
+                    {locale === "ne" ? "फारम फिल्डहरू" : "Form fields"}
+                    <span className={styles.muted}>
+                      {" "}
+                      ({userFields.length})
+                    </span>
+                  </h3>
+                  {caseVitals ? (
+                    <button
+                      type="button"
+                      className={styles.secondaryBtn}
+                      onClick={reapplyOcr}
+                      disabled={busy || generating}
+                    >
+                      {locale === "ne" ? "OCR फेरि लागू" : "Re-apply OCR"}
+                    </button>
+                  ) : null}
                 </div>
-              )}
-            </section>
+                {userFields.length === 0 ? (
+                  <p className={styles.muted}>
+                    This template has no fillable placeholders.
+                  </p>
+                ) : (
+                  <div className={styles.formScroll}>
+                    <div className={styles.form}>
+                      {orderedFields.map((field, index) => {
+                        const section = field.section?.trim() || "";
+                        const sectionLabel = sectionTitle(section);
+                        return (
+                          <label
+                            key={field.key}
+                            className={`${styles.field} ${
+                              activeFieldKey === field.key ? styles.fieldActive : ""
+                            }`}
+                          >
+                            <span className={styles.fieldLabelRow}>
+                              <span className={styles.fieldIndex}>{index + 1}.</span>
+                              <span>
+                                {fieldLabel(field)}
+                                {field.required ? " *" : ""}
+                              </span>
+                            </span>
+                            {sectionLabel ? (
+                              <span className={styles.fieldSection}>{sectionLabel}</span>
+                            ) : null}
+                            <input
+                              type={
+                                field.type === "number"
+                                  ? "number"
+                                  : field.type === "date"
+                                    ? "date"
+                                    : "text"
+                              }
+                              value={values[field.key] ?? ""}
+                              onFocus={() => handleFieldFocus(field.key)}
+                              onChange={(e) => {
+                                invalidateGenerated();
+                                setValues((prev) => ({
+                                  ...prev,
+                                  [field.key]: e.target.value,
+                                }));
+                              }}
+                              required={field.required}
+                              placeholder={field.key}
+                            />
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </aside>
+
+              <section className={styles.previewPane}>
+                <div className={styles.paneHeader}>
+                  <h3>
+                    {hasGenerated
+                      ? locale === "ne"
+                        ? "जेनेरेट गरिएको कागजात"
+                        : "Generated document"
+                      : locale === "ne"
+                        ? "टेम्प्लेट पूर्वावलोकन"
+                        : "Template preview"}
+                  </h3>
+                  {!hasGenerated ? (
+                    <button
+                      type="button"
+                      className={styles.secondaryBtn}
+                      onClick={() => void refreshPreview()}
+                      disabled={busy || generating}
+                    >
+                      {busy
+                        ? locale === "ne"
+                          ? "अपडेट…"
+                          : "Updating…"
+                        : locale === "ne"
+                          ? "पूर्वावलोकन अपडेट"
+                          : "Update preview"}
+                    </button>
+                  ) : null}
+                </div>
+                {previewHtml ? (
+                  <div
+                    ref={previewDocRef}
+                    className={styles.previewDoc}
+                    dangerouslySetInnerHTML={{ __html: previewHtml }}
+                  />
+                ) : (
+                  <p className={styles.muted}>
+                    {busy || generating
+                      ? generating
+                        ? locale === "ne"
+                          ? "Gemini ले कागजात बनाउँदैछ…"
+                          : "Gemini is generating the document…"
+                        : "Building preview…"
+                      : "Preview will appear here after the template loads."}
+                  </p>
+                )}
+              </section>
+            </div>
 
             <footer className={styles.modalFooter}>
               <button type="button" className={styles.secondaryBtn} onClick={onClose}>
                 Cancel
               </button>
-              <button type="submit" className={styles.primaryBtn} disabled={busy}>
-                {busy ? "Building preview…" : "Preview document"}
-              </button>
-            </footer>
-          </form>
-        ) : (
-          <div className={styles.modalBody}>
-            <div className={styles.previewLayout}>
-              <section className={styles.previewPane}>
-                <h3>Document preview</h3>
-                {previewHtml ? (
-                  <div
-                    className={styles.previewDoc}
-                    dangerouslySetInnerHTML={{ __html: previewHtml }}
-                  />
-                ) : (
-                  <p className={styles.muted}>No preview available.</p>
-                )}
-              </section>
-
-              <aside className={styles.editPane}>
-                <h3>Edit fields</h3>
-                <div className={styles.form}>
-                  {userFields.map((field) => (
-                    <label key={field.key} className={styles.field}>
-                      <span>
-                        {fieldLabel(field, locale)}
-                        {field.required ? " *" : ""}
-                      </span>
-                      <input
-                        type={
-                          field.type === "number"
-                            ? "number"
-                            : field.type === "date"
-                              ? "date"
-                              : "text"
-                        }
-                        value={values[field.key] ?? ""}
-                        onChange={(e) =>
-                          setValues((prev) => ({
-                            ...prev,
-                            [field.key]: e.target.value,
-                          }))
-                        }
-                        required={field.required}
-                      />
-                    </label>
-                  ))}
-                </div>
-              </aside>
-            </div>
-
-            <footer className={styles.modalFooter}>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={() => setStep("fill")}
-                disabled={busy}
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={() => void refreshPreview()}
-                disabled={busy}
-              >
-                {busy ? "Updating…" : "Update preview"}
-              </button>
-              <button
-                type="button"
-                className={styles.secondaryBtn}
-                onClick={() => void handleDownload()}
-                disabled={busy}
-              >
-                {busy
-                  ? "Working…"
-                  : `Download${previewFileName ? ` (${previewFileName})` : ""}`}
-              </button>
-              <button
-                type="button"
-                className={styles.primaryBtn}
-                onClick={() => void handleSaveToCase()}
-                disabled={busy}
-              >
-                {busy ? "Saving…" : "Save to case Documents"}
-              </button>
+              {!hasGenerated ? (
+                <button
+                  type="button"
+                  className={styles.primaryBtn}
+                  onClick={() => void handleGenerate()}
+                  disabled={busy || generating || userFields.length === 0}
+                >
+                  {generating
+                    ? locale === "ne"
+                      ? "जेनेरेट हुँदैछ…"
+                      : "Generating…"
+                    : locale === "ne"
+                      ? "Generate"
+                      : "Generate"}
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={() => void handleGenerate()}
+                    disabled={busy || generating}
+                  >
+                    {generating
+                      ? locale === "ne"
+                        ? "फेरि जेनेरेट…"
+                        : "Regenerating…"
+                      : locale === "ne"
+                        ? "फेरि Generate"
+                        : "Regenerate"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryBtn}
+                    onClick={handleDownloadGenerated}
+                    disabled={busy || generating}
+                  >
+                    {locale === "ne" ? "डाउनलोड" : "Download"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.primaryBtn}
+                    onClick={() => void handleSaveGenerated()}
+                    disabled={busy || generating}
+                  >
+                    {busy
+                      ? locale === "ne"
+                        ? "सेभ हुँदैछ…"
+                        : "Saving…"
+                      : locale === "ne"
+                        ? "केस कागजातमा सेभ"
+                        : "Save to case Documents"}
+                  </button>
+                </>
+              )}
             </footer>
           </div>
         )}
@@ -342,3 +549,4 @@ export function CaseDocumentModal({
     </div>
   );
 }
+

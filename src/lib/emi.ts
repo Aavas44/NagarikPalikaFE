@@ -92,3 +92,10 @@ export function formatNpr(amount: number): string {
     maximumFractionDigits: 0,
   }).format(Math.round(amount));
 }
+
+/** Numeric NPR amount without the "NPR" currency prefix (fits narrow result cards). */
+export function formatNprAmount(amount: number): string {
+  return new Intl.NumberFormat("en-NP", {
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount));
+}

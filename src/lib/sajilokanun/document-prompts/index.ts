@@ -55,10 +55,15 @@ export type {
 export {
   emptyExtractedCaseDocument,
   emptyExtractedDefendant,
+  emptyExtractedParty,
   emptyExtractedFamilyTree,
   ensureFamilyTreeFromParties,
   normalizeExtractedCaseDocument,
   normalizeExtractedFamilyTree,
+  normalizePartyList,
+  plaintiffParties,
+  defendantParties,
+  mergePartyLists,
   parseExtractedJsonText,
 } from "./extract-case-document";
 

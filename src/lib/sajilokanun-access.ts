@@ -1327,6 +1327,7 @@ export type SkTemplateFormField = {
   label: { en: string; ne: string };
   type: "text" | "date" | "number";
   required: boolean;
+  section?: string;
 };
 
 export async function fetchSkTemplateFields(templateId: string): Promise<{
@@ -1388,6 +1389,57 @@ export async function generateSkCaseDocument(input: {
     `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/generate`,
     { templateId: input.templateId, variables: input.variables }
   );
+}
+
+export async function generateSkCaseDocumentWithAi(input: {
+  caseId: string;
+  templateId: string;
+  variables: Record<string, string>;
+}): Promise<{
+  values: Record<string, string>;
+  filledCount: number;
+  fileName: string;
+  contentType: string;
+  blob: Blob;
+}> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/generate-ai`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        templateId: input.templateId,
+        variables: input.variables,
+      }),
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) {
+    throwIfFirmQuotaResponse(res, data);
+    throw new Error(data.error ?? "Failed to AI-generate document");
+  }
+  const contentType = String(
+    data.contentType ??
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+  );
+  const base64 = String(data.contentBase64 ?? "");
+  if (!base64) {
+    throw new Error("AI generate response missing document content");
+  }
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return {
+    values:
+      data.values && typeof data.values === "object"
+        ? (data.values as Record<string, string>)
+        : {},
+    filledCount: Number(data.filledCount ?? 0),
+    fileName: String(data.fileName ?? "document.docx"),
+    contentType,
+    blob: new Blob([bytes], { type: contentType }),
+  };
 }
 
 export async function saveSkCaseDocument(input: {
