@@ -98,7 +98,10 @@ export function withTableRowRequestValues(
   enabled = true
 ): Record<string, string> {
   if (!enabled) return values;
-  const next = { ...values, [TABLE_ROW_COUNT_KEY]: String(rowCount) };
+  const next: Record<string, string> = {
+    ...values,
+    [TABLE_ROW_COUNT_KEY]: String(rowCount),
+  };
   for (let row = 1; row <= rowCount; row += 1) {
     next[`क्र_सं_${row}`] = String(row).replace(
       /\d/g,
