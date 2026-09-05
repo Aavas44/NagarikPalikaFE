@@ -1787,7 +1787,7 @@
   min-height: 360px;
   max-height: calc(100vh - 16rem);
   margin: 1rem 1.25rem 1.25rem;
-  padding: 1rem 1.25rem;
+  padding: 1.5rem 2rem;
   overflow: auto;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
@@ -1795,6 +1795,7 @@
   font-size: 14px;
   line-height: 1.6;
   outline: none;
+  text-align: justify;
 }
 
 .wardTemplateEditorBody:focus {
@@ -1804,6 +1805,42 @@
 
 .wardTemplateEditorBody p {
   margin: 0 0 0.75rem;
+}
+
+.wardTemplateEditorBody :global(.text-center),
+.wardTemplateEditorBody p[style*="text-align: center"],
+.wardTemplateEditorBody p[style*="text-align:center"] {
+  text-align: center;
+}
+
+.wardTemplateEditorBody :global(.text-right),
+.wardTemplateEditorBody p[style*="text-align: right"],
+.wardTemplateEditorBody p[style*="text-align:right"] {
+  text-align: right;
+}
+
+.wardTemplateEditorBody :global(.text-justify),
+.wardTemplateEditorBody p[style*="text-align: justify"],
+.wardTemplateEditorBody p[style*="text-align:justify"] {
+  text-align: justify;
+}
+
+.wardTemplateEditorBody :global(.text-left),
+.wardTemplateEditorBody p[style*="text-align: left"],
+.wardTemplateEditorBody p[style*="text-align:left"] {
+  text-align: left;
+}
+
+.wardTemplateEditorBody table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.wardTemplateEditorBody th,
+.wardTemplateEditorBody td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem;
 }
 
 .skTemplateSettingsModal {

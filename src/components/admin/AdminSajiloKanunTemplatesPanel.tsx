@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import {
   adminCreateSkTemplate,
   adminDeleteSkTemplate,
+  adminFetchSkTemplateFile,
   adminFetchSkTemplateMeta,
   adminFetchSkTemplates,
   adminUpdateSkTemplate,
@@ -426,6 +427,28 @@ export function AdminSajiloKanunTemplatesPanel() {
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete template");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDownload(template: SajiloKanunDocumentTemplate) {
+    setBusyId(template.id);
+    setError("");
+    try {
+      const blob = await adminFetchSkTemplateFile(template.id);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download =
+        template.originalFileName?.trim() ||
+        `${template.slug || "template"}.${template.fileType === "pdf" ? "pdf" : "docx"}`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to download template file"
+      );
     } finally {
       setBusyId(null);
     }
@@ -872,6 +895,14 @@ export function AdminSajiloKanunTemplatesPanel() {
                           onClick={() => startEdit(template)}
                         >
                           Settings
+                        </button>{" "}
+                        <button
+                          type="button"
+                          className={styles.skSmallBtn}
+                          disabled={busyId === template.id || saving}
+                          onClick={() => void handleDownload(template)}
+                        >
+                          {busyId === template.id ? "Downloading…" : "Download"}
                         </button>{" "}
                         {template.fileType === "docx" ? (
                           <>

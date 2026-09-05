@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { docxToPreviewHtml } from "@/lib/sajilokanun/docx-to-preview-html";
+import { docxToEditableHtml } from "@/lib/sajilokanun/docx-to-preview-html";
 import {
   adminFetchSkTemplateFile,
   adminSaveSkTemplateContent,
@@ -50,7 +50,7 @@ export function AdminSajiloKanunTemplateEditor({
     setLoadError("");
     try {
       const blob = await adminFetchSkTemplateFile(template.id);
-      const value = await docxToPreviewHtml(blob);
+      const value = await docxToEditableHtml(blob);
       setDraft(value);
       setBaseline(value);
       setLoaded(true);

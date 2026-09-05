@@ -1,0 +1,93 @@
+.row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.35rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.row:has(textarea) {
+  align-items: flex-start;
+}
+
+.control {
+  flex: 1;
+  min-width: 0;
+}
+
+.control input,
+.control textarea {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.25rem;
+  align-self: stretch;
+}
+
+.row:has(textarea) .actions {
+  align-self: flex-start;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #185fa5;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #185fa5;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #185fa5;
+  outline-offset: 2px;
+}
+
+.btnListening:focus-visible {
+  outline-color: #fecaca;
+}
+
+.btnListening {
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: #fff;
+  animation: voicePulse 1.2s ease-in-out infinite;
+}
+
+.btnListening:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #991b1b;
+  color: #fff;
+}
+
+.btnStop {
+  color: #b91c1c;
+}
+
+.btnStop:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #b91c1c;
+}
+
+@keyframes voicePulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+  }
+}

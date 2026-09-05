@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import mammoth from "mammoth";
+import { docxToEditableHtml } from "@/lib/sajilokanun/docx-to-preview-html";
 import {
   WARD_BUILTIN_VARIABLES,
   adminFetchWardTemplateFile,
@@ -49,9 +49,7 @@ export function AdminWardTemplateEditor({
     setLoadError("");
     try {
       const blob = await adminFetchWardTemplateFile(template.id);
-      const arrayBuffer = await blob.arrayBuffer();
-      const result = await mammoth.convertToHtml({ arrayBuffer });
-      const value = result.value || "<p></p>";
+      const value = await docxToEditableHtml(blob);
       setDraft(value);
       setBaseline(value);
       setLoaded(true);

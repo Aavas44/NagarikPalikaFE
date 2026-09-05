@@ -16,6 +16,7 @@ import type { WitnessInputs } from "@/lib/sajilokanun/document-prompts/common";
 import emiStyles from "@/components/user/emi.module.css";
 import pageStyles from "@/app/user.module.css";
 import caseChatStyles from "@/components/sajilokanun/CaseChat.module.css";
+import { VoiceFillRow } from "@/components/VoiceFillButton";
 
 export type DraftableLegalDocKind =
   | "nivedan_awedan"
@@ -114,14 +115,16 @@ function TextField({
   return (
     <div className={emiStyles.emiField}>
       <label htmlFor={id}>{label}</label>
-      <input
-        id={id}
-        className={emiStyles.emiNumberInput}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        placeholder={placeholder}
-      />
+      <VoiceFillRow onTranscript={onChange}>
+        <input
+          id={id}
+          className={emiStyles.emiNumberInput}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required={required}
+          placeholder={placeholder}
+        />
+      </VoiceFillRow>
     </div>
   );
 }
@@ -146,15 +149,17 @@ function TextAreaField({
   return (
     <div className={emiStyles.emiField}>
       <label htmlFor={id}>{label}</label>
-      <textarea
-        id={id}
-        className={emiStyles.emiNumberInput}
-        rows={rows}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        placeholder={placeholder}
-      />
+      <VoiceFillRow onTranscript={onChange}>
+        <textarea
+          id={id}
+          className={emiStyles.emiNumberInput}
+          rows={rows}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          required={required}
+          placeholder={placeholder}
+        />
+      </VoiceFillRow>
     </div>
   );
 }

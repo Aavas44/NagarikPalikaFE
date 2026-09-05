@@ -24,6 +24,8 @@ import {
   blobToBase64Payload,
   fetchCaseUploadBlob,
   fetchSkDocumentTemplates,
+  fetchSajiloKanunMe,
+  setSkStarredDocumentTemplate,
   saveGeneratedDocumentToCaseFiles,
   isFirmQuotaError,
   markCaseMessagesRead,
@@ -57,10 +59,12 @@ import {
 } from "@/lib/nepaliCalendar";
 import { toDevanagariDigits } from "@/lib/sajilokanun/nepali-digits";
 import { matchesNepaliRomanSearch } from "@/lib/sajilokanun/nepali-roman-search";
+import { sortStarredFirst, toggleStarredId } from "@/lib/starred-templates";
 import { COURT_TYPE_META } from "@/lib/sajilokanun/court-type";
 import { useLanguage } from "@/context/LanguageContext";
 import { NepaliDatePicker } from "@/components/sajilokanun/NepaliDatePicker";
 import { SheetSelect } from "@/components/sajilokanun/SheetSelect";
+import { TemplateStarChip } from "@/components/TemplateStarChip";
 import emiStyles from "@/components/user/emi.module.css";
 import pageStyles from "@/app/user.module.css";
 import shellStyles from "@/components/sajilokanun/SajiloKanunAppShell.module.css";
@@ -486,6 +490,8 @@ export function CaseDetailPanel({
   const [templatePage, setTemplatePage] = useState(1);
   const [activeFormTemplate, setActiveFormTemplate] =
     useState<SkPublishedDocumentTemplate | null>(null);
+  const [starredTemplateIds, setStarredTemplateIds] = useState<string[]>([]);
+  const starLock = useRef(new Set<string>());
   const [savingDocId, setSavingDocId] = useState<string | null>(null);
   const [extractSelectedUploadIds, setExtractSelectedUploadIds] = useState<string[]>(
     []
@@ -790,6 +796,25 @@ export function CaseDetailPanel({
       cancelled = true;
     };
   }, [detail?.courtType, detail?.id, isFirmUser, t.detailError]);
+
+  useEffect(() => {
+    if (!isFirmUser) {
+      setStarredTemplateIds([]);
+      return;
+    }
+    let cancelled = false;
+    void fetchSajiloKanunMe()
+      .then((me) => {
+        if (cancelled) return;
+        setStarredTemplateIds(me.starredDocumentTemplateIds ?? []);
+      })
+      .catch(() => {
+        if (!cancelled) setStarredTemplateIds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isFirmUser]);
 
   useEffect(() => {
     const saved = detail?.documentExtraction;
@@ -1195,21 +1220,41 @@ export function CaseDetailPanel({
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
+  async function toggleStarredTemplate(templateId: string) {
+    if (starLock.current.has(templateId)) return;
+    const starred = !starredTemplateIds.includes(templateId);
+    const previous = starredTemplateIds;
+    starLock.current.add(templateId);
+    setStarredTemplateIds(toggleStarredId(previous, templateId));
+    if (starred) setTemplatePage(1);
+    try {
+      const next = await setSkStarredDocumentTemplate(templateId, starred);
+      setStarredTemplateIds(next);
+    } catch (err) {
+      setStarredTemplateIds(previous);
+      setError(err instanceof Error ? err.message : t.detailError);
+    } finally {
+      starLock.current.delete(templateId);
+    }
+  }
+
   const filteredCourtTemplates = useMemo(() => {
     const q = templateSearch.trim();
-    if (!q) return courtTemplates;
-    return courtTemplates.filter((template) =>
-      matchesNepaliRomanSearch(q, [
-        template.name.ne,
-        template.name.en,
-        template.name.roman,
-        template.documentKind,
-        template.documentKindTitle,
-        template.description?.ne,
-        template.description?.en,
-      ])
-    );
-  }, [courtTemplates, templateSearch]);
+    const matched = !q
+      ? courtTemplates
+      : courtTemplates.filter((template) =>
+          matchesNepaliRomanSearch(q, [
+            template.name.ne,
+            template.name.en,
+            template.name.roman,
+            template.documentKind,
+            template.documentKindTitle,
+            template.description?.ne,
+            template.description?.en,
+          ])
+        );
+    return sortStarredFirst(matched, starredTemplateIds);
+  }, [courtTemplates, templateSearch, starredTemplateIds]);
 
   const templateTotalPages = Math.max(
     1,
@@ -3268,32 +3313,30 @@ export function CaseDetailPanel({
                             ? template.name.ne || template.name.en
                             : template.name.en || template.name.ne;
                         const roman = template.name.roman?.trim() || "";
+                        const starred = starredTemplateIds.includes(template.id);
                         return (
-                          <button
+                          <TemplateStarChip
                             key={template.id}
-                            type="button"
-                            className={emiStyles.emiPreset}
-                            aria-pressed={activeFormTemplate?.id === template.id}
-                            onClick={() => {
+                            starred={starred}
+                            selected={activeFormTemplate?.id === template.id}
+                            primary={primary}
+                            secondary={roman || undefined}
+                            starLabel={
+                              locale === "ne" ? "बुकमार्क गर्नुहोस्" : "Bookmark"
+                            }
+                            unstarLabel={
+                              locale === "ne"
+                                ? "बुकमार्क हटाउनुहोस्"
+                                : "Remove bookmark"
+                            }
+                            onToggleStar={() =>
+                              void toggleStarredTemplate(template.id)
+                            }
+                            onSelect={() => {
                               setActiveFormTemplate(template);
                               setError("");
                             }}
-                          >
-                            <span style={{ display: "block" }}>{primary}</span>
-                            {roman ? (
-                              <span
-                                style={{
-                                  display: "block",
-                                  marginTop: "0.15rem",
-                                  fontSize: "0.72em",
-                                  opacity: 0.75,
-                                  fontWeight: 500,
-                                }}
-                              >
-                                {roman}
-                              </span>
-                            ) : null}
-                          </button>
+                          />
                         );
                       })}
                     </div>

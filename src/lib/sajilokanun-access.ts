@@ -15,6 +15,7 @@ export interface SajiloKanunUser {
   teamId?: string | null;
   role?: "admin" | "member" | "caseUser" | null;
   teamName?: string | null;
+  starredDocumentTemplateIds?: string[];
 }
 
 export interface SajiloKanunDailyQuota {
@@ -1322,6 +1323,25 @@ export async function fetchSkDocumentTemplates(
   return data as SkPublishedDocumentTemplate[];
 }
 
+export async function setSkStarredDocumentTemplate(
+  templateId: string,
+  starred: boolean
+): Promise<string[]> {
+  const res = await skAuthedFetch(
+    `/api/sajilokanun-auth/starred-document-templates/${templateId}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ starred }),
+    }
+  );
+  const data = (await res.json()) as {
+    error?: string;
+    starredDocumentTemplateIds?: string[];
+  };
+  if (!res.ok) throw new Error(data.error ?? "Failed to update bookmark");
+  return data.starredDocumentTemplateIds ?? [];
+}
+
 export type SkTemplateFormField = {
   key: string;
   label: { en: string; ne: string };
@@ -1446,6 +1466,7 @@ export async function saveSkCaseDocument(input: {
   caseId: string;
   templateId: string;
   variables: Record<string, string>;
+  allowIncomplete?: boolean;
 }): Promise<{ upload: CaseUploadedDocumentRecord; fileName: string }> {
   const res = await skAuthedFetch(
     `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/save`,
@@ -1454,6 +1475,7 @@ export async function saveSkCaseDocument(input: {
       body: JSON.stringify({
         templateId: input.templateId,
         variables: input.variables,
+        allowIncomplete: input.allowIncomplete === true,
       }),
     }
   );

@@ -18,6 +18,11 @@ import {
 } from "@/lib/sajilokanun/document-prompts";
 import { mapExtractionToSkValues } from "@/lib/sajilokanun/map-extraction-to-sk-values";
 import { docxToPreviewHtml } from "@/lib/sajilokanun/docx-to-preview-html";
+import {
+  MissingRequiredFieldsDialog,
+  listMissingRequiredLabels,
+} from "@/components/MissingRequiredFieldsDialog";
+import { VoiceFillRow } from "@/components/VoiceFillButton";
 import styles from "./CaseDocumentModal.module.css";
 
 type CaseDocumentModalProps = {
@@ -96,6 +101,10 @@ export function CaseDocumentModal({
   const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
   const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null);
   const [generatedFileName, setGeneratedFileName] = useState("");
+  const [missingRequired, setMissingRequired] = useState<string[] | null>(null);
+  const [pendingIncompleteAction, setPendingIncompleteAction] = useState<
+    "generate" | "save" | null
+  >(null);
   const previewDocRef = useRef<HTMLDivElement | null>(null);
 
   const title =
@@ -109,6 +118,36 @@ export function CaseDocumentModal({
     () => orderFieldsByTemplate(userFields, placeholderKeys),
     [userFields, placeholderKeys]
   );
+
+  function missingRequiredLabels(): string[] {
+    return listMissingRequiredLabels(
+      orderedFields
+        .filter(
+          (field) =>
+            !/^blank_\d+$/i.test(field.key) && !/^unknown_\d+$/i.test(field.key)
+        )
+        .map((field) => ({
+          key: field.key,
+          required: field.required,
+          label: fieldLabel(field),
+        })),
+      values
+    );
+  }
+
+  function confirmOrRun(action: "generate" | "save", allowIncomplete: boolean) {
+    if (!allowIncomplete) {
+      const missing = missingRequiredLabels();
+      if (missing.length > 0) {
+        setMissingRequired(missing);
+        setPendingIncompleteAction(action);
+        return false;
+      }
+    }
+    setMissingRequired(null);
+    setPendingIncompleteAction(null);
+    return true;
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -228,7 +267,8 @@ export function CaseDocumentModal({
     }
   }
 
-  async function handleGenerate() {
+  async function handleGenerate(options?: { allowIncomplete?: boolean }) {
+    if (!confirmOrRun("generate", Boolean(options?.allowIncomplete))) return;
     setGenerating(true);
     setError("");
     try {
@@ -268,8 +308,9 @@ export function CaseDocumentModal({
     URL.revokeObjectURL(url);
   }
 
-  async function handleSaveGenerated() {
+  async function handleSaveGenerated(options?: { allowIncomplete?: boolean }) {
     if (!generatedBlob) return;
+    if (!confirmOrRun("save", Boolean(options?.allowIncomplete))) return;
     setBusy(true);
     setError("");
     try {
@@ -277,6 +318,7 @@ export function CaseDocumentModal({
         caseId,
         templateId: template.id,
         variables: values,
+        allowIncomplete: options?.allowIncomplete === true,
       });
       onSaved(upload);
       onClose();
@@ -312,11 +354,13 @@ export function CaseDocumentModal({
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key !== "Escape") return;
+      if (missingRequired && missingRequired.length > 0) return;
+      onClose();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  }, [missingRequired, onClose]);
 
   return (
     <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
@@ -407,26 +451,50 @@ export function CaseDocumentModal({
                             {sectionLabel ? (
                               <span className={styles.fieldSection}>{sectionLabel}</span>
                             ) : null}
-                            <input
-                              type={
-                                field.type === "number"
-                                  ? "number"
-                                  : field.type === "date"
-                                    ? "date"
-                                    : "text"
-                              }
-                              value={values[field.key] ?? ""}
-                              onFocus={() => handleFieldFocus(field.key)}
-                              onChange={(e) => {
-                                invalidateGenerated();
-                                setValues((prev) => ({
-                                  ...prev,
-                                  [field.key]: e.target.value,
-                                }));
-                              }}
-                              required={field.required}
-                              placeholder={field.key}
-                            />
+                            {field.type === "date" ? (
+                              <input
+                                type="date"
+                                value={values[field.key] ?? ""}
+                                onFocus={() => handleFieldFocus(field.key)}
+                                onChange={(e) => {
+                                  invalidateGenerated();
+                                  setValues((prev) => ({
+                                    ...prev,
+                                    [field.key]: e.target.value,
+                                  }));
+                                }}
+                                placeholder={field.key}
+                              />
+                            ) : (
+                              <VoiceFillRow
+                                locale={locale}
+                                lang="ne-NP"
+                                disabled={busy || generating}
+                                onTranscript={(text) => {
+                                  invalidateGenerated();
+                                  setValues((prev) => ({
+                                    ...prev,
+                                    [field.key]: text,
+                                  }));
+                                }}
+                              >
+                                <input
+                                  type={
+                                    field.type === "number" ? "number" : "text"
+                                  }
+                                  value={values[field.key] ?? ""}
+                                  onFocus={() => handleFieldFocus(field.key)}
+                                  onChange={(e) => {
+                                    invalidateGenerated();
+                                    setValues((prev) => ({
+                                      ...prev,
+                                      [field.key]: e.target.value,
+                                    }));
+                                  }}
+                                  placeholder={field.key}
+                                />
+                              </VoiceFillRow>
+                            )}
                           </label>
                         );
                       })}
@@ -546,6 +614,23 @@ export function CaseDocumentModal({
           </div>
         )}
       </div>
+      {missingRequired && missingRequired.length > 0 ? (
+        <MissingRequiredFieldsDialog
+          items={missingRequired}
+          locale={locale}
+          onClose={() => {
+            setMissingRequired(null);
+            setPendingIncompleteAction(null);
+          }}
+          onContinue={() => {
+            if (pendingIncompleteAction === "save") {
+              void handleSaveGenerated({ allowIncomplete: true });
+              return;
+            }
+            void handleGenerate({ allowIncomplete: true });
+          }}
+        />
+      ) : null}
     </div>
   );
 }

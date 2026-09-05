@@ -3,6 +3,7 @@ import { toDevanagariDigits } from "@/lib/sajilokanun/nepali-digits";
 import type { WardTemplateVariable } from "@/lib/ward-access";
 
 const LATIN_RE = /[A-Za-z]/;
+const ASCII_DIGIT_RE = /\d/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const WARD_LOCALIZE_SYSTEM_PROMPT = `You localize ward office (वडा कार्यालय) document template field values into formal Nepali (Devanagari) for official municipal paperwork.
@@ -24,6 +25,12 @@ export type WardLocalizeField = Pick<
   "key" | "type" | "label"
 >;
 
+export type WardLocalizeResult = {
+  variables: Record<string, string>;
+  /** True when at least one field was sent to the LLM. */
+  usedAi: boolean;
+};
+
 function extractJsonObject(text: string): string {
   const trimmed = text.trim();
   const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
@@ -38,6 +45,12 @@ function extractJsonObject(text: string): string {
 
 function localNumericValue(value: string): string {
   return toDevanagariDigits(value.trim());
+}
+
+/** Convert leftover ASCII digits after AI / for digit-only fields. */
+function applyDevanagariDigitsIfNeeded(value: string): string {
+  if (!ASCII_DIGIT_RE.test(value)) return value;
+  return localNumericValue(value);
 }
 
 function fieldNeedsAi(field: WardLocalizeField, value: string): boolean {
@@ -66,12 +79,16 @@ export function resolveWardLocalizeModel(): string {
   );
 }
 
+/**
+ * Localize template user-field values. Only `userFields` keys are considered for
+ * AI / digit conversion; other keys in `values` are passed through unchanged.
+ */
 export async function localizeWardUserVariables(
   userFields: WardLocalizeField[],
   values: Record<string, string>
-): Promise<Record<string, string>> {
+): Promise<WardLocalizeResult> {
   if (!isWardAiLocalizeEnabled() || userFields.length === 0) {
-    return values;
+    return { variables: values, usedAi: false };
   }
 
   const localized: Record<string, string> = { ...values };
@@ -88,15 +105,9 @@ export async function localizeWardUserVariables(
     const trimmed = raw.trim();
     if (!trimmed) continue;
 
-    if (field.type === "number" && !LATIN_RE.test(trimmed)) {
-      localized[field.key] = localNumericValue(trimmed);
-      continue;
-    }
-
     if (!fieldNeedsAi(field, trimmed)) {
-      if (field.type === "number") {
-        localized[field.key] = localNumericValue(trimmed);
-      }
+      // Digits-only / already-Nepali: convert ASCII digits locally, no LLM.
+      localized[field.key] = applyDevanagariDigitsIfNeeded(trimmed);
       continue;
     }
 
@@ -109,7 +120,7 @@ export async function localizeWardUserVariables(
   }
 
   if (aiFields.length === 0) {
-    return localized;
+    return { variables: localized, usedAi: false };
   }
 
   const userPrompt = JSON.stringify({ fields: aiFields }, null, 2);
@@ -133,9 +144,8 @@ export async function localizeWardUserVariables(
     if (typeof next !== "string") continue;
     const trimmed = next.trim();
     if (!trimmed) continue;
-    localized[field.key] =
-      field.type === "number" ? localNumericValue(trimmed) : trimmed;
+    localized[field.key] = applyDevanagariDigitsIfNeeded(trimmed);
   }
 
-  return localized;
+  return { variables: localized, usedAi: true };
 }

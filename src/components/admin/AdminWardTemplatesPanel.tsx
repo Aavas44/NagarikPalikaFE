@@ -5,6 +5,7 @@ import {
   WARD_BUILTIN_VARIABLES,
   adminCreateWardTemplate,
   adminDeleteWardTemplate,
+  adminFetchWardTemplateFile,
   adminFetchWardTemplates,
   adminUpdateWardTemplate,
   readFileAsBase64,
@@ -373,6 +374,28 @@ export function AdminWardTemplatesPanel() {
     }
   }
 
+  async function handleDownload(template: WardDocumentTemplate) {
+    setBusyId(template.id);
+    setError("");
+    try {
+      const blob = await adminFetchWardTemplateFile(template.id);
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download =
+        template.originalFileName?.trim() ||
+        `${template.slug || "template"}.${template.fileType === "pdf" ? "pdf" : "docx"}`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to download template file"
+      );
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <section id="ward-templates" className={styles.panel}>
       <div className={styles.panelHeader}>
@@ -677,6 +700,14 @@ export function AdminWardTemplatesPanel() {
                         onClick={() => startEdit(template)}
                       >
                         Settings
+                      </button>{" "}
+                      <button
+                        type="button"
+                        className={styles.skSmallBtn}
+                        disabled={busyId === template.id || saving}
+                        onClick={() => void handleDownload(template)}
+                      >
+                        {busyId === template.id ? "Downloading…" : "Download"}
                       </button>{" "}
                       {template.fileType === "docx" ? (
                         <>

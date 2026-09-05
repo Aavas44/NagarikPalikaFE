@@ -503,7 +503,7 @@ export const messages = {
         totalPaid: "Total paid",
         documentGeneratorTitle: "Document generator",
         documentGeneratorHint:
-          "Choose an official petition form for this case’s court type. Fill the fields, preview, download, or save to case Documents.",
+          "Star forms you use often to pin them at the top. Choose an official petition form for this case’s court type. Fill the fields, preview, download, or save to case Documents.",
         documentTemplatesSearch: "Search forms (Nepali or roman, e.g. tarikh sakar)",
         documentTemplatesEmpty: "No published templates for this court type yet.",
         documentTemplatesNoCourtType:
@@ -1808,7 +1808,7 @@ export const messages = {
         totalPaid: "कुल भुक्तानी",
         documentGeneratorTitle: "कागजात जेनेरेटर",
         documentGeneratorHint:
-          "यो मुद्दाको अदालत प्रकारअनुसार प्रकाशित आधिकारिक निवेदन फारम छान्नुहोस्। फिल्ड भरी पूर्वावलोकन, डाउनलोड वा Documents मा सेभ गर्नुहोस्।",
+          "बारम्बार प्रयोग हुने फारम तारा थिचेर माथि पिन गर्नुहोस्। यो मुद्दाको अदालत प्रकारअनुसार प्रकाशित आधिकारिक निवेदन फारम छान्नुहोस्। फिल्ड भरी पूर्वावलोकन, डाउनलोड वा Documents मा सेभ गर्नुहोस्।",
         documentTemplatesSearch: "फारम खोज्नुहोस् (नेपाली वा रोमन, जस्तै tarikh sakar)",
         documentTemplatesEmpty: "यो अदालत प्रकारका लागि अहिले कुनै प्रकाशित टेम्प्लेट छैन।",
         documentTemplatesNoCourtType:

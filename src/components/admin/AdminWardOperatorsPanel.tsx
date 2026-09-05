@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import {
   adminCreateWardOperator,
   adminFetchWardOperators,
@@ -12,9 +13,9 @@ import {
 import styles from "@/app/admin.module.css";
 
 const LOCAL_BODY_OPTIONS: { value: LocalBodyType; label: string }[] = [
-  { value: "nagarpalika", label: "Nagarpalika" },
-  { value: "gaupalika", label: "Gaupalika" },
-  { value: "mahanagarpalika", label: "Mahanagarpalika" },
+  { value: "nagarpalika", label: "नगरपालिका" },
+  { value: "gaupalika", label: "गाउँपालिका" },
+  { value: "mahanagarpalika", label: "महानगरपालिका" },
 ];
 
 const LOCAL_BODY_LABELS = Object.fromEntries(
@@ -61,10 +62,172 @@ function FormField({
   );
 }
 
+function WardOperatorKebabMenu({
+  busy,
+  active,
+  onEdit,
+  onSetLimit,
+  onResetCount,
+  onToggleActive,
+}: {
+  busy: boolean;
+  active: boolean;
+  onEdit: () => void;
+  onSetLimit: () => void;
+  onResetCount: () => void;
+  onToggleActive: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{
+    top: number;
+    left: number;
+    openUp: boolean;
+  } | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const btnRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const updatePosition = useCallback(() => {
+    const btn = btnRef.current;
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const menuWidth = 180;
+    const gap = 6;
+    const estimatedHeight = 176;
+    const spaceBelow = window.innerHeight - rect.bottom - gap;
+    const spaceAbove = rect.top - gap;
+    const preferUp = spaceBelow < estimatedHeight && spaceAbove > spaceBelow;
+    const left = Math.min(
+      Math.max(8, rect.right - menuWidth),
+      window.innerWidth - menuWidth - 8
+    );
+    setMenuPos({
+      top: preferUp ? rect.top - gap : rect.bottom + gap,
+      left,
+      openUp: preferUp,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      setMenuPos(null);
+      return;
+    }
+    updatePosition();
+    function onDocClick(event: MouseEvent) {
+      const target = event.target as Node;
+      if (
+        wrapRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    function onReposition() {
+      updatePosition();
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onReposition);
+    window.addEventListener("scroll", onReposition, true);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onReposition);
+      window.removeEventListener("scroll", onReposition, true);
+    };
+  }, [open, updatePosition]);
+
+  function runAndClose(action: () => void) {
+    setOpen(false);
+    action();
+  }
+
+  return (
+    <div className={styles.skKebabWrap} ref={wrapRef}>
+      <button
+        ref={btnRef}
+        type="button"
+        className={styles.skKebabBtn}
+        disabled={busy}
+        aria-label="More actions"
+        aria-expanded={open}
+        onClick={() => setOpen((value) => !value)}
+      >
+        ⋮
+      </button>
+      {open && menuPos
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className={`${styles.skKebabMenu} ${styles.skKebabMenuFixed} ${
+                menuPos.openUp ? styles.skKebabMenuUp : ""
+              }`}
+              role="menu"
+              style={{
+                top: menuPos.openUp ? undefined : menuPos.top,
+                bottom: menuPos.openUp
+                  ? window.innerHeight - menuPos.top
+                  : undefined,
+                left: menuPos.left,
+              }}
+            >
+              <button
+                type="button"
+                className={styles.skKebabItem}
+                role="menuitem"
+                disabled={busy}
+                onClick={() => runAndClose(onEdit)}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className={styles.skKebabItem}
+                role="menuitem"
+                disabled={busy}
+                onClick={() => runAndClose(onSetLimit)}
+              >
+                Set generation limit
+              </button>
+              <button
+                type="button"
+                className={styles.skKebabItem}
+                role="menuitem"
+                disabled={busy}
+                onClick={() => runAndClose(onResetCount)}
+              >
+                Reset generation count
+              </button>
+              <div className={styles.skKebabDivider} />
+              <button
+                type="button"
+                className={`${styles.skKebabItem} ${
+                  active ? styles.skKebabItemDanger : ""
+                }`}
+                role="menuitem"
+                disabled={busy}
+                onClick={() => runAndClose(onToggleActive)}
+              >
+                {active ? "Deactivate" : "Activate"}
+              </button>
+            </div>,
+            document.body
+          )
+        : null}
+    </div>
+  );
+}
+
 export function AdminWardOperatorsPanel() {
   const [operators, setOperators] = useState<WardOperatorProfile[]>([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -86,7 +249,49 @@ export function AdminWardOperatorsPanel() {
     void load();
   }, [load]);
 
-  async function handleCreate(e: React.FormEvent) {
+  function closeForm() {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setShowPassword(false);
+  }
+
+  function openCreateForm() {
+    if (showForm && !editingId) {
+      closeForm();
+      return;
+    }
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setShowPassword(false);
+    setShowForm(true);
+  }
+
+  function openEditForm(operator: WardOperatorProfile) {
+    setEditingId(operator.id);
+    setForm({
+      username: operator.username,
+      email: operator.email ?? "",
+      password: "",
+      operatorName: operator.operatorName,
+      districtName: operator.districtName,
+      wardNo: operator.wardNo,
+      localBodyType: operator.localBodyType,
+      localBodyName: operator.localBodyName,
+      formerLocalBodyType: operator.formerLocalBodyType,
+      formerLocalBodyName: operator.formerLocalBodyName,
+      formerWardNo: operator.formerWardNo,
+      generationLimit: operator.generationLimit?.toString() ?? "",
+    });
+    setShowPassword(false);
+    setShowForm(true);
+    document.getElementById("ward-operators")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     if (form.generationLimit.trim() !== "") {
@@ -96,21 +301,47 @@ export function AdminWardOperatorsPanel() {
         return;
       }
     }
-    setBusyId("create");
+    if (editingId && form.password.trim() && form.password.trim().length < 8) {
+      setError("Password must be at least 8 characters, or leave it blank to keep the current one");
+      return;
+    }
+    setBusyId(editingId ? editingId : "create");
     try {
-      await adminCreateWardOperator({
-        ...form,
-        generationLimit:
-          form.generationLimit.trim() === ""
-            ? null
-            : Number(form.generationLimit),
-      });
-      setForm(EMPTY_FORM);
-      setShowPassword(false);
-      setShowForm(false);
+      const generationLimit =
+        form.generationLimit.trim() === ""
+          ? null
+          : Number(form.generationLimit);
+      if (editingId) {
+        await adminUpdateWardOperator(editingId, {
+          username: form.username,
+          email: form.email,
+          operatorName: form.operatorName,
+          districtName: form.districtName,
+          wardNo: form.wardNo,
+          localBodyType: form.localBodyType,
+          localBodyName: form.localBodyName,
+          formerLocalBodyType: form.formerLocalBodyType,
+          formerLocalBodyName: form.formerLocalBodyName,
+          formerWardNo: form.formerWardNo,
+          generationLimit,
+          ...(form.password.trim() ? { password: form.password.trim() } : {}),
+        });
+      } else {
+        await adminCreateWardOperator({
+          ...form,
+          generationLimit,
+        });
+      }
+      closeForm();
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create ward operator");
+      setError(
+        err instanceof Error
+          ? err.message
+          : editingId
+            ? "Failed to update ward operator"
+            : "Failed to create ward operator"
+      );
     } finally {
       setBusyId(null);
     }
@@ -179,7 +410,7 @@ export function AdminWardOperatorsPanel() {
           <button
             type="button"
             className={styles.btnPrimary}
-            onClick={() => setShowForm((open) => !open)}
+            onClick={() => (showForm ? closeForm() : openCreateForm())}
           >
             {showForm ? "Close" : "Add operator"}
           </button>
@@ -192,8 +423,10 @@ export function AdminWardOperatorsPanel() {
       {error ? <p className={styles.formError}>{error}</p> : null}
 
       {showForm ? (
-        <form className={styles.skAddMemberCard} onSubmit={handleCreate}>
-          <h3 className={styles.skSubheading}>New ward operator</h3>
+        <form className={styles.skAddMemberCard} onSubmit={handleSubmit}>
+          <h3 className={styles.skSubheading}>
+            {editingId ? "Edit ward operator" : "New ward operator"}
+          </h3>
           <div className={`${styles.skRoleFormGrid} ${styles.wardOperatorFormBody}`}>
             <FormField label="Operator name" htmlFor="ward-operator-name" required>
               <input
@@ -228,8 +461,12 @@ export function AdminWardOperatorsPanel() {
             <FormField
               label="Password"
               htmlFor="ward-password"
-              hint="Minimum 8 characters"
-              required
+              hint={
+                editingId
+                  ? "Leave blank to keep the current password"
+                  : "Minimum 8 characters"
+              }
+              required={!editingId}
             >
               <div className={styles.passwordFieldWrap}>
                 <input
@@ -238,7 +475,7 @@ export function AdminWardOperatorsPanel() {
                   type={showPassword ? "text" : "password"}
                   value={form.password}
                   onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                  required
+                  required={!editingId}
                   minLength={8}
                   autoComplete="new-password"
                 />
@@ -401,8 +638,18 @@ export function AdminWardOperatorsPanel() {
             </div>
           </div>
           <div className={styles.skAddMemberFormActions} style={{ padding: "0 1rem 1rem" }}>
-            <button type="submit" className={styles.btnPrimary} disabled={busyId === "create"}>
-              {busyId === "create" ? "Creating…" : "Create operator"}
+            <button
+              type="submit"
+              className={styles.btnPrimary}
+              disabled={busyId === "create" || busyId === editingId}
+            >
+              {busyId === "create" || busyId === editingId
+                ? editingId
+                  ? "Saving…"
+                  : "Creating…"
+                : editingId
+                  ? "Save changes"
+                  : "Create operator"}
             </button>
           </div>
         </form>
@@ -452,32 +699,14 @@ export function AdminWardOperatorsPanel() {
                     <td>{formatWardGenerationQuota(operator)}</td>
                     <td>{operator.active ? "Active" : "Inactive"}</td>
                     <td>
-                      <div className={styles.skMemberActions}>
-                        <button
-                          type="button"
-                          className={styles.skSmallBtn}
-                          disabled={busyId === operator.id}
-                          onClick={() => void updateGenerationLimit(operator)}
-                        >
-                          Set limit
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.skSmallBtn}
-                          disabled={busyId === operator.id}
-                          onClick={() => void resetGenerationCount(operator)}
-                        >
-                          Reset count
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.skSmallBtn}
-                          disabled={busyId === operator.id}
-                          onClick={() => void toggleActive(operator)}
-                        >
-                          {operator.active ? "Deactivate" : "Activate"}
-                        </button>
-                      </div>
+                      <WardOperatorKebabMenu
+                        busy={busyId === operator.id}
+                        active={operator.active}
+                        onEdit={() => openEditForm(operator)}
+                        onSetLimit={() => void updateGenerationLimit(operator)}
+                        onResetCount={() => void resetGenerationCount(operator)}
+                        onToggleActive={() => void toggleActive(operator)}
+                      />
                     </td>
                   </tr>
                 ))

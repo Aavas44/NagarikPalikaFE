@@ -48,6 +48,7 @@ export async function handleWardDocumentRequest(
     templateId?: string;
     variables?: Record<string, string | number>;
     skipLocalize?: boolean;
+    allowIncomplete?: boolean;
   };
 
   const templateId = body.templateId?.trim();
@@ -65,7 +66,8 @@ export async function handleWardDocumentRequest(
   let variables = inputValues;
   if (isWardAiLocalizeEnabled() && !body.skipLocalize) {
     const userFields = await fetchTemplateUserFields(templateId, authorization);
-    variables = await localizeWardUserVariables(userFields, inputValues);
+    const localized = await localizeWardUserVariables(userFields, inputValues);
+    variables = localized.variables;
   }
 
   const upstream = await fetch(`${apiBaseUrl()}/api/ward/documents/${mode}`, {
@@ -74,7 +76,11 @@ export async function handleWardDocumentRequest(
       "Content-Type": "application/json",
       Authorization: authorization,
     },
-    body: JSON.stringify({ templateId, variables }),
+    body: JSON.stringify({
+      templateId,
+      variables,
+      allowIncomplete: body.allowIncomplete === true,
+    }),
     cache: "no-store",
   });
 
@@ -133,6 +139,9 @@ export async function handleWardLocalizeRequest(request: Request): Promise<Respo
   }
 
   const userFields = await fetchTemplateUserFields(templateId, authorization);
-  const variables = await localizeWardUserVariables(userFields, inputValues);
-  return Response.json({ variables, localized: true });
+  const result = await localizeWardUserVariables(userFields, inputValues);
+  return Response.json({
+    variables: result.variables,
+    localized: result.usedAi,
+  });
 }

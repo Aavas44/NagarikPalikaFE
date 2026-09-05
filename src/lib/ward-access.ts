@@ -18,6 +18,7 @@ export interface WardOperatorProfile {
   generationCount: number;
   generationRemaining: number | null;
   generationUnlimited: boolean;
+  starredTemplateIds: string[];
   active: boolean;
   email: string | null;
   createdAt: string;
@@ -181,6 +182,23 @@ export async function wardFetchTemplates(): Promise<WardDocumentTemplate[]> {
   return data as WardDocumentTemplate[];
 }
 
+export async function wardSetStarredTemplate(
+  templateId: string,
+  starred: boolean
+): Promise<string[]> {
+  const { authedFetch } = await import("@/lib/auth");
+  const res = await authedFetch(`/ward/starred-templates/${templateId}`, {
+    method: "PUT",
+    body: JSON.stringify({ starred }),
+  });
+  const data = (await res.json()) as {
+    error?: string;
+    starredTemplateIds?: string[];
+  };
+  if (!res.ok) throw new Error(data.error ?? "Failed to update bookmark");
+  return data.starredTemplateIds ?? [];
+}
+
 export async function wardLocalizeVariables(input: {
   templateId: string;
   variables: Record<string, string>;
@@ -236,6 +254,7 @@ export async function wardGenerateDocument(input: {
   templateId: string;
   variables: Record<string, string>;
   skipLocalize?: boolean;
+  allowIncomplete?: boolean;
 }): Promise<{ blob: Blob; fileName: string }> {
   const { getToken } = await import("@/lib/auth");
   const token = getToken();
@@ -258,6 +277,35 @@ export async function wardGenerateDocument(input: {
   const fileName = match?.[1]
     ? decodeURIComponent(match[1])
     : "document.docx";
+  const blob = await res.blob();
+  return { blob, fileName };
+}
+
+export async function wardDocxFromEditedHtml(input: {
+  html: string;
+  fileName?: string;
+}): Promise<{ blob: Blob; fileName: string }> {
+  const { getToken } = await import("@/lib/auth");
+  const token = getToken();
+  const res = await fetch("/api/ward/documents/from-html", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(input),
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? "Failed to convert edited preview");
+  }
+
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/i);
+  const fileName = match?.[1]
+    ? decodeURIComponent(match[1])
+    : input.fileName || "document.docx";
   const blob = await res.blob();
   return { blob, fileName };
 }

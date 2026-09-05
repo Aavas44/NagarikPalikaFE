@@ -23,3 +23,27 @@ export function markSkPreviewFields(html: string): string {
     return `<mark class="sk-preview-field" data-sk-field="${safeKey}">${safeContent}</mark>`;
   });
 }
+
+const MARK_FIELD_RE =
+  /(<mark\b[^>]*\bdata-sk-field="([^"]+)"[^>]*>)([\s\S]*?)(<\/mark>)/gi;
+
+/**
+ * Replace text inside preview field marks from current form values (client-side live preview).
+ * `displayForKey(key, value)` should return the visible string (including empty-state labels).
+ */
+export function applyValuesToSkPreviewHtml(
+  html: string,
+  values: Record<string, string>,
+  displayForKey: (key: string, value: string) => string
+): string {
+  if (!html.includes("data-sk-field")) return html;
+  return html.replace(MARK_FIELD_RE, (_match, open: string, key: string, _content: string, close: string) => {
+    const display = displayForKey(key, values[key] ?? "");
+    return `${open}${escapeHtmlText(display)}${close}`;
+  });
+}
+
+/** True when the preview HTML still has live-editable field marks. */
+export function skPreviewHtmlHasFieldMarks(html: string): boolean {
+  return /data-sk-field="/i.test(html);
+}

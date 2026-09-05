@@ -1,0 +1,84 @@
+.wrap {
+  display: inline-flex;
+  align-items: stretch;
+  max-width: 100%;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 999px;
+  overflow: hidden;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.wrap:hover:not(.wrapDisabled) {
+  border-color: #b5d4f4;
+}
+
+.wrapSelected {
+  background: #e6f1fb;
+  border-color: #185fa5;
+}
+
+.wrapDisabled {
+  opacity: 0.5;
+}
+
+.star {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #d1d5db;
+  padding: 0 2px 0 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.star:hover,
+.star:focus-visible {
+  color: #eab308;
+  outline: none;
+}
+
+.starOn {
+  color: #ca8a04;
+}
+
+.chip {
+  border: none;
+  background: transparent;
+  padding: 5px 10px 5px 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  min-width: 0;
+}
+
+.wrap:hover:not(.wrapDisabled) .chip {
+  color: #185fa5;
+}
+
+.wrapSelected .chip,
+.wrapSelected:hover .chip {
+  color: #0c447c;
+}
+
+.chip:disabled {
+  cursor: not-allowed;
+}
+
+.primary {
+  display: block;
+}
+
+.secondary {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72em;
+  opacity: 0.75;
+  font-weight: 500;
+}
