@@ -74,46 +74,32 @@ export function VoiceFillRow({
     return <>{children}</>;
   }
 
-  const recordTitle =
-    error === "not-allowed" || error === "service-not-allowed"
+  const label = listening
+    ? labels.stop
+    : error === "not-allowed" || error === "service-not-allowed"
       ? labels.denied
       : labels.record;
 
   return (
     <div className={styles.row}>
       <div className={styles.control}>{children}</div>
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={`${styles.btn} ${listening ? styles.btnListening : ""}`}
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            start();
-          }}
-          disabled={disabled || listening}
-          aria-label={labels.record}
-          title={recordTitle}
-        >
-          <MicIcon />
-        </button>
-        <button
-          type="button"
-          className={`${styles.btn} ${styles.btnStop}`}
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            stop();
-          }}
-          disabled={disabled || !listening}
-          aria-label={labels.stop}
-          title={labels.stop}
-        >
-          <StopIcon />
-        </button>
-      </div>
+      <button
+        type="button"
+        className={`${styles.btn} ${listening ? styles.btnListening : ""}`}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (listening) stop();
+          else start();
+        }}
+        disabled={disabled}
+        aria-pressed={listening}
+        aria-label={label}
+        title={label}
+      >
+        {listening ? <StopIcon /> : <MicIcon />}
+      </button>
     </div>
   );
 }

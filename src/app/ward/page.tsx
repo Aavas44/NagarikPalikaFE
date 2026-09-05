@@ -13,7 +13,7 @@ import {
 } from "@/lib/ward-access";
 import { matchesNepaliRomanSearch } from "@/lib/sajilokanun/nepali-roman-search";
 import { sortStarredFirst, toggleStarredId } from "@/lib/starred-templates";
-import { TemplateStarChip } from "@/components/TemplateStarChip";
+import { TemplateCatalog } from "@/components/TemplateCatalog";
 import styles from "@/app/ward/ward.module.css";
 
 const LOCAL_BODY_LABELS: Record<string, string> = {
@@ -22,7 +22,7 @@ const LOCAL_BODY_LABELS: Record<string, string> = {
   mahanagarpalika: "Mahanagarpalika",
 };
 
-const TEMPLATE_PAGE_SIZE = 20;
+const TEMPLATE_PAGE_SIZE = 12;
 
 export default function WardOperatorPage() {
   const [profile, setProfile] = useState<WardOperatorProfile | null>(null);
@@ -30,6 +30,7 @@ export default function WardOperatorPage() {
   const [activeTemplate, setActiveTemplate] = useState<WardDocumentTemplate | null>(null);
   const [templateSearch, setTemplateSearch] = useState("");
   const [templatePage, setTemplatePage] = useState(1);
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const starLock = useRef(new Set<string>());
@@ -39,9 +40,11 @@ export default function WardOperatorPage() {
     return (profile.generationRemaining ?? 0) <= 0;
   }, [profile]);
 
+  const starredIds = profile?.starredTemplateIds ?? [];
+
   const filteredTemplates = useMemo(() => {
     const q = templateSearch.trim();
-    const matched = !q
+    let matched = !q
       ? templates
       : templates.filter((template) =>
           matchesNepaliRomanSearch(q, [
@@ -52,8 +55,11 @@ export default function WardOperatorPage() {
             template.description?.en,
           ])
         );
-    return sortStarredFirst(matched, profile?.starredTemplateIds);
-  }, [templates, templateSearch, profile?.starredTemplateIds]);
+    if (showStarredOnly) {
+      matched = matched.filter((template) => starredIds.includes(template.id));
+    }
+    return sortStarredFirst(matched, starredIds);
+  }, [templates, templateSearch, showStarredOnly, starredIds]);
 
   const templateTotalPages = Math.max(
     1,
@@ -109,19 +115,27 @@ export default function WardOperatorPage() {
   }
 
   if (loading) {
-    return <div className={styles.wrap}><p className={styles.muted}>Loading…</p></div>;
+    return (
+      <div className={styles.wrap}>
+        <p className={styles.muted}>Loading…</p>
+      </div>
+    );
   }
 
   return (
     <div className={styles.wrap}>
       <header className={styles.header}>
         <div>
-          <Link href="/" className={styles.brand}>Nagarik Palika</Link>
+          <Link href="/" className={styles.brand}>
+            Nagarik Palika
+          </Link>
           <h1>Ward document generator</h1>
           {profile ? (
             <p className={styles.subtitle}>
-              {profile.operatorName} · {LOCAL_BODY_LABELS[profile.localBodyType] ?? profile.localBodyType}{" "}
-              {profile.localBodyName}, Current ward {profile.wardNo} · {profile.districtName}
+              {profile.operatorName} ·{" "}
+              {LOCAL_BODY_LABELS[profile.localBodyType] ?? profile.localBodyType}{" "}
+              {profile.localBodyName}, Current ward {profile.wardNo} ·{" "}
+              {profile.districtName}
             </p>
           ) : null}
           {profile ? (
@@ -136,121 +150,85 @@ export default function WardOperatorPage() {
             </p>
           ) : null}
         </div>
-        <button type="button" className={styles.logoutBtn} onClick={() => logout("/sajilokanun/login")}>
+        <button
+          type="button"
+          className={styles.logoutBtn}
+          onClick={() => logout("/sajilokanun/login")}
+        >
           Sign out
         </button>
       </header>
 
       {error ? <p className={styles.error}>{error}</p> : null}
 
-      {templates.length === 0 ? (
-        <div className={styles.empty}>
-          <p>No published templates yet. Ask your superadmin to publish ward templates.</p>
-        </div>
-      ) : (
-        <section className={styles.panel}>
-          <h2 className={styles.panelTitle}>Document generator</h2>
-          <p className={styles.hint}>
-            टेम्प्लेट छान्नुहोस् — तारा थिचेर बुकमार्क गर्नुहोस्, फिल्ड भर्नुहोस्, पूर्वावलोकनमा सम्पादन गर्नुहोस्, त्यसपछि डाउनलोड गर्नुहोस्।
-            वडा कार्यालयको ठेगाना र आजको नेपाली मिति स्वतः भरिन्छ।
-          </p>
-          <p className={styles.muted} style={{ marginTop: 0 }}>
-            {filteredTemplates.length} template{filteredTemplates.length === 1 ? "" : "s"}
-            {templateSearch.trim() ? ` matching “${templateSearch.trim()}”` : ""}
-          </p>
-
-          <div className={styles.searchField}>
-            <label htmlFor="ward-template-search">Search templates</label>
-            <input
-              id="ward-template-search"
-              className={styles.searchInput}
-              value={templateSearch}
-              onChange={(e) => {
-                setTemplateSearch(e.target.value);
-                setTemplatePage(1);
-              }}
-              placeholder="Search templates"
-            />
+      <section className={`${styles.panel} ${styles.catalogPanel}`}>
+        <div className={styles.catalogHeader}>
+          <div>
+            <h2 className={styles.panelTitle}>Document templates</h2>
+            <p className={styles.hint}>
+              टेम्प्लेट छान्नुहोस् — तारा थिचेर बुकमार्क गर्नुहोस्, फिल्ड भर्नुहोस्,
+              पूर्वावलोकनमा सम्पादन गर्नुहोस्, त्यसपछि डाउनलोड गर्नुहोस्।
+            </p>
           </div>
+        </div>
 
-          {filteredTemplates.length === 0 ? (
-            <p className={styles.muted}>No templates match that search.</p>
-          ) : (
-            <>
-              <div className={styles.presets}>
-                {pagedTemplates.map((template) => {
-                  const primary = template.name.ne || template.name.en;
-                  const secondary =
-                    template.name.en && template.name.en !== primary
-                      ? template.name.en
-                      : "";
-                  const disabled = template.fileType !== "docx";
-                  const starred = (profile?.starredTemplateIds ?? []).includes(
-                    template.id
-                  );
-                  return (
-                    <TemplateStarChip
-                      key={template.id}
-                      starred={starred}
-                      selected={activeTemplate?.id === template.id}
-                      disabled={disabled}
-                      primary={primary}
-                      secondary={secondary || undefined}
-                      title={
-                        disabled
-                          ? "DOCX fill only (PDF coming soon)"
-                          : primary
-                      }
-                      starLabel="बुकमार्क गर्नुहोस्"
-                      unstarLabel="बुकमार्क हटाउनुहोस्"
-                      onToggleStar={() => void toggleStar(template.id)}
-                      onSelect={() => {
-                        if (disabled) return;
-                        setError("");
-                        setActiveTemplate(template);
-                      }}
-                    />
-                  );
-                })}
-              </div>
-              {filteredTemplates.length > TEMPLATE_PAGE_SIZE ? (
-                <div className={styles.pagination}>
-                  <span className={styles.muted}>
-                    {`${(activeTemplatePage - 1) * TEMPLATE_PAGE_SIZE + 1}–${Math.min(
-                      activeTemplatePage * TEMPLATE_PAGE_SIZE,
-                      filteredTemplates.length
-                    )} / ${filteredTemplates.length}`}
-                  </span>
-                  <div className={styles.paginationActions}>
-                    <button
-                      type="button"
-                      className={styles.pageBtn}
-                      disabled={activeTemplatePage <= 1}
-                      onClick={() =>
-                        setTemplatePage((page) => Math.max(1, page - 1))
-                      }
-                    >
-                      Prev
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.pageBtn}
-                      disabled={activeTemplatePage >= templateTotalPages}
-                      onClick={() =>
-                        setTemplatePage((page) =>
-                          Math.min(templateTotalPages, page + 1)
-                        )
-                      }
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-            </>
-          )}
-        </section>
-      )}
+        <TemplateCatalog
+          items={pagedTemplates.map((template) => {
+            const primary = template.name.ne || template.name.en;
+            const secondary =
+              template.name.en && template.name.en !== primary
+                ? template.name.en
+                : undefined;
+            const disabled = template.fileType !== "docx";
+            return {
+              id: template.id,
+              primary,
+              secondary,
+              meta: template.fileType.toUpperCase(),
+              starred: starredIds.includes(template.id),
+              selected: activeTemplate?.id === template.id,
+              disabled,
+              disabledReason: disabled ? "DOCX only (PDF soon)" : undefined,
+            };
+          })}
+          filteredCount={filteredTemplates.length}
+          totalCount={templates.length}
+          search={templateSearch}
+          onSearchChange={(value) => {
+            setTemplateSearch(value);
+            setTemplatePage(1);
+          }}
+          page={activeTemplatePage}
+          pageSize={TEMPLATE_PAGE_SIZE}
+          onPageChange={setTemplatePage}
+          showStarredOnly={showStarredOnly}
+          onShowStarredOnlyChange={(value) => {
+            setShowStarredOnly(value);
+            setTemplatePage(1);
+          }}
+          starredCount={starredIds.length}
+          labels={{
+            searchLabel: "Search templates",
+            searchPlaceholder: "Search by Nepali or English name…",
+            all: "All",
+            starred: "Starred",
+            empty: "No published templates yet. Ask your superadmin to publish ward templates.",
+            noResults: "No templates match that search.",
+            starLabel: "बुकमार्क गर्नुहोस्",
+            unstarLabel: "बुकमार्क हटाउनुहोस्",
+            prev: "Prev",
+            next: "Next",
+            openHint: "Open →",
+          }}
+          onToggleStar={(id) => void toggleStar(id)}
+          onSelect={(id) => {
+            const template = templates.find((item) => item.id === id);
+            if (!template || template.fileType !== "docx") return;
+            setError("");
+            setActiveTemplate(template);
+          }}
+        />
+      </section>
 
       {activeTemplate && profile ? (
         <WardDocumentModal

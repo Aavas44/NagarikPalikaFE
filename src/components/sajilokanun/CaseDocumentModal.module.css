@@ -102,6 +102,69 @@
   margin-top: 1rem;
 }
 
+.rowBlock {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.7rem 0.7rem 0.8rem 0.85rem;
+  margin-left: 0.1rem;
+  border-left: 3px solid #38bdf8;
+  background: #f0f9ff;
+  border-radius: 0 12px 12px 0;
+}
+
+.rowBlockTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0369a1;
+}
+
+.rowBlockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rowBlockRemove {
+  border: none;
+  background: transparent;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.15rem 0.25rem;
+  font-family: inherit;
+}
+
+.rowAddBtn {
+  justify-self: start;
+  border: 1px dashed #7dd3fc;
+  background: #fff;
+  color: #0369a1;
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rowAddBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rowBlockFields {
+  display: grid;
+  gap: 0.7rem;
+  padding-left: 0.45rem;
+}
+
+.rowBlock .fieldActive {
+  margin: 0;
+}
+
 .field {
   display: grid;
   gap: 0.35rem;

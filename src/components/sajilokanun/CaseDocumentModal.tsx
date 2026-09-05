@@ -23,6 +23,15 @@ import {
   listMissingRequiredLabels,
 } from "@/components/MissingRequiredFieldsDialog";
 import { VoiceFillRow } from "@/components/VoiceFillButton";
+import {
+  fieldKeyForRow,
+  layoutFormFields,
+  layoutHasRepeatableRows,
+  labelWithoutRowNumber,
+  MAX_TABLE_ROWS,
+  rowGroupTitle,
+  withTableRowRequestValues,
+} from "@/lib/form-row-groups";
 import styles from "./CaseDocumentModal.module.css";
 
 type CaseDocumentModalProps = {
@@ -92,6 +101,7 @@ export function CaseDocumentModal({
   const [placeholderKeys, setPlaceholderKeys] = useState<string[]>([]);
   const [fieldsLoading, setFieldsLoading] = useState(true);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [tableRowCount, setTableRowCount] = useState(1);
   const [previewHtml, setPreviewHtml] = useState("");
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -119,20 +129,40 @@ export function CaseDocumentModal({
     [userFields, placeholderKeys]
   );
 
+  const formLayout = useMemo(
+    () => layoutFormFields(orderedFields),
+    [orderedFields]
+  );
+  const hasRepeatableRows = layoutHasRepeatableRows(formLayout);
+
   function missingRequiredLabels(): string[] {
-    return listMissingRequiredLabels(
-      orderedFields
-        .filter(
-          (field) =>
-            !/^blank_\d+$/i.test(field.key) && !/^unknown_\d+$/i.test(field.key)
-        )
-        .map((field) => ({
-          key: field.key,
-          required: field.required,
-          label: fieldLabel(field),
-        })),
-      values
-    );
+    const fields: Array<{ key: string; required?: boolean; label: string }> = [];
+    for (const group of formLayout) {
+      if (group.type === "loose") {
+        if (
+          /^blank_\d+$/i.test(group.field.key) ||
+          /^unknown_\d+$/i.test(group.field.key)
+        ) {
+          continue;
+        }
+        fields.push({
+          key: group.field.key,
+          required: group.field.required,
+          label: fieldLabel(group.field),
+        });
+        continue;
+      }
+      for (let row = 1; row <= tableRowCount; row += 1) {
+        for (const column of group.columns) {
+          fields.push({
+            key: fieldKeyForRow(column.key, row),
+            required: Boolean(column.required) && row === 1,
+            label: `${labelWithoutRowNumber(fieldLabel(column), row)} (${rowGroupTitle(row, locale)})`,
+          });
+        }
+      }
+    }
+    return listMissingRequiredLabels(fields, values);
   }
 
   function confirmOrRun(action: "generate" | "save", allowIncomplete: boolean) {
@@ -166,6 +196,7 @@ export function CaseDocumentModal({
         if (cancelled) return;
         setUserFields(fields.userFields);
         setPlaceholderKeys(fields.placeholderKeys);
+        setTableRowCount(1);
 
         const initial: Record<string, string> = {};
         for (const field of fields.userFields) {
@@ -219,7 +250,11 @@ export function CaseDocumentModal({
       const { blob } = await previewSkCaseDocument({
         caseId,
         templateId: template.id,
-        variables: values,
+        variables: withTableRowRequestValues(
+          values,
+          tableRowCount,
+          hasRepeatableRows
+        ),
       });
       setPreviewHtml(await docxToPreviewHtml(blob));
     } catch (err) {
@@ -227,13 +262,13 @@ export function CaseDocumentModal({
     } finally {
       setBusy(false);
     }
-  }, [caseId, template.id, values]);
+  }, [caseId, template.id, values, tableRowCount, hasRepeatableRows]);
 
   useEffect(() => {
     if (fieldsLoading || userFields.length === 0) return;
     void refreshPreview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fieldsLoading, template.id, caseId]);
+  }, [fieldsLoading, template.id, caseId, tableRowCount]);
 
   useEffect(() => {
     const container = previewDocRef.current;
@@ -267,6 +302,34 @@ export function CaseDocumentModal({
     }
   }
 
+  function addTableRow() {
+    if (tableRowCount >= MAX_TABLE_ROWS) return;
+    invalidateGenerated();
+    setTableRowCount((count) => count + 1);
+  }
+
+  function removeTableRow(row: number) {
+    if (tableRowCount <= 1) return;
+    const columns = formLayout.flatMap((group) =>
+      group.type === "repeatable" ? group.columns : []
+    );
+    setValues((prev) => {
+      const next = { ...prev };
+      for (let from = row; from < tableRowCount; from += 1) {
+        for (const column of columns) {
+          next[fieldKeyForRow(column.key, from)] =
+            next[fieldKeyForRow(column.key, from + 1)] ?? "";
+        }
+      }
+      for (const column of columns) {
+        delete next[fieldKeyForRow(column.key, tableRowCount)];
+      }
+      return next;
+    });
+    invalidateGenerated();
+    setTableRowCount((count) => count - 1);
+  }
+
   async function handleGenerate(options?: { allowIncomplete?: boolean }) {
     if (!confirmOrRun("generate", Boolean(options?.allowIncomplete))) return;
     setGenerating(true);
@@ -275,7 +338,11 @@ export function CaseDocumentModal({
       const result = await generateSkCaseDocumentWithAi({
         caseId,
         templateId: template.id,
-        variables: values,
+        variables: withTableRowRequestValues(
+          values,
+          tableRowCount,
+          hasRepeatableRows
+        ),
       });
       setValues((prev) => ({ ...prev, ...result.values }));
       setGeneratedBlob(result.blob);
@@ -317,7 +384,11 @@ export function CaseDocumentModal({
       const { upload } = await saveSkCaseDocument({
         caseId,
         templateId: template.id,
-        variables: values,
+        variables: withTableRowRequestValues(
+          values,
+          tableRowCount,
+          hasRepeatableRows
+        ),
         allowIncomplete: options?.allowIncomplete === true,
       });
       onSaved(upload);
@@ -361,6 +432,80 @@ export function CaseDocumentModal({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [missingRequired, onClose]);
+
+  function renderFormField(
+    field: SkTemplateFormField,
+    index: number,
+    row?: number
+  ) {
+    const section = field.section?.trim() || "";
+    const sectionLabel = sectionTitle(section);
+    const label =
+      row != null
+        ? labelWithoutRowNumber(fieldLabel(field), row)
+        : fieldLabel(field);
+    return (
+      <label
+        key={field.key}
+        className={`${styles.field} ${
+          activeFieldKey === field.key ? styles.fieldActive : ""
+        }`}
+      >
+        <span className={styles.fieldLabelRow}>
+          <span className={styles.fieldIndex}>{index}.</span>
+          <span>
+            {label}
+            {field.required ? " *" : ""}
+          </span>
+        </span>
+        {sectionLabel ? (
+          <span className={styles.fieldSection}>{sectionLabel}</span>
+        ) : null}
+        {field.type === "date" ? (
+          <input
+            type="date"
+            value={values[field.key] ?? ""}
+            onFocus={() => handleFieldFocus(field.key)}
+            onChange={(e) => {
+              invalidateGenerated();
+              setValues((prev) => ({
+                ...prev,
+                [field.key]: e.target.value,
+              }));
+            }}
+            placeholder={field.key}
+          />
+        ) : (
+          <VoiceFillRow
+            locale={locale}
+            lang="ne-NP"
+            disabled={busy || generating}
+            onTranscript={(text) => {
+              invalidateGenerated();
+              setValues((prev) => ({
+                ...prev,
+                [field.key]: text,
+              }));
+            }}
+          >
+            <input
+              type={field.type === "number" ? "number" : "text"}
+              value={values[field.key] ?? ""}
+              onFocus={() => handleFieldFocus(field.key)}
+              onChange={(e) => {
+                invalidateGenerated();
+                setValues((prev) => ({
+                  ...prev,
+                  [field.key]: e.target.value,
+                }));
+              }}
+              placeholder={field.key}
+            />
+          </VoiceFillRow>
+        )}
+      </label>
+    );
+  }
 
   return (
     <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
@@ -431,73 +576,77 @@ export function CaseDocumentModal({
                 ) : (
                   <div className={styles.formScroll}>
                     <div className={styles.form}>
-                      {orderedFields.map((field, index) => {
-                        const section = field.section?.trim() || "";
-                        const sectionLabel = sectionTitle(section);
-                        return (
-                          <label
-                            key={field.key}
-                            className={`${styles.field} ${
-                              activeFieldKey === field.key ? styles.fieldActive : ""
-                            }`}
-                          >
-                            <span className={styles.fieldLabelRow}>
-                              <span className={styles.fieldIndex}>{index + 1}.</span>
-                              <span>
-                                {fieldLabel(field)}
-                                {field.required ? " *" : ""}
-                              </span>
-                            </span>
-                            {sectionLabel ? (
-                              <span className={styles.fieldSection}>{sectionLabel}</span>
-                            ) : null}
-                            {field.type === "date" ? (
-                              <input
-                                type="date"
-                                value={values[field.key] ?? ""}
-                                onFocus={() => handleFieldFocus(field.key)}
-                                onChange={(e) => {
-                                  invalidateGenerated();
-                                  setValues((prev) => ({
-                                    ...prev,
-                                    [field.key]: e.target.value,
-                                  }));
-                                }}
-                                placeholder={field.key}
-                              />
-                            ) : (
-                              <VoiceFillRow
-                                locale={locale}
-                                lang="ne-NP"
-                                disabled={busy || generating}
-                                onTranscript={(text) => {
-                                  invalidateGenerated();
-                                  setValues((prev) => ({
-                                    ...prev,
-                                    [field.key]: text,
-                                  }));
-                                }}
+                      {(() => {
+                        let fieldNumber = 1;
+                        return formLayout.flatMap((group) => {
+                          if (group.type === "loose") {
+                            const index = fieldNumber;
+                            fieldNumber += 1;
+                            return [renderFormField(group.field, index)];
+                          }
+                          const blocks = [];
+                          for (let row = 1; row <= tableRowCount; row += 1) {
+                            const rowIndex = row;
+                            blocks.push(
+                              <div
+                                key={`row-${rowIndex}-${group.columns[0].key}`}
+                                className={styles.rowBlock}
                               >
-                                <input
-                                  type={
-                                    field.type === "number" ? "number" : "text"
-                                  }
-                                  value={values[field.key] ?? ""}
-                                  onFocus={() => handleFieldFocus(field.key)}
-                                  onChange={(e) => {
-                                    invalidateGenerated();
-                                    setValues((prev) => ({
-                                      ...prev,
-                                      [field.key]: e.target.value,
-                                    }));
-                                  }}
-                                  placeholder={field.key}
-                                />
-                              </VoiceFillRow>
-                            )}
-                          </label>
-                        );
-                      })}
+                                <div className={styles.rowBlockHeader}>
+                                  <p className={styles.rowBlockTitle}>
+                                    {rowGroupTitle(rowIndex, locale)}
+                                  </p>
+                                  {tableRowCount > 1 ? (
+                                    <button
+                                      type="button"
+                                      className={styles.rowBlockRemove}
+                                      onClick={() => removeTableRow(rowIndex)}
+                                      disabled={busy || generating}
+                                    >
+                                      {locale === "ne" ? "हटाउनुहोस्" : "Remove"}
+                                    </button>
+                                  ) : null}
+                                </div>
+                                <div className={styles.rowBlockFields}>
+                                  {group.columns.map((column) => {
+                                    const index = fieldNumber;
+                                    fieldNumber += 1;
+                                    return renderFormField(
+                                      {
+                                        ...column,
+                                        key: fieldKeyForRow(column.key, rowIndex),
+                                        required:
+                                          Boolean(column.required) &&
+                                          rowIndex === 1,
+                                      },
+                                      index,
+                                      rowIndex
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            );
+                          }
+                          blocks.push(
+                            <button
+                              key={`add-row-${group.columns[0].key}`}
+                              type="button"
+                              className={styles.rowAddBtn}
+                              onClick={addTableRow}
+                              disabled={
+                                busy ||
+                                generating ||
+                                tableRowCount >= MAX_TABLE_ROWS
+                              }
+                            >
+                              {locale === "ne"
+                                ? "+ क्रम थप्नुहोस्"
+                                : "+ Add row"}
+                            </button>
+                          );
+                          return blocks;
+                        });
+                      })()}
                     </div>
                   </div>
                 )}

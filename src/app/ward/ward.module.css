@@ -1,6 +1,9 @@
 .wrap {
   min-height: 100vh;
-  background: #f8fafc;
+  background:
+    radial-gradient(ellipse 80% 50% at 0% -10%, rgba(24, 95, 165, 0.08), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(14, 116, 144, 0.06), transparent 50%),
+    #f5f8fc;
   padding: 1.5rem;
 }
 
@@ -9,12 +12,13 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.35rem;
 }
 
 .brand {
   display: inline-block;
   font-size: 13px;
+  font-weight: 600;
   color: #185fa5;
   text-decoration: none;
   margin-bottom: 0.35rem;
@@ -22,7 +26,9 @@
 
 .header h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+  color: #042c53;
 }
 
 .subtitle {
@@ -49,14 +55,24 @@
 .panel {
   background: #fff;
   border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-radius: 16px;
+  padding: 1.35rem 1.35rem 1.5rem;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.04);
+}
+
+.catalogPanel {
+  overflow: hidden;
+}
+
+.catalogHeader {
+  margin-bottom: 1rem;
 }
 
 .panelTitle {
   margin: 0 0 0.35rem;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   color: #042c53;
+  letter-spacing: -0.015em;
 }
 
 .searchField {
@@ -171,6 +187,69 @@
   display: grid;
   gap: 0.85rem;
   margin-top: 1rem;
+}
+
+.rowBlock {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.7rem 0.7rem 0.8rem 0.85rem;
+  margin-left: 0.1rem;
+  border-left: 3px solid #38bdf8;
+  background: #f0f9ff;
+  border-radius: 0 12px 12px 0;
+}
+
+.rowBlockTitle {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0369a1;
+}
+
+.rowBlockHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rowBlockRemove {
+  border: none;
+  background: transparent;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.15rem 0.25rem;
+  font-family: inherit;
+}
+
+.rowAddBtn {
+  justify-self: start;
+  border: 1px dashed #7dd3fc;
+  background: #fff;
+  color: #0369a1;
+  border-radius: 10px;
+  padding: 0.5rem 0.85rem;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rowAddBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rowBlockFields {
+  display: grid;
+  gap: 0.7rem;
+  padding-left: 0.45rem;
+}
+
+.rowBlock .fieldActive {
+  margin: 0;
 }
 
 .field {

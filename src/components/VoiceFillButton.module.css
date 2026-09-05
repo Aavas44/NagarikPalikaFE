@@ -20,21 +20,12 @@
   width: 100%;
 }
 
-.actions {
-  display: flex;
-  flex-shrink: 0;
-  gap: 0.25rem;
-  align-self: stretch;
-}
-
-.row:has(textarea) .actions {
-  align-self: flex-start;
-}
-
 .btn {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  align-self: stretch;
   width: 2.35rem;
   min-height: 2.35rem;
   padding: 0;
@@ -46,9 +37,19 @@
   line-height: 0;
 }
 
+.row:has(textarea) .btn {
+  align-self: flex-start;
+}
+
 .btn:hover:not(:disabled) {
   background: #eff6ff;
   border-color: #185fa5;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  color: #6b7280;
 }
 
 .btn:focus-visible {
@@ -71,15 +72,6 @@
   background: #b91c1c;
   border-color: #991b1b;
   color: #fff;
-}
-
-.btnStop {
-  color: #b91c1c;
-}
-
-.btnStop:hover:not(:disabled) {
-  background: #fef2f2;
-  border-color: #b91c1c;
 }
 
 @keyframes voicePulse {

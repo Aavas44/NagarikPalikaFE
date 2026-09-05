@@ -32,6 +32,15 @@ import {
   listMissingRequiredLabels,
 } from "@/components/MissingRequiredFieldsDialog";
 import { VoiceFillRow } from "@/components/VoiceFillButton";
+import {
+  fieldKeyForRow,
+  layoutFormFields,
+  layoutHasRepeatableRows,
+  labelWithoutRowNumber,
+  MAX_TABLE_ROWS,
+  rowGroupTitle,
+  withTableRowRequestValues,
+} from "@/lib/form-row-groups";
 import styles from "@/app/ward/ward.module.css";
 
 function RegenerateIcon() {
@@ -96,6 +105,7 @@ export function WardDocumentModal({
   const [autoFieldKeys, setAutoFieldKeys] = useState<string[]>([]);
   const [fieldsLoading, setFieldsLoading] = useState(true);
   const [values, setValues] = useState<Record<string, string>>({});
+  const [tableRowCount, setTableRowCount] = useState(1);
   const [previewHtml, setPreviewHtml] = useState("");
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -156,6 +166,12 @@ export function WardDocumentModal({
     return orderedFields.filter((field) => !autoKeys.has(field.key));
   }, [autoFields, orderedFields]);
 
+  const formLayout = useMemo(
+    () => layoutFormFields(citizenFields),
+    [citizenFields]
+  );
+  const hasRepeatableRows = layoutHasRepeatableRows(formLayout);
+
   useEffect(() => {
     let cancelled = false;
     async function loadFields() {
@@ -175,6 +191,7 @@ export function WardDocumentModal({
         setUserFields(fields.userFields);
         setPlaceholderKeys(fields.placeholderKeys);
         setAutoFieldKeys(fields.autoFieldKeys);
+        setTableRowCount(1);
         setValues(
           buildInitialWardDocumentValues(
             profileRef.current,
@@ -219,7 +236,11 @@ export function WardDocumentModal({
     baseHtml: string,
     nextValues: Record<string, string>
   ): string {
-    return applyValuesToSkPreviewHtml(baseHtml, nextValues, previewDisplayForKey);
+    return applyValuesToSkPreviewHtml(
+      baseHtml,
+      withTableRowRequestValues(nextValues, tableRowCount, hasRepeatableRows),
+      previewDisplayForKey
+    );
   }
 
   const loadTemplatePreview = useCallback(async () => {
@@ -230,7 +251,11 @@ export function WardDocumentModal({
     try {
       const { blob } = await wardPreviewDocument({
         templateId: template.id,
-        variables: requestValues,
+        variables: withTableRowRequestValues(
+          requestValues,
+          tableRowCount,
+          hasRepeatableRows
+        ),
         skipLocalize: true,
       });
       if (generatedBlobRef.current) return;
@@ -249,12 +274,12 @@ export function WardDocumentModal({
     } finally {
       setBusy(false);
     }
-  }, [template.id]);
+  }, [template.id, tableRowCount, hasRepeatableRows]);
 
   useEffect(() => {
     if (fieldsLoading) return;
     void loadTemplatePreview();
-  }, [fieldsLoading, template.id, loadTemplatePreview]);
+  }, [fieldsLoading, template.id, tableRowCount, loadTemplatePreview]);
 
   useEffect(() => {
     const container = previewDocRef.current;
@@ -361,14 +386,76 @@ export function WardDocumentModal({
     }
   }
 
+  function repeatableColumns() {
+    return formLayout.flatMap((group) =>
+      group.type === "repeatable" ? group.columns : []
+    );
+  }
+
+  function repeatableRowKeys(): string[] {
+    const keys: string[] = [];
+    for (const column of repeatableColumns()) {
+      for (let row = 1; row <= tableRowCount; row += 1) {
+        keys.push(fieldKeyForRow(column.key, row));
+      }
+    }
+    return keys;
+  }
+
+  function requiredCitizenFields() {
+    const fields: Array<{ key: string; required?: boolean; label: string }> = [];
+    for (const group of formLayout) {
+      if (group.type === "loose") {
+        fields.push({
+          key: group.field.key,
+          required: group.field.required,
+          label: fieldLabel(group.field),
+        });
+        continue;
+      }
+      for (let row = 1; row <= tableRowCount; row += 1) {
+        for (const column of group.columns) {
+          fields.push({
+            key: fieldKeyForRow(column.key, row),
+            required: Boolean(column.required) && row === 1,
+            label: `${labelWithoutRowNumber(fieldLabel(column), row)} (${rowGroupTitle(row, "ne")})`,
+          });
+        }
+      }
+    }
+    return fields;
+  }
+
+  function addTableRow() {
+    if (tableRowCount >= MAX_TABLE_ROWS) return;
+    invalidateGenerated();
+    setTableRowCount((count) => count + 1);
+  }
+
+  function removeTableRow(row: number) {
+    if (tableRowCount <= 1) return;
+    const columns = repeatableColumns();
+    const next = { ...valuesRef.current };
+    for (let from = row; from < tableRowCount; from += 1) {
+      for (const column of columns) {
+        next[fieldKeyForRow(column.key, from)] =
+          next[fieldKeyForRow(column.key, from + 1)] ?? "";
+      }
+    }
+    for (const column of columns) {
+      delete next[fieldKeyForRow(column.key, tableRowCount)];
+    }
+    delete next[`क्र_सं_${tableRowCount}`];
+    valuesRef.current = next;
+    setValues(next);
+    invalidateGenerated();
+    setTableRowCount((count) => count - 1);
+  }
+
   async function handleGenerate(options?: { allowIncomplete?: boolean }) {
     if (quotaExhausted) return;
     const missing = listMissingRequiredLabels(
-      orderedFields.map((field) => ({
-        key: field.key,
-        required: field.required,
-        label: fieldLabel(field),
-      })),
+      requiredCitizenFields(),
       values
     );
     if (missing.length > 0 && !options?.allowIncomplete) {
@@ -384,6 +471,7 @@ export function WardDocumentModal({
       const localizeKeys = new Set([
         ...orderedFields.map((field) => field.key),
         ...autoFields.map((field) => field.key),
+        ...repeatableRowKeys(),
       ]);
       const localizeInput = Object.fromEntries(
         [...localizeKeys].map((key) => [key, values[key] ?? ""])
@@ -399,7 +487,11 @@ export function WardDocumentModal({
 
       const { blob, fileName } = await wardGenerateDocument({
         templateId: template.id,
-        variables: nextValues,
+        variables: withTableRowRequestValues(
+          nextValues,
+          tableRowCount,
+          hasRepeatableRows
+        ),
         skipLocalize: true,
         allowIncomplete: options?.allowIncomplete === true,
       });
@@ -467,6 +559,62 @@ export function WardDocumentModal({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [missingRequired, onClose]);
+
+  function renderCitizenField(
+    variable: WardTemplateVariable,
+    index: number,
+    row?: number
+  ) {
+    const label =
+      row != null
+        ? labelWithoutRowNumber(fieldLabel(variable), row)
+        : fieldLabel(variable);
+    return (
+      <label
+        key={variable.key}
+        className={`${styles.field} ${
+          activeFieldKey === variable.key ? styles.fieldActive : ""
+        }`}
+      >
+        <span className={styles.fieldLabelRow}>
+          <span className={styles.fieldIndex}>{index}.</span>
+          <span>
+            {label}
+            {variable.required ? " *" : ""}
+          </span>
+        </span>
+        {variable.type === "date" ? (
+          <input
+            type="date"
+            value={values[variable.key] ?? ""}
+            onFocus={() => setActiveFieldKey(variable.key)}
+            onChange={(e) => {
+              updateFieldValue(variable.key, e.target.value);
+            }}
+            placeholder={variable.key}
+            disabled={generating}
+          />
+        ) : (
+          <VoiceFillRow
+            locale="ne"
+            disabled={generating}
+            onTranscript={(text) => updateFieldValue(variable.key, text)}
+          >
+            <input
+              type={variable.type === "number" ? "number" : "text"}
+              value={values[variable.key] ?? ""}
+              onFocus={() => setActiveFieldKey(variable.key)}
+              onChange={(e) => {
+                updateFieldValue(variable.key, e.target.value);
+              }}
+              placeholder={variable.key}
+              disabled={generating}
+            />
+          </VoiceFillRow>
+        )}
+      </label>
+    );
+  }
 
   return (
     <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
@@ -560,60 +708,73 @@ export function WardDocumentModal({
                       </p>
                     ) : (
                       <div className={styles.form}>
-                        {citizenFields.map((variable, index) => (
-                          <label
-                            key={variable.key}
-                            className={`${styles.field} ${
-                              activeFieldKey === variable.key ? styles.fieldActive : ""
-                            }`}
-                          >
-                            <span className={styles.fieldLabelRow}>
-                              <span className={styles.fieldIndex}>{index + 1}.</span>
-                              <span>
-                                {fieldLabel(variable)}
-                                {variable.required ? " *" : ""}
-                              </span>
-                            </span>
-                            {variable.type === "date" ? (
-                              <input
-                                type="date"
-                                value={values[variable.key] ?? ""}
-                                onFocus={() => setActiveFieldKey(variable.key)}
-                                onChange={(e) => {
-                                  updateFieldValue(variable.key, e.target.value);
-                                }}
-                                placeholder={variable.key}
-                                disabled={generating}
-                              />
-                            ) : (
-                              <VoiceFillRow
-                                locale="ne"
-                                disabled={generating}
-                                onTranscript={(text) =>
-                                  updateFieldValue(variable.key, text)
+                        {(() => {
+                          let fieldNumber = 1;
+                          return formLayout.flatMap((group) => {
+                            if (group.type === "loose") {
+                              const index = fieldNumber;
+                              fieldNumber += 1;
+                              return [renderCitizenField(group.field, index)];
+                            }
+                            const blocks = [];
+                            for (let row = 1; row <= tableRowCount; row += 1) {
+                              const rowIndex = row;
+                              blocks.push(
+                                <div
+                                  key={`row-${rowIndex}-${group.columns[0].key}`}
+                                  className={styles.rowBlock}
+                                >
+                                  <div className={styles.rowBlockHeader}>
+                                    <p className={styles.rowBlockTitle}>
+                                      {rowGroupTitle(rowIndex, "ne")}
+                                    </p>
+                                    {tableRowCount > 1 ? (
+                                      <button
+                                        type="button"
+                                        className={styles.rowBlockRemove}
+                                        onClick={() => removeTableRow(rowIndex)}
+                                        disabled={generating}
+                                      >
+                                        हटाउनुहोस्
+                                      </button>
+                                    ) : null}
+                                  </div>
+                                  <div className={styles.rowBlockFields}>
+                                    {group.columns.map((column) => {
+                                      const index = fieldNumber;
+                                      fieldNumber += 1;
+                                      return renderCitizenField(
+                                        {
+                                          ...column,
+                                          key: fieldKeyForRow(column.key, rowIndex),
+                                          required:
+                                            Boolean(column.required) &&
+                                            rowIndex === 1,
+                                        },
+                                        index,
+                                        rowIndex
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            blocks.push(
+                              <button
+                                key={`add-row-${group.columns[0].key}`}
+                                type="button"
+                                className={styles.rowAddBtn}
+                                onClick={addTableRow}
+                                disabled={
+                                  generating || tableRowCount >= MAX_TABLE_ROWS
                                 }
                               >
-                                <input
-                                  type={
-                                    variable.type === "number" ? "number" : "text"
-                                  }
-                                  value={values[variable.key] ?? ""}
-                                  onFocus={() =>
-                                    setActiveFieldKey(variable.key)
-                                  }
-                                  onChange={(e) => {
-                                    updateFieldValue(
-                                      variable.key,
-                                      e.target.value
-                                    );
-                                  }}
-                                  placeholder={variable.key}
-                                  disabled={generating}
-                                />
-                              </VoiceFillRow>
-                            )}
-                          </label>
-                        ))}
+                                + क्रम थप्नुहोस्
+                              </button>
+                            );
+                            return blocks;
+                          });
+                        })()}
                       </div>
                     )}
                   </section>

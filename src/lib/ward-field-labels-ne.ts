@@ -1,3 +1,5 @@
+import { toDevanagariDigits } from "@/lib/sajilokanun/nepali-digits";
+
 const HAS_DEVANAGARI = /[\u0900-\u097F]/;
 
 const KEY_LABELS_NE: Record<string, string> = {
@@ -200,6 +202,26 @@ function humanizeKey(key: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+const TABLE_COLUMN_LABELS_NE: Record<string, string> = {
+  क्र_सं: "क्र.सं.",
+  नाम_थर: "नाम, थर",
+  नागरिकता_जन्मदर्ता_नम्बर: "नागरिकता / जन्मदर्ता नं.",
+  नाता: "नाता",
+  कैफियत: "कैफियत",
+  आम्दानीको_स्रोत: "आम्दानीको स्रोत",
+  आय_आर्जन_गर्ने_व्यक्ति: "आय आर्जन गर्ने व्यक्ति",
+  वार्षिक_आय_रकम: "वार्षिक आय रकम",
+  निवेदकसँगको_नाता: "निवेदकसँगको नाता",
+};
+
+function numberedTableLabelNe(key: string): string | null {
+  const match = key.trim().match(/^(.+)_(\d+)$/);
+  if (!match) return null;
+  const column = TABLE_COLUMN_LABELS_NE[match[1]];
+  if (!column) return null;
+  return `${column} (${toDevanagariDigits(match[2])})`;
+}
+
 export function wardEnglishFieldLabel(key: string, labelEn?: string): string {
   const normalized = normalizeKey(key);
   if (KEY_LABELS_EN[normalized]) return KEY_LABELS_EN[normalized];
@@ -214,6 +236,8 @@ export function wardNepaliFieldLabel(
   labelEn?: string
 ): string {
   if (labelNe && HAS_DEVANAGARI.test(labelNe)) return labelNe.trim();
+  const numbered = numberedTableLabelNe(key);
+  if (numbered) return numbered;
   if (key && HAS_DEVANAGARI.test(key)) return key.trim();
 
   const normalized = normalizeKey(key);

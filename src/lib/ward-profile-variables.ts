@@ -137,6 +137,11 @@ export function wardProfileValueForKey(
 
   if (looksLikeOpponentField(key) || looksLikeCourtField(key)) return undefined;
 
+  const serialMatch = key.trim().match(/^क्र_सं_(\d+)$/);
+  if (serialMatch) {
+    return toDevanagariDigits(serialMatch[1]);
+  }
+
   if (looksLikeFormerField(key)) {
     if (/ठेगाना|address/i.test(key)) return vars.former_address;
     if (/वडा|ward/i.test(key)) return vars.former_ward_no;

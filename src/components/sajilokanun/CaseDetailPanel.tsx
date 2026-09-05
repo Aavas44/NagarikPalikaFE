@@ -64,7 +64,7 @@ import { COURT_TYPE_META } from "@/lib/sajilokanun/court-type";
 import { useLanguage } from "@/context/LanguageContext";
 import { NepaliDatePicker } from "@/components/sajilokanun/NepaliDatePicker";
 import { SheetSelect } from "@/components/sajilokanun/SheetSelect";
-import { TemplateStarChip } from "@/components/TemplateStarChip";
+import { TemplateCatalog } from "@/components/TemplateCatalog";
 import emiStyles from "@/components/user/emi.module.css";
 import pageStyles from "@/app/user.module.css";
 import shellStyles from "@/components/sajilokanun/SajiloKanunAppShell.module.css";
@@ -361,7 +361,7 @@ const ACTIVITY_LABEL_KEYS: Record<
   witness_testimony: "activityWitnessTestimony",
 };
 
-const TEMPLATE_PAGE_SIZE = 20;
+const TEMPLATE_PAGE_SIZE = 12;
 
 function todayInputValue() {
   const d = new Date();
@@ -488,6 +488,7 @@ export function CaseDetailPanel({
   const [courtTemplatesError, setCourtTemplatesError] = useState("");
   const [templateSearch, setTemplateSearch] = useState("");
   const [templatePage, setTemplatePage] = useState(1);
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
   const [activeFormTemplate, setActiveFormTemplate] =
     useState<SkPublishedDocumentTemplate | null>(null);
   const [starredTemplateIds, setStarredTemplateIds] = useState<string[]>([]);
@@ -1240,7 +1241,7 @@ export function CaseDetailPanel({
 
   const filteredCourtTemplates = useMemo(() => {
     const q = templateSearch.trim();
-    const matched = !q
+    let matched = !q
       ? courtTemplates
       : courtTemplates.filter((template) =>
           matchesNepaliRomanSearch(q, [
@@ -1253,8 +1254,13 @@ export function CaseDetailPanel({
             template.description?.en,
           ])
         );
+    if (showStarredOnly) {
+      matched = matched.filter((template) =>
+        starredTemplateIds.includes(template.id)
+      );
+    }
     return sortStarredFirst(matched, starredTemplateIds);
-  }, [courtTemplates, templateSearch, starredTemplateIds]);
+  }, [courtTemplates, templateSearch, starredTemplateIds, showStarredOnly]);
 
   const templateTotalPages = Math.max(
     1,
@@ -3280,115 +3286,78 @@ export function CaseDetailPanel({
 
             {detail.courtType ? (
               <div style={{ marginBottom: "1rem" }}>
-                <div className={emiStyles.emiField} style={{ marginBottom: "0.75rem" }}>
-                  <label htmlFor="sk-template-search">{t.documentTemplatesSearch}</label>
-                  <input
-                    id="sk-template-search"
-                    className={emiStyles.emiNumberInput}
-                    value={templateSearch}
-                    onChange={(e) => {
-                      setTemplateSearch(e.target.value);
-                      setTemplatePage(1);
-                    }}
-                    placeholder={t.documentTemplatesSearch}
-                  />
-                </div>
-
-                {courtTemplatesLoading ? (
-                  <p className={pageStyles.calculatorSubtitle}>
-                    {t.documentTemplatesLoading}
-                  </p>
-                ) : courtTemplatesError ? (
-                  <p className={pageStyles.contactError}>{courtTemplatesError}</p>
-                ) : filteredCourtTemplates.length === 0 ? (
-                  <p className={pageStyles.calculatorSubtitle}>
-                    {t.documentTemplatesEmpty}
-                  </p>
-                ) : (
-                  <>
-                    <div className={emiStyles.emiPresets}>
-                      {pagedCourtTemplates.map((template) => {
-                        const primary =
-                          locale === "ne"
-                            ? template.name.ne || template.name.en
-                            : template.name.en || template.name.ne;
-                        const roman = template.name.roman?.trim() || "";
-                        const starred = starredTemplateIds.includes(template.id);
-                        return (
-                          <TemplateStarChip
-                            key={template.id}
-                            starred={starred}
-                            selected={activeFormTemplate?.id === template.id}
-                            primary={primary}
-                            secondary={roman || undefined}
-                            starLabel={
-                              locale === "ne" ? "बुकमार्क गर्नुहोस्" : "Bookmark"
-                            }
-                            unstarLabel={
-                              locale === "ne"
-                                ? "बुकमार्क हटाउनुहोस्"
-                                : "Remove bookmark"
-                            }
-                            onToggleStar={() =>
-                              void toggleStarredTemplate(template.id)
-                            }
-                            onSelect={() => {
-                              setActiveFormTemplate(template);
-                              setError("");
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-                    {filteredCourtTemplates.length > TEMPLATE_PAGE_SIZE ? (
-                      <div
-                        className="flex flex-wrap items-center justify-between gap-2"
-                        style={{ marginTop: "0.75rem" }}
-                      >
-                        <span className={emiStyles.emiFieldHint} style={{ margin: 0 }}>
-                          {`${(activeTemplatePage - 1) * TEMPLATE_PAGE_SIZE + 1}–${Math.min(
-                            activeTemplatePage * TEMPLATE_PAGE_SIZE,
-                            filteredCourtTemplates.length
-                          )} / ${filteredCourtTemplates.length}`}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className={pageStyles.skGateDemoBtn}
-                            style={{
-                              padding: "0.35rem 0.7rem",
-                              fontSize: "0.75rem",
-                              margin: 0,
-                            }}
-                            disabled={activeTemplatePage <= 1}
-                            onClick={() =>
-                              setTemplatePage((page) => Math.max(1, page - 1))
-                            }
-                          >
-                            Prev
-                          </button>
-                          <button
-                            type="button"
-                            className={pageStyles.skGateDemoBtn}
-                            style={{
-                              padding: "0.35rem 0.7rem",
-                              fontSize: "0.75rem",
-                              margin: 0,
-                            }}
-                            disabled={activeTemplatePage >= templateTotalPages}
-                            onClick={() =>
-                              setTemplatePage((page) =>
-                                Math.min(templateTotalPages, page + 1)
-                              )
-                            }
-                          >
-                            Next
-                          </button>
-                        </div>
-                      </div>
-                    ) : null}
-                  </>
-                )}
+                <TemplateCatalog
+                  items={pagedCourtTemplates.map((template) => {
+                    const primary =
+                      locale === "ne"
+                        ? template.name.ne || template.name.en
+                        : template.name.en || template.name.ne;
+                    const roman = template.name.roman?.trim() || "";
+                    const secondary =
+                      roman ||
+                      (locale === "ne"
+                        ? template.name.en && template.name.en !== primary
+                          ? template.name.en
+                          : ""
+                        : template.name.ne && template.name.ne !== primary
+                          ? template.name.ne
+                          : "");
+                    return {
+                      id: template.id,
+                      primary,
+                      secondary: secondary || undefined,
+                      meta:
+                        template.documentKindTitle ||
+                        template.documentKind ||
+                        undefined,
+                      starred: starredTemplateIds.includes(template.id),
+                      selected: activeFormTemplate?.id === template.id,
+                    };
+                  })}
+                  filteredCount={filteredCourtTemplates.length}
+                  totalCount={courtTemplates.length}
+                  search={templateSearch}
+                  onSearchChange={(value) => {
+                    setTemplateSearch(value);
+                    setTemplatePage(1);
+                  }}
+                  page={activeTemplatePage}
+                  pageSize={TEMPLATE_PAGE_SIZE}
+                  onPageChange={setTemplatePage}
+                  showStarredOnly={showStarredOnly}
+                  onShowStarredOnlyChange={(value) => {
+                    setShowStarredOnly(value);
+                    setTemplatePage(1);
+                  }}
+                  starredCount={starredTemplateIds.length}
+                  loading={courtTemplatesLoading}
+                  error={courtTemplatesError || null}
+                  labels={{
+                    searchLabel: t.documentTemplatesSearch,
+                    searchPlaceholder: t.documentTemplatesSearch,
+                    all: locale === "ne" ? "सबै" : "All",
+                    starred: locale === "ne" ? "बुकमार्क" : "Starred",
+                    empty: t.documentTemplatesEmpty,
+                    noResults:
+                      locale === "ne"
+                        ? "कुनै फारम मिलेन।"
+                        : "No forms match that search.",
+                    loading: t.documentTemplatesLoading,
+                    starLabel: locale === "ne" ? "बुकमार्क गर्नुहोस्" : "Bookmark",
+                    unstarLabel:
+                      locale === "ne" ? "बुकमार्क हटाउनुहोस्" : "Remove bookmark",
+                    prev: locale === "ne" ? "अघिल्लो" : "Prev",
+                    next: locale === "ne" ? "अर्को" : "Next",
+                    openHint: locale === "ne" ? "खोल्नुहोस् →" : "Open →",
+                  }}
+                  onToggleStar={(id) => void toggleStarredTemplate(id)}
+                  onSelect={(id) => {
+                    const template = courtTemplates.find((item) => item.id === id);
+                    if (!template) return;
+                    setActiveFormTemplate(template);
+                    setError("");
+                  }}
+                />
               </div>
             ) : null}
 
