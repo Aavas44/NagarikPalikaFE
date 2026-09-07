@@ -175,15 +175,10 @@ export default function WardOperatorPage() {
         <TemplateCatalog
           items={pagedTemplates.map((template) => {
             const primary = template.name.ne || template.name.en;
-            const secondary =
-              template.name.en && template.name.en !== primary
-                ? template.name.en
-                : undefined;
             const disabled = template.fileType !== "docx";
             return {
               id: template.id,
               primary,
-              secondary,
               meta: template.fileType.toUpperCase(),
               starred: starredIds.includes(template.id),
               selected: activeTemplate?.id === template.id,

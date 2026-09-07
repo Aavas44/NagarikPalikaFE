@@ -641,9 +641,9 @@ export function AdminWardOperatorsPanel() {
             <button
               type="submit"
               className={styles.btnPrimary}
-              disabled={busyId === "create" || busyId === editingId}
+              disabled={Boolean(busyId)}
             >
-              {busyId === "create" || busyId === editingId
+              {busyId
                 ? editingId
                   ? "Saving…"
                   : "Creating…"

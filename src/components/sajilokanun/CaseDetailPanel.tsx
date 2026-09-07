@@ -3292,20 +3292,9 @@ export function CaseDetailPanel({
                       locale === "ne"
                         ? template.name.ne || template.name.en
                         : template.name.en || template.name.ne;
-                    const roman = template.name.roman?.trim() || "";
-                    const secondary =
-                      roman ||
-                      (locale === "ne"
-                        ? template.name.en && template.name.en !== primary
-                          ? template.name.en
-                          : ""
-                        : template.name.ne && template.name.ne !== primary
-                          ? template.name.ne
-                          : "");
                     return {
                       id: template.id,
                       primary,
-                      secondary: secondary || undefined,
                       meta:
                         template.documentKindTitle ||
                         template.documentKind ||
