@@ -16,6 +16,7 @@ import {
 import { COURT_TYPE_META, type CourtType } from "@/lib/sajilokanun/court-type";
 import type { LegalCaseDocumentKind } from "@/lib/sajilokanun-access";
 import { AdminSajiloKanunTemplateEditor } from "./AdminSajiloKanunTemplateEditor";
+import { AdminSajiloKanunTemplateReview } from "./AdminSajiloKanunTemplateReview";
 import styles from "@/app/admin.module.css";
 
 const EMPTY_VARIABLE: SkTemplateVariable = {
@@ -213,7 +214,11 @@ function VariablesEditor({
   );
 }
 
-export function AdminSajiloKanunTemplatesPanel() {
+export function AdminSajiloKanunTemplatesPanel({
+  openReview = false,
+}: {
+  openReview?: boolean;
+}) {
   const [templates, setTemplates] = useState<SajiloKanunDocumentTemplate[]>([]);
   const [meta, setMeta] = useState<SkTemplateMeta | null>(null);
   const [createForm, setCreateForm] = useState<TemplateFormState>(EMPTY_FORM);
@@ -222,6 +227,7 @@ export function AdminSajiloKanunTemplatesPanel() {
     useState<SajiloKanunDocumentTemplate | null>(null);
   const [documentEditorTemplate, setDocumentEditorTemplate] =
     useState<SajiloKanunDocumentTemplate | null>(null);
+  const [showTemplateReview, setShowTemplateReview] = useState(openReview);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -251,6 +257,32 @@ export function AdminSajiloKanunTemplatesPanel() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (openReview) setShowTemplateReview(true);
+  }, [openReview]);
+
+  function setReviewHash(open: boolean) {
+    const nextHash = open
+      ? "#sajilo-kanun-templates-review"
+      : "#sajilo-kanun-templates";
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
+      window.dispatchEvent(new Event("hashchange"));
+    }
+  }
+
+  function openTemplateReview() {
+    setShowTemplateReview(true);
+    setShowCreateForm(false);
+    cancelEdit();
+    setReviewHash(true);
+  }
+
+  function closeTemplateReview() {
+    setShowTemplateReview(false);
+    setReviewHash(false);
+  }
 
   useEffect(() => {
     setCurrentPage(1);
@@ -479,6 +511,13 @@ export function AdminSajiloKanunTemplatesPanel() {
         <div className={styles.panelHeaderActions}>
           <button
             type="button"
+            className={styles.btnSecondary}
+            onClick={openTemplateReview}
+          >
+            Review Templates
+          </button>
+          <button
+            type="button"
             className={styles.btnPrimary}
             onClick={() => {
               setShowCreateForm((open) => !open);
@@ -492,9 +531,19 @@ export function AdminSajiloKanunTemplatesPanel() {
       <p className={styles.panelDesc}>
         Upload DOCX templates per <strong>court type</strong> (जिल्ला / उच्च / सर्वोच्च /
         विशेष) and <strong>document kind</strong>. Use {"{placeholders}"} — same list/edit
-        flow as ward templates. Variables and prompts can be filled in gradually.
+        flow as ward templates. Compare official Supreme Court Word files with ours via{" "}
+        <strong>Review Templates</strong> (also in the left nav).
       </p>
       {error ? <p className={styles.formError}>{error}</p> : null}
+
+      {showTemplateReview ? (
+        <AdminSajiloKanunTemplateReview
+          onClose={closeTemplateReview}
+          onSaved={async () => {
+            await load();
+          }}
+        />
+      ) : null}
 
       {documentEditorTemplate ? (
         <AdminSajiloKanunTemplateEditor

@@ -1,5 +1,3 @@
-const FIELD_MARKER_RE = /\uE000([^\uE001]+)\uE001([\s\S]*?)\uE002\1\uE003/g;
-
 function escapeHtmlAttr(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -15,13 +13,33 @@ function escapeHtmlText(value: string): string {
     .replace(/>/g, "&gt;");
 }
 
+function decodePreviewMarkers(html: string): string {
+  return html
+    .replace(/&#x0*e000;/gi, "\uE000")
+    .replace(/&#x0*e001;/gi, "\uE001")
+    .replace(/&#x0*e002;/gi, "\uE002")
+    .replace(/&#x0*e003;/gi, "\uE003")
+    .replace(/&#57344;/g, "\uE000")
+    .replace(/&#57345;/g, "\uE001")
+    .replace(/&#57346;/g, "\uE002")
+    .replace(/&#57347;/g, "\uE003");
+}
+
+function stripTags(value: string): string {
+  return value.replace(/<[^>]+>/g, "");
+}
+
 /** Convert preview-only field markers from the backend into highlightable spans. */
 export function markSkPreviewFields(html: string): string {
-  return html.replace(FIELD_MARKER_RE, (_match, key: string, content: string) => {
-    const safeKey = escapeHtmlAttr(key);
-    const safeContent = escapeHtmlText(content);
-    return `<mark class="sk-preview-field" data-sk-field="${safeKey}">${safeContent}</mark>`;
-  });
+  return decodePreviewMarkers(html).replace(
+    /\uE000([\s\S]*?)\uE001([\s\S]*?)\uE002([\s\S]*?)\uE003/g,
+    (match, keyRaw: string, content: string, keyEndRaw: string) => {
+      const key = stripTags(keyRaw).trim();
+      const endKey = stripTags(keyEndRaw).trim();
+      if (!key || key !== endKey) return match;
+      return `<mark class="sk-preview-field" data-sk-field="${escapeHtmlAttr(key)}">${escapeHtmlText(stripTags(content))}</mark>`;
+    }
+  );
 }
 
 const MARK_FIELD_RE =

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import mammoth from "mammoth";
+import { renderAsync } from "docx-preview";
+import { docxToEditableHtml } from "@/lib/sajilokanun/docx-to-preview-html";
 import {
   getCaseUploadEditableKind,
   getSajiloKanunToken,
@@ -33,7 +34,7 @@ type CaseFilePreviewPanelProps = {
 };
 
 const DOC_ARTICLE_CLASS =
-  "mx-auto max-w-3xl rounded-lg bg-white px-6 py-8 text-[15px] leading-relaxed text-[#1a1a1a] shadow-sm outline-none focus:ring-2 focus:ring-[var(--primary)]/30 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_img]:max-w-full [&_li]:my-1 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[#ddd] [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-[#ddd] [&_th]:px-2 [&_th]:py-1 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6";
+  "mx-auto max-w-3xl rounded-lg bg-white px-6 py-8 text-[15px] leading-relaxed text-[#1a1a1a] shadow-sm outline-none focus:ring-2 focus:ring-[var(--primary)]/30 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_img]:max-w-full [&_li]:my-1 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-3 [&_p.text-center]:text-center [&_p.text-right]:text-right [&_p.text-justify]:text-justify [&_table]:my-4 [&_table]:w-full [&_table]:border-collapse [&_td]:border [&_td]:border-[#ddd] [&_td]:px-2 [&_td]:py-1 [&_th]:border [&_th]:border-[#ddd] [&_th]:px-2 [&_th]:py-1 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6";
 
 export function CaseFilePreviewPanel({
   url,
@@ -64,32 +65,74 @@ export function CaseFilePreviewPanel({
   const [saveOk, setSaveOk] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(url);
   const editorRef = useRef<HTMLElement | null>(null);
+  const docxHostRef = useRef<HTMLDivElement | null>(null);
+  const docxStyleRef = useRef<HTMLDivElement | null>(null);
   const ownedPreviewUrlRef = useRef<string | null>(null);
+  const renderGenRef = useRef(0);
 
   const dirty = editing && draft !== baseline;
 
-  const loadContent = useCallback(async (sourceUrl: string, kind: CaseUploadEditableKind) => {
-    setLoaded(false);
-    setLoadError("");
-    try {
-      const res = await fetch(sourceUrl);
-      if (!res.ok) throw new Error("Failed to load document");
-      let value = "";
-      if (kind === "txt") {
-        value = await res.text();
-      } else {
-        const arrayBuffer = await res.arrayBuffer();
-        const result = await mammoth.convertToHtml({ arrayBuffer });
-        value = result.value || "<p></p>";
-      }
-      setDraft(value);
-      setBaseline(value);
-      setLoaded(true);
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : "Failed to preview document");
-      setLoaded(true);
+  const renderDocxPreview = useCallback(async (sourceUrl: string) => {
+    const renderId = ++renderGenRef.current;
+    const host = docxHostRef.current;
+    const styleHost = docxStyleRef.current;
+    if (!host) return;
+    host.innerHTML = "";
+    if (styleHost) styleHost.innerHTML = "";
+
+    const res = await fetch(sourceUrl);
+    if (!res.ok) throw new Error("Failed to load document");
+    const blob = await res.blob();
+    if (renderId !== renderGenRef.current) return;
+    await renderAsync(blob, host, styleHost ?? undefined, {
+      className: "docx",
+      inWrapper: true,
+      ignoreWidth: false,
+      ignoreHeight: true,
+      breakPages: true,
+      renderHeaders: true,
+      renderFooters: true,
+      renderFootnotes: true,
+      useBase64URL: true,
+      experimental: true,
+    });
+    if (renderId !== renderGenRef.current) {
+      host.innerHTML = "";
     }
   }, []);
+
+  const loadEditableHtml = useCallback(async (sourceUrl: string) => {
+    const res = await fetch(sourceUrl);
+    if (!res.ok) throw new Error("Failed to load document");
+    const blob = await res.blob();
+    return docxToEditableHtml(blob);
+  }, []);
+
+  const loadContent = useCallback(
+    async (sourceUrl: string, kind: CaseUploadEditableKind) => {
+      setLoaded(false);
+      setLoadError("");
+      try {
+        if (kind === "txt") {
+          const res = await fetch(sourceUrl);
+          if (!res.ok) throw new Error("Failed to load document");
+          const value = await res.text();
+          setDraft(value);
+          setBaseline(value);
+          setLoaded(true);
+          return;
+        }
+        // Mount the Word preview host first, then paint into it.
+        setLoaded(true);
+      } catch (err) {
+        setLoadError(
+          err instanceof Error ? err.message : "Failed to preview document"
+        );
+        setLoaded(true);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     setPreviewUrl(url);
@@ -105,11 +148,38 @@ export function CaseFilePreviewPanel({
   }, [url, title, editableKind, loadContent]);
 
   useEffect(() => {
+    if (editableKind !== "docx" || editing || !loaded || loadError) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        await renderDocxPreview(previewUrl);
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(
+            err instanceof Error ? err.message : "Failed to preview document"
+          );
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    editableKind,
+    editing,
+    loaded,
+    loadError,
+    previewUrl,
+    renderDocxPreview,
+  ]);
+
+  useEffect(() => {
     return () => {
       if (ownedPreviewUrlRef.current) {
         URL.revokeObjectURL(ownedPreviewUrlRef.current);
         ownedPreviewUrlRef.current = null;
       }
+      renderGenRef.current += 1;
     };
   }, []);
 
@@ -132,6 +202,24 @@ export function CaseFilePreviewPanel({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose, editing, dirty]);
+
+  async function startEditing() {
+    if (!editableKind) return;
+    setSaveOk(false);
+    setSaveError("");
+    if (editableKind === "txt") {
+      setEditing(true);
+      return;
+    }
+    try {
+      const html = await loadEditableHtml(previewUrl);
+      setDraft(html);
+      setBaseline(html);
+      setEditing(true);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to open editor");
+    }
+  }
 
   async function handleSave() {
     if (!caseId || !uploadId || !dirty || saving) return;
@@ -224,11 +312,7 @@ export function CaseFilePreviewPanel({
               <button
                 type="button"
                 className={headerBtnClass}
-                onClick={() => {
-                  setEditing(true);
-                  setSaveOk(false);
-                  setSaveError("");
-                }}
+                onClick={() => void startEditing()}
               >
                 {labels.edit}
               </button>
@@ -271,7 +355,9 @@ export function CaseFilePreviewPanel({
           </div>
         ) : loadError && editableKind ? (
           <div className="flex min-h-0 flex-1 items-center justify-center bg-[var(--surface-muted)] p-6">
-            <p className="max-w-md text-center text-sm text-[var(--muted)]">{loadError}</p>
+            <p className="max-w-md text-center text-sm text-[var(--muted)]">
+              {loadError}
+            </p>
           </div>
         ) : editableKind === "docx" ? (
           <div className="min-h-0 flex-1 overflow-auto bg-[var(--surface-muted)] p-4 sm:p-6 sm:rounded-b-xl">
@@ -287,10 +373,13 @@ export function CaseFilePreviewPanel({
                 }}
               />
             ) : (
-              <article
-                className={DOC_ARTICLE_CLASS}
-                dangerouslySetInnerHTML={{ __html: draft }}
-              />
+              <>
+                <div ref={docxStyleRef} className="h-0 overflow-hidden" aria-hidden />
+                <div
+                  ref={docxHostRef}
+                  className="mx-auto max-w-4xl [&_.docx-wrapper]:flex [&_.docx-wrapper]:flex-col [&_.docx-wrapper]:items-center [&_.docx-wrapper]:gap-3 [&_.docx-wrapper]:bg-[#e2e8f0] [&_.docx-wrapper]:p-3 [&_section.docx]:mx-auto [&_section.docx]:bg-white [&_section.docx]:p-5 [&_section.docx]:shadow-sm"
+                />
+              </>
             )}
           </div>
         ) : editableKind === "txt" ? (
@@ -316,7 +405,11 @@ export function CaseFilePreviewPanel({
         ) : isImage ? (
           <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-[var(--surface-muted)] p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={previewUrl} alt={title} className="max-h-full max-w-full object-contain" />
+            <img
+              src={previewUrl}
+              alt={title}
+              className="max-h-full max-w-full object-contain"
+            />
           </div>
         ) : isPdf ? (
           <embed

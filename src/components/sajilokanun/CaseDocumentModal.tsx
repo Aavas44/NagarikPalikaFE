@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   fetchCaseDetail,
+  fetchCaseParticipants,
   fetchSkTemplateFields,
-  generateSkCaseDocumentWithAi,
+  generateSkCaseDocument,
   isFirmQuotaError,
   previewSkCaseDocument,
   saveSkCaseDocument,
+  skDocxFromEditedHtml,
+  type CaseParticipantRecord,
   type CaseUploadedDocumentRecord,
+  type LegalCaseRecord,
   type SkPublishedDocumentTemplate,
   type SkTemplateFormField,
 } from "@/lib/sajilokanun-access";
@@ -17,19 +21,41 @@ import {
   type ExtractedCaseDocument,
 } from "@/lib/sajilokanun/document-prompts";
 import { mapExtractionToSkValues } from "@/lib/sajilokanun/map-extraction-to-sk-values";
-import { docxToPreviewHtml } from "@/lib/sajilokanun/docx-to-preview-html";
+import {
+  allOcrPartyIds,
+  ocrOpponentPartyId,
+  ocrPartyId,
+  opposingParties,
+  representedParties,
+} from "@/lib/sajilokanun/party-fill";
+import {
+  applyInlineAlignmentStyles,
+  docxToEditableHtml,
+  docxToPreviewHtml,
+} from "@/lib/sajilokanun/docx-to-preview-html";
+import {
+  applyValuesToSkPreviewHtml,
+  skPreviewHtmlHasFieldMarks,
+} from "@/lib/sajilokanun/mark-sk-preview-fields";
 import {
   MissingRequiredFieldsDialog,
   listMissingRequiredLabels,
 } from "@/components/MissingRequiredFieldsDialog";
-import { VoiceFillRow } from "@/components/VoiceFillButton";
+import {
+  insertTextAtContentEditableCaret,
+  speechTranscriptDelta,
+  VoiceFillButton,
+  VoiceFillRow,
+} from "@/components/VoiceFillButton";
 import {
   fieldKeyForRow,
+  initialTableRowCounts,
   layoutFormFields,
   layoutHasRepeatableRows,
   labelWithoutRowNumber,
   MAX_TABLE_ROWS,
   rowGroupTitle,
+  tableGroupTitle,
   withTableRowRequestValues,
 } from "@/lib/form-row-groups";
 import styles from "./CaseDocumentModal.module.css";
@@ -47,30 +73,99 @@ type CaseDocumentModalProps = {
   }) => void;
 };
 
-function fieldLabel(field: SkTemplateFormField): string {
-  const ne = field.label.ne?.trim() || "";
-  const en = field.label.en?.trim() || "";
-  if (ne && en && ne !== en) {
-    return `${ne} (${en})`;
+const PREVIEW_FORMAT_ACTIONS: Array<{
+  command: string;
+  label: string;
+  titleEn: string;
+  titleNe: string;
+}> = [
+  { command: "bold", label: "B", titleEn: "Bold", titleNe: "बाक्लो" },
+  { command: "italic", label: "I", titleEn: "Italic", titleNe: "छड्के" },
+  { command: "underline", label: "U", titleEn: "Underline", titleNe: "रेखाङ्कन" },
+  { command: "justifyLeft", label: "⟸", titleEn: "Align left", titleNe: "बायाँ पङ्क्तिबद्ध" },
+  { command: "justifyCenter", label: "⇔", titleEn: "Align center", titleNe: "केन्द्र" },
+  { command: "justifyRight", label: "⟹", titleEn: "Align right", titleNe: "दायाँ पङ्क्तिबद्ध" },
+  { command: "justifyFull", label: "☰", titleEn: "Justify", titleNe: "दुवैतिर बराबर" },
+];
+
+async function blobToBase64(blob: Blob): Promise<string> {
+  const buffer = await blob.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
   }
-  return ne || en || field.key;
+  return btoa(binary);
+}
+
+function normalizePreviewHtmlForDocx(html: string): string {
+  const withParagraphs = html
+    .replace(/<div\b/gi, "<p")
+    .replace(/<\/div>/gi, "</p>");
+  return applyInlineAlignmentStyles(withParagraphs);
+}
+
+/** Drop Latin glosses like `मिति (Miti)` or UI concat `नाम (Name)`. */
+function stripLatinParenthetical(label: string): string {
+  return label
+    .replace(/\s*\([^)]*[A-Za-z][^)]*\)/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function fieldLabel(field: SkTemplateFormField): string {
+  const fromKey = field.key.replace(/_/g, " ");
+  let ne = field.label.ne?.trim() || "";
+  if (/विपक्षी/.test(field.key) && /निवेदक/.test(ne) && !/विपक्षी/.test(ne)) {
+    ne = fromKey;
+  }
+  const primary = stripLatinParenthetical(ne || field.label.en?.trim() || field.key);
+  return primary || field.key;
+}
+
+function fillStatusBanner(
+  locale: "en" | "ne",
+  mapped: {
+    filledCount: number;
+    applicantSide: "वादी" | "प्रतिवादी";
+    partyMode: "single" | "samet";
+    applicantNames: string[];
+  }
+): string {
+  const sideNe = mapped.applicantSide;
+  const sideEn =
+    mapped.applicantSide === "प्रतिवादी"
+      ? "Defendant (Pratibadi)"
+      : "Plaintiff (Badi)";
+  const names = mapped.applicantNames.join(", ");
+  if (locale === "ne") {
+    return `मुद्दाको पक्ष: ${sideNe}${names ? ` — ${names}` : ""}. OCR बाट ${mapped.filledCount} फिल्ड भरियो; नभएका फिल्ड खाली राखियो।`;
+  }
+  return `Case side: ${sideEn}${names ? ` — ${names}` : ""}. Mapped ${mapped.filledCount} OCR fields; missing placeholders left blank.`;
 }
 
 function sectionTitle(section: string): string {
   if (!section) return "";
   if (section.startsWith("plaintiff") || section.startsWith("petitioner")) {
-    return "वादी / निवेदक (Plaintiff)";
+    return "वादी / निवेदक";
+  }
+  if (section === "other_party") {
+    return "अन्य पक्ष / वारिस हुनेको";
   }
   if (section.startsWith("defendant") || section.startsWith("respondent")) {
-    return "प्रतिवादी / विपक्षी (Defendant)";
+    return "प्रतिवादी / विपक्षी";
   }
-  if (section === "court") return "अदालत (Court)";
-  if (section === "case") return "मुद्दा (Case)";
-  if (section === "facts") return "तथ्य (Facts)";
-  if (section === "claims") return "दाबी (Claims)";
-  if (section === "evidence") return "प्रमाण (Evidence)";
-  if (section === "other") return "अन्य (Other)";
-  return section;
+  if (section === "court") return "अदालत";
+  if (section === "case") return "मुद्दा";
+  if (section === "facts") return "तथ्य";
+  if (section === "claims") return "दाबी";
+  if (section === "evidence") return "प्रमाण";
+  if (section === "other") return "अन्य";
+  if (section.startsWith("table:") || section.startsWith("table-row:")) {
+    return "";
+  }
+  return stripLatinParenthetical(section);
 }
 
 function orderFieldsByTemplate(
@@ -101,21 +196,44 @@ export function CaseDocumentModal({
   const [placeholderKeys, setPlaceholderKeys] = useState<string[]>([]);
   const [fieldsLoading, setFieldsLoading] = useState(true);
   const [values, setValues] = useState<Record<string, string>>({});
-  const [tableRowCount, setTableRowCount] = useState(1);
+  const [tableRowCounts, setTableRowCounts] = useState<Record<string, number>>(
+    {}
+  );
   const [previewHtml, setPreviewHtml] = useState("");
   const [busy, setBusy] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const [autofillBanner, setAutofillBanner] = useState("");
   const [caseVitals, setCaseVitals] = useState<ExtractedCaseDocument | null>(null);
+  const [participants, setParticipants] = useState<CaseParticipantRecord[]>([]);
+  const [casePartySide, setCasePartySide] = useState<
+    LegalCaseRecord["partySide"] | null
+  >(null);
+  const [caseNo, setCaseNo] = useState("");
+  const [selectedPartyIds, setSelectedPartyIds] = useState<string[]>([]);
+  const [applicantSide, setApplicantSide] = useState<"वादी" | "प्रतिवादी">("वादी");
   const [activeFieldKey, setActiveFieldKey] = useState<string | null>(null);
   const [generatedBlob, setGeneratedBlob] = useState<Blob | null>(null);
   const [generatedFileName, setGeneratedFileName] = useState("");
+  const [previewEditorSeed, setPreviewEditorSeed] = useState(0);
+  const [previewEdited, setPreviewEdited] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [missingRequired, setMissingRequired] = useState<string[] | null>(null);
   const [pendingIncompleteAction, setPendingIncompleteAction] = useState<
     "generate" | "save" | null
   >(null);
   const previewDocRef = useRef<HTMLDivElement | null>(null);
+  const previewVoiceSessionTextRef = useRef("");
+  const formScrollRef = useRef<HTMLDivElement | null>(null);
+  const fieldNavSourceRef = useRef<"form" | "preview">("form");
+  const ignoreNextFormFocusRef = useRef(false);
+  const valuesRef = useRef(values);
+  const generatedBlobRef = useRef(generatedBlob);
+  const templatePreviewHtmlRef = useRef("");
+  const fieldLabelByKeyRef = useRef<Map<string, string>>(new Map());
+
+  valuesRef.current = values;
+  generatedBlobRef.current = generatedBlob;
 
   const title =
     locale === "ne"
@@ -134,6 +252,109 @@ export function CaseDocumentModal({
     [orderedFields]
   );
   const hasRepeatableRows = layoutHasRepeatableRows(formLayout);
+  const repeatableGroupCount = formLayout.filter(
+    (group) => group.type === "repeatable"
+  ).length;
+
+  function rowCountForGroup(tableGroup: string): number {
+    return tableRowCounts[tableGroup] ?? 1;
+  }
+
+  const ownSideParties = useMemo(() => {
+    if (!caseVitals) return [];
+    return representedParties(caseVitals, casePartySide);
+  }, [caseVitals, casePartySide]);
+  const opponentParties = useMemo(() => {
+    if (!caseVitals) return [];
+    return opposingParties(caseVitals, casePartySide);
+  }, [caseVitals, casePartySide]);
+  // Always offer निवेदक selection when anyone is available (including a single
+  // party, and opponents who can be chosen as निवेदक on this form).
+  const showPartyPicker = ownSideParties.length + opponentParties.length >= 1;
+
+  useEffect(() => {
+    const labels = new Map<string, string>();
+    for (const field of userFields) {
+      labels.set(field.key, fieldLabel(field));
+    }
+    for (const group of formLayout) {
+      if (group.type !== "repeatable") continue;
+      const rowCount = tableRowCounts[group.tableGroup] ?? 1;
+      for (let row = 1; row <= rowCount; row += 1) {
+        for (const column of group.columns) {
+          labels.set(
+            fieldKeyForRow(column.key, row),
+            labelWithoutRowNumber(fieldLabel(column), row)
+          );
+        }
+      }
+    }
+    fieldLabelByKeyRef.current = labels;
+  }, [userFields, formLayout, tableRowCounts]);
+
+  function previewDisplayForKey(key: string, value: string): string {
+    const trimmed = value.trim();
+    if (trimmed) return trimmed;
+    return fieldLabelByKeyRef.current.get(key) || key;
+  }
+
+  function paintedPreviewHtml(
+    baseHtml: string,
+    nextValues: Record<string, string>
+  ): string {
+    return applyValuesToSkPreviewHtml(
+      baseHtml,
+      withTableRowRequestValues(nextValues, tableRowCounts, hasRepeatableRows),
+      previewDisplayForKey
+    );
+  }
+
+  function paintLivePreview(nextValues: Record<string, string>) {
+    const base = templatePreviewHtmlRef.current;
+    if (base && !generatedBlobRef.current && skPreviewHtmlHasFieldMarks(base)) {
+      const pane = previewDocRef.current;
+      const top = pane?.scrollTop ?? 0;
+      setPreviewHtml(paintedPreviewHtml(base, nextValues));
+      requestAnimationFrame(() => {
+        if (previewDocRef.current) previewDocRef.current.scrollTop = top;
+      });
+    }
+  }
+
+  function commitValues(next: Record<string, string>) {
+    valuesRef.current = next;
+    setValues(next);
+    paintLivePreview(next);
+  }
+
+  function remapFromOcr(
+    extracted: ExtractedCaseDocument,
+    fields: SkTemplateFormField[],
+    nextSelectedPartyIds: string[],
+    nextParticipants: CaseParticipantRecord[] = participants,
+    nextPartySide: LegalCaseRecord["partySide"] | null = casePartySide
+  ) {
+    const mapped = mapExtractionToSkValues(extracted, fields, {
+      selectedPartyIds: nextSelectedPartyIds,
+      casePartySide: nextPartySide,
+      participants: nextParticipants,
+      caseNo,
+    });
+    setApplicantSide(mapped.applicantSide);
+    setTableRowCounts(
+      initialTableRowCounts(layoutFormFields(fields), mapped.suggestedRowCount)
+    );
+    const next = { ...valuesRef.current };
+    for (const field of fields) {
+      next[field.key] = mapped.values[field.key] ?? "";
+    }
+    for (const [key, value] of Object.entries(mapped.values)) {
+      next[key] = value;
+    }
+    commitValues(next);
+    setAutofillBanner(fillStatusBanner(locale, mapped));
+    return mapped;
+  }
 
   function missingRequiredLabels(): string[] {
     const fields: Array<{ key: string; required?: boolean; label: string }> = [];
@@ -152,7 +373,18 @@ export function CaseDocumentModal({
         });
         continue;
       }
-      for (let row = 1; row <= tableRowCount; row += 1) {
+      if (group.type === "fixed-row") {
+        for (const field of group.fields) {
+          fields.push({
+            key: field.key,
+            required: field.required,
+            label: fieldLabel(field),
+          });
+        }
+        continue;
+      }
+      const rowCount = rowCountForGroup(group.tableGroup);
+      for (let row = 1; row <= rowCount; row += 1) {
         for (const column of group.columns) {
           fields.push({
             key: fieldKeyForRow(column.key, row),
@@ -183,20 +415,31 @@ export function CaseDocumentModal({
     let cancelled = false;
     async function load() {
       setFieldsLoading(true);
-      setError("");
-      setAutofillBanner("");
-      setCaseVitals(null);
-      setGeneratedBlob(null);
-      setGeneratedFileName("");
+        setError("");
+        setAutofillBanner("");
+        setCaseVitals(null);
+        setGeneratedBlob(null);
+        setGeneratedFileName("");
+        generatedBlobRef.current = null;
+        setPreviewEdited(false);
+        templatePreviewHtmlRef.current = "";
       try {
-        const [fields, detail] = await Promise.all([
+        const [fields, detail, people] = await Promise.all([
           fetchSkTemplateFields(template.id),
           fetchCaseDetail(caseId).catch(() => null),
+          fetchCaseParticipants(caseId).catch(() => [] as CaseParticipantRecord[]),
         ]);
         if (cancelled) return;
         setUserFields(fields.userFields);
         setPlaceholderKeys(fields.placeholderKeys);
-        setTableRowCount(1);
+        setTableRowCounts({});
+        setParticipants(people);
+        setCasePartySide(detail?.partySide ?? null);
+        setCaseNo(detail?.caseNo?.trim() || "");
+        setApplicantSide(
+          detail?.partySide === "defendant" ? "प्रतिवादी" : "वादी"
+        );
+        setSelectedPartyIds([]);
 
         const initial: Record<string, string> = {};
         for (const field of fields.userFields) {
@@ -204,28 +447,37 @@ export function CaseDocumentModal({
         }
 
         const rawFacts = detail?.documentExtraction?.facts;
-        if (rawFacts && typeof rawFacts === "object") {
-          const extracted = normalizeExtractedCaseDocument(rawFacts);
+        const extracted =
+          rawFacts && typeof rawFacts === "object"
+            ? normalizeExtractedCaseDocument(rawFacts)
+            : null;
+        if (extracted) {
           setCaseVitals(extracted);
-          const mapped = mapExtractionToSkValues(extracted, fields.userFields);
-          for (const [key, value] of Object.entries(mapped.values)) {
-            if (key in initial) initial[key] = value;
-          }
-          if (mapped.filledCount > 0) {
-            setAutofillBanner(
-              locale === "ne"
-                ? `यस मुद्दाको OCR बाट ${mapped.filledCount} फिल्ड भरियो — Generate थिचेर Gemini ले टेम्प्लेट भर्छ।`
-                : `Filled ${mapped.filledCount} fields from this case’s OCR — click Generate for Gemini to fill the template.`
-            );
-          } else {
-            setAutofillBanner(
-              locale === "ne"
-                ? "यस मुद्दामा OCR छ, तर यस फारमका फिल्डसँग मिल्ने कुञ्जी भेटिएन।"
-                : "This case has OCR vitals, but no keys matched this form yet."
-            );
-          }
         }
+        const ownParties = extracted
+          ? representedParties(extracted, detail?.partySide ?? null)
+          : [];
+        const initialPartyIds = allOcrPartyIds(ownParties.length);
+        setSelectedPartyIds(initialPartyIds);
+        const mapped = mapExtractionToSkValues(extracted, fields.userFields, {
+          selectedPartyIds: initialPartyIds,
+          casePartySide: detail?.partySide ?? null,
+          participants: people,
+          caseNo: detail?.caseNo?.trim() || "",
+        });
+        setApplicantSide(mapped.applicantSide);
+        setTableRowCounts(
+          initialTableRowCounts(
+            layoutFormFields(fields.userFields),
+            mapped.suggestedRowCount
+          )
+        );
+        for (const [key, value] of Object.entries(mapped.values)) {
+          initial[key] = value;
+        }
+        setAutofillBanner(fillStatusBanner(locale, mapped));
 
+        valuesRef.current = initial;
         setValues(initial);
       } catch (err) {
         if (!cancelled) {
@@ -243,7 +495,8 @@ export function CaseDocumentModal({
     };
   }, [template.id, caseId, locale]);
 
-  const refreshPreview = useCallback(async () => {
+  const loadTemplatePreview = useCallback(async () => {
+    if (generatedBlobRef.current) return;
     setBusy(true);
     setError("");
     try {
@@ -251,24 +504,45 @@ export function CaseDocumentModal({
         caseId,
         templateId: template.id,
         variables: withTableRowRequestValues(
-          values,
-          tableRowCount,
+          valuesRef.current,
+          tableRowCounts,
           hasRepeatableRows
         ),
       });
-      setPreviewHtml(await docxToPreviewHtml(blob));
+      if (generatedBlobRef.current) return;
+      const html = await docxToPreviewHtml(blob);
+      templatePreviewHtmlRef.current = html;
+      if (!skPreviewHtmlHasFieldMarks(html)) {
+        setPreviewHtml(html);
+      } else {
+        setPreviewHtml(paintedPreviewHtml(html, valuesRef.current));
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to preview document");
     } finally {
       setBusy(false);
     }
-  }, [caseId, template.id, values, tableRowCount, hasRepeatableRows]);
+  }, [caseId, template.id, tableRowCounts, hasRepeatableRows]);
 
   useEffect(() => {
     if (fieldsLoading || userFields.length === 0) return;
-    void refreshPreview();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fieldsLoading, template.id, caseId, tableRowCount]);
+    void loadTemplatePreview();
+  }, [fieldsLoading, template.id, caseId, tableRowCounts, loadTemplatePreview]);
+
+  function scrollFormFieldIntoView(fieldKey: string): boolean {
+    const formRoot = formScrollRef.current;
+    if (!formRoot) return false;
+    const field = formRoot.querySelector(
+      `[data-sk-form-field="${CSS.escape(fieldKey)}"]`
+    );
+    if (!(field instanceof HTMLElement)) return false;
+    field.scrollIntoView({ behavior: "smooth", block: "center" });
+    const input = field.querySelector("input, textarea, select");
+    if (input instanceof HTMLElement) {
+      input.focus({ preventScroll: true });
+    }
+    return true;
+  }
 
   useEffect(() => {
     const container = previewDocRef.current;
@@ -278,7 +552,7 @@ export function CaseDocumentModal({
       node.classList.remove("sk-preview-field-active");
     });
 
-    if (!activeFieldKey) return;
+    if (!activeFieldKey || generatedBlob) return;
 
     const targets = container.querySelectorAll(
       `[data-sk-field="${CSS.escape(activeFieldKey)}"]`
@@ -288,46 +562,130 @@ export function CaseDocumentModal({
     targets.forEach((node) => {
       node.classList.add("sk-preview-field-active");
     });
-    targets[0].scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [activeFieldKey, previewHtml]);
+  }, [activeFieldKey, previewHtml, generatedBlob]);
+
+  useEffect(() => {
+    if (!activeFieldKey || generatedBlob) return;
+    if (fieldNavSourceRef.current !== "form") return;
+    const container = previewDocRef.current;
+    if (!container) return;
+    const target = container.querySelector(
+      `[data-sk-field="${CSS.escape(activeFieldKey)}"]`
+    );
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [activeFieldKey, generatedBlob]);
 
   function handleFieldFocus(fieldKey: string) {
+    if (ignoreNextFormFocusRef.current) {
+      ignoreNextFormFocusRef.current = false;
+      setActiveFieldKey(fieldKey);
+      return;
+    }
+    fieldNavSourceRef.current = "form";
     setActiveFieldKey(fieldKey);
   }
 
-  function invalidateGenerated() {
-    if (generatedBlob) {
-      setGeneratedBlob(null);
-      setGeneratedFileName("");
+  function handlePreviewFieldActivate(fieldKey: string) {
+    fieldNavSourceRef.current = "preview";
+    setActiveFieldKey(fieldKey);
+    ignoreNextFormFocusRef.current = scrollFormFieldIntoView(fieldKey);
+  }
+
+  function previewFieldKeyFromEvent(event: { target: EventTarget | null }): string | null {
+    const node = event.target;
+    if (!(node instanceof Element)) return null;
+    const mark = node.closest("[data-sk-field]");
+    if (!mark || !previewDocRef.current?.contains(mark)) return null;
+    return mark.getAttribute("data-sk-field");
+  }
+
+  function restoreTemplatePreview() {
+    const base = templatePreviewHtmlRef.current;
+    if (base) {
+      setPreviewHtml(paintedPreviewHtml(base, valuesRef.current));
+      return;
+    }
+    void loadTemplatePreview();
+  }
+
+  useEffect(() => {
+    if (!hasGenerated || !previewDocRef.current) return;
+    previewDocRef.current.innerHTML = previewHtml;
+    setPreviewEdited(false);
+  }, [hasGenerated, previewEditorSeed, previewHtml]);
+
+  function applyPreviewFormat(command: string) {
+    if (!hasGenerated || generating) return;
+    previewDocRef.current?.focus();
+    document.execCommand("styleWithCSS", false, "true");
+    document.execCommand(command, false);
+    setPreviewEdited(true);
+  }
+
+  function insertPreviewVoiceTranscript(sessionText: string) {
+    const root = previewDocRef.current;
+    if (!root || !hasGenerated || generating) return;
+    const { delta, nextBaseline } = speechTranscriptDelta(
+      previewVoiceSessionTextRef.current,
+      sessionText
+    );
+    previewVoiceSessionTextRef.current = nextBaseline;
+    if (!delta) return;
+    if (insertTextAtContentEditableCaret(root, delta)) {
+      setPreviewEdited(true);
     }
   }
 
-  function addTableRow() {
-    if (tableRowCount >= MAX_TABLE_ROWS) return;
-    invalidateGenerated();
-    setTableRowCount((count) => count + 1);
+  function invalidateGenerated() {
+    if (generatedBlobRef.current) {
+      setGeneratedBlob(null);
+      setGeneratedFileName("");
+      generatedBlobRef.current = null;
+      setPreviewEdited(false);
+      setAutofillBanner(
+        locale === "ne"
+          ? "फिल्ड परिवर्तन भयो — फेरि Generate गर्नुहोस्। पूर्वावलोकनका सम्पादन हट्छन्।"
+          : "Fields changed — Generate again. Preview edits will be discarded."
+      );
+      restoreTemplatePreview();
+    }
   }
 
-  function removeTableRow(row: number) {
-    if (tableRowCount <= 1) return;
-    const columns = formLayout.flatMap((group) =>
-      group.type === "repeatable" ? group.columns : []
-    );
-    setValues((prev) => {
-      const next = { ...prev };
-      for (let from = row; from < tableRowCount; from += 1) {
-        for (const column of columns) {
-          next[fieldKeyForRow(column.key, from)] =
-            next[fieldKeyForRow(column.key, from + 1)] ?? "";
-        }
-      }
-      for (const column of columns) {
-        delete next[fieldKeyForRow(column.key, tableRowCount)];
-      }
-      return next;
-    });
+  function updateFieldValue(key: string, value: string) {
     invalidateGenerated();
-    setTableRowCount((count) => count - 1);
+    const next = { ...valuesRef.current, [key]: value };
+    commitValues(next);
+  }
+
+  function addTableRow(tableGroup: string) {
+    const current = rowCountForGroup(tableGroup);
+    if (current >= MAX_TABLE_ROWS) return;
+    invalidateGenerated();
+    setTableRowCounts((prev) => ({ ...prev, [tableGroup]: current + 1 }));
+  }
+
+  function removeTableRow(tableGroup: string, row: number) {
+    const current = rowCountForGroup(tableGroup);
+    if (current <= 1) return;
+    const columns = formLayout.flatMap((group) =>
+      group.type === "repeatable" && group.tableGroup === tableGroup
+        ? group.columns
+        : []
+    );
+    const next = { ...valuesRef.current };
+    for (let from = row; from < current; from += 1) {
+      for (const column of columns) {
+        next[fieldKeyForRow(column.key, from)] =
+          next[fieldKeyForRow(column.key, from + 1)] ?? "";
+      }
+    }
+    for (const column of columns) {
+      delete next[fieldKeyForRow(column.key, current)];
+    }
+    valuesRef.current = next;
+    setValues(next);
+    invalidateGenerated();
+    setTableRowCounts((prev) => ({ ...prev, [tableGroup]: current - 1 }));
   }
 
   async function handleGenerate(options?: { allowIncomplete?: boolean }) {
@@ -335,61 +693,108 @@ export function CaseDocumentModal({
     setGenerating(true);
     setError("");
     try {
-      const result = await generateSkCaseDocumentWithAi({
+      const result = await generateSkCaseDocument({
         caseId,
         templateId: template.id,
         variables: withTableRowRequestValues(
           values,
-          tableRowCount,
+          tableRowCounts,
           hasRepeatableRows
         ),
+        allowIncomplete: options?.allowIncomplete === true,
       });
-      setValues((prev) => ({ ...prev, ...result.values }));
       setGeneratedBlob(result.blob);
+      generatedBlobRef.current = result.blob;
       setGeneratedFileName(result.fileName);
-      setPreviewHtml(await docxToPreviewHtml(result.blob));
+      setPreviewHtml(await docxToEditableHtml(result.blob));
+      setPreviewEditorSeed((seed) => seed + 1);
+      setPreviewEdited(false);
       setAutofillBanner(
         locale === "ne"
-          ? `Gemini ले ${result.filledCount} फिल्ड भर्‍यो — डाउनलोड वा केस कागजातमा सेभ गर्न सकिन्छ।`
-          : `Gemini filled ${result.filledCount} fields — you can download or save to case documents.`
+          ? "कागजात तयार भयो — दायाँ पूर्वावलोकनमा सिधै सम्पादन गर्न सकिन्छ (पाठ थप्ने/हटाउने, ढाँचा मिलाउने), त्यसपछि डाउनलोड वा सेभ गर्नुहोस्।"
+          : "Document is ready — edit the preview on the right (add/remove text, adjust formatting), then download or save."
       );
     } catch (err) {
       if (isFirmQuotaError(err) && err.code === "firm_documents_quota") {
         onQuotaError?.({ code: err.code, used: err.used, limit: err.limit });
       }
       setError(
-        err instanceof Error ? err.message : "Failed to generate document with AI"
+        err instanceof Error ? err.message : "Failed to generate document"
       );
     } finally {
       setGenerating(false);
     }
   }
 
-  function handleDownloadGenerated() {
-    if (!generatedBlob) return;
-    const url = URL.createObjectURL(generatedBlob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = generatedFileName || "document.docx";
-    anchor.click();
-    URL.revokeObjectURL(url);
+  async function resolveOutputDocument(): Promise<{ blob: Blob; fileName: string }> {
+    const fileName = generatedFileName || "document.docx";
+    // Prefer the live preview DOM when the user changed it — that is the
+    // version that should land in case Documents / download.
+    const liveHtml = previewDocRef.current?.innerHTML?.trim() ?? "";
+    if (previewEdited && liveHtml) {
+      const converted = await skDocxFromEditedHtml({
+        caseId,
+        html: normalizePreviewHtmlForDocx(liveHtml),
+        fileName,
+      });
+      setGeneratedBlob(converted.blob);
+      generatedBlobRef.current = converted.blob;
+      setGeneratedFileName(converted.fileName);
+      setPreviewEdited(false);
+      return converted;
+    }
+    if (!generatedBlobRef.current && !generatedBlob) {
+      throw new Error(
+        locale === "ne"
+          ? "पहिले कागजात Generate गर्नुहोस्।"
+          : "Generate the document first."
+      );
+    }
+    return {
+      blob: generatedBlobRef.current ?? generatedBlob!,
+      fileName,
+    };
+  }
+
+  async function handleDownloadGenerated() {
+    setDownloading(true);
+    setError("");
+    try {
+      const { blob, fileName } = await resolveOutputDocument();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = fileName;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to download document"
+      );
+    } finally {
+      setDownloading(false);
+    }
   }
 
   async function handleSaveGenerated(options?: { allowIncomplete?: boolean }) {
-    if (!generatedBlob) return;
+    if (!generatedBlob && !previewDocRef.current) return;
     if (!confirmOrRun("save", Boolean(options?.allowIncomplete))) return;
     setBusy(true);
     setError("");
     try {
+      const { blob, fileName } = await resolveOutputDocument();
+      const contentBase64 = await blobToBase64(blob);
       const { upload } = await saveSkCaseDocument({
         caseId,
         templateId: template.id,
         variables: withTableRowRequestValues(
           values,
-          tableRowCount,
+          tableRowCounts,
           hasRepeatableRows
         ),
         allowIncomplete: options?.allowIncomplete === true,
+        contentBase64,
+        fileName,
       });
       onSaved(upload);
       onClose();
@@ -407,20 +812,32 @@ export function CaseDocumentModal({
 
   function reapplyOcr() {
     if (!caseVitals) return;
-    const mapped = mapExtractionToSkValues(caseVitals, userFields);
-    setValues((prev) => {
-      const next = { ...prev };
-      for (const [key, value] of Object.entries(mapped.values)) {
-        if (value) next[key] = value;
-      }
-      return next;
-    });
+    remapFromOcr(caseVitals, userFields, selectedPartyIds);
     invalidateGenerated();
-    setAutofillBanner(
-      locale === "ne"
-        ? `OCR बाट फेरि ${mapped.filledCount} फिल्ड भरियो।`
-        : `Re-applied ${mapped.filledCount} OCR fields.`
-    );
+  }
+
+  function applyPartyIds(nextIds: string[]) {
+    setSelectedPartyIds(nextIds);
+    if (caseVitals) {
+      remapFromOcr(caseVitals, userFields, nextIds);
+    }
+    invalidateGenerated();
+  }
+
+  function togglePartyId(id: string) {
+    const selected = new Set(selectedPartyIds);
+    const isOpponent = /^ocr:opp:/i.test(id);
+    if (selected.has(id)) {
+      if (selected.size <= 1) return;
+      selected.delete(id);
+    } else {
+      for (const existing of [...selected]) {
+        const existingOpp = /^ocr:opp:/i.test(existing);
+        if (existingOpp !== isOpponent) selected.delete(existing);
+      }
+      selected.add(id);
+    }
+    applyPartyIds(Array.from(selected));
   }
 
   useEffect(() => {
@@ -447,6 +864,7 @@ export function CaseDocumentModal({
     return (
       <label
         key={field.key}
+        data-sk-form-field={field.key}
         className={`${styles.field} ${
           activeFieldKey === field.key ? styles.fieldActive : ""
         }`}
@@ -467,25 +885,18 @@ export function CaseDocumentModal({
             value={values[field.key] ?? ""}
             onFocus={() => handleFieldFocus(field.key)}
             onChange={(e) => {
-              invalidateGenerated();
-              setValues((prev) => ({
-                ...prev,
-                [field.key]: e.target.value,
-              }));
+              updateFieldValue(field.key, e.target.value);
             }}
             placeholder={field.key}
+            disabled={busy || generating || hasGenerated}
           />
         ) : (
           <VoiceFillRow
             locale={locale}
             lang="ne-NP"
-            disabled={busy || generating}
+            disabled={busy || generating || hasGenerated}
             onTranscript={(text) => {
-              invalidateGenerated();
-              setValues((prev) => ({
-                ...prev,
-                [field.key]: text,
-              }));
+              updateFieldValue(field.key, text);
             }}
           >
             <input
@@ -493,13 +904,10 @@ export function CaseDocumentModal({
               value={values[field.key] ?? ""}
               onFocus={() => handleFieldFocus(field.key)}
               onChange={(e) => {
-                invalidateGenerated();
-                setValues((prev) => ({
-                  ...prev,
-                  [field.key]: e.target.value,
-                }));
+                updateFieldValue(field.key, e.target.value);
               }}
               placeholder={field.key}
+              disabled={busy || generating || hasGenerated}
             />
           </VoiceFillRow>
         )}
@@ -526,8 +934,8 @@ export function CaseDocumentModal({
             ) : null}
             <p className={styles.muted}>
               {locale === "ne"
-                ? "बायाँ: फिल्ड जाँच · Generate: Gemini ले टेम्प्लेट भर्छ"
-                : "Left: review fields · Generate: Gemini fills the DOCX template"}
+                ? "बायाँ: फिल्ड भर्नुहोस् · दायाँ पूर्वावलोकन तुरुन्तै अपडेट हुन्छ · Generate: OCR/फारमका मान मात्र भर्छ (खाली फिल्ड अनुमान गर्दैन)"
+                : "Left: fill fields · Right preview updates live · Generate: fills from OCR/form only (does not invent missing values)"}
             </p>
           </div>
           <button type="button" className={styles.modalClose} onClick={onClose}>
@@ -540,6 +948,103 @@ export function CaseDocumentModal({
           <p className={styles.autofillBanner} role="status">
             {autofillBanner}
           </p>
+        ) : null}
+
+        {casePartySide || caseVitals ? (
+          <div className={styles.partyBar}>
+            <div className={styles.partyBarRow}>
+              <span
+                className={`${styles.sideBadge} ${
+                  applicantSide === "प्रतिवादी" ? styles.sideBadgeDefendant : ""
+                }`}
+              >
+                {locale === "ne"
+                  ? casePartySide === "defendant"
+                    ? "मुद्दाको पक्ष: प्रतिवादी"
+                    : "मुद्दाको पक्ष: वादी"
+                  : casePartySide === "defendant"
+                    ? "Case side: Defendant (Pratibadi)"
+                    : "Case side: Plaintiff (Badi)"}
+              </span>
+              {showPartyPicker ? (
+                <div className={styles.partyChecks}>
+                  <div className={styles.partyChecksHeader}>
+                    <span>
+                      {locale === "ne"
+                        ? "निवेदक छान्नुहोस् (यस निवेदनमा)"
+                        : "Select applicant (निवेदक) for this form"}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.partySelectAll}
+                      disabled={busy || generating || fieldsLoading || hasGenerated}
+                      onClick={() =>
+                        applyPartyIds(allOcrPartyIds(ownSideParties.length))
+                      }
+                    >
+                      {locale === "ne" ? "आफ्नो पक्ष" : "Own side"}
+                    </button>
+                  </div>
+                  {ownSideParties.length > 0 ? (
+                    <div className={styles.partyCheckList}>
+                      <span className={styles.partyGroupLabel}>
+                        {locale === "ne"
+                          ? casePartySide === "defendant"
+                            ? "प्रतिवादी"
+                            : "वादी"
+                          : casePartySide === "defendant"
+                            ? "Defendants"
+                            : "Plaintiffs"}
+                      </span>
+                      {ownSideParties.map((party, index) => {
+                        const id = ocrPartyId(index);
+                        const name = party.पूरा_नाम?.trim() || `${index + 1}`;
+                        return (
+                          <label key={id} className={styles.partyCheck}>
+                            <input
+                              type="checkbox"
+                              checked={selectedPartyIds.includes(id)}
+                              disabled={busy || generating || fieldsLoading || hasGenerated}
+                              onChange={() => togglePartyId(id)}
+                            />
+                            <span>{name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  {opponentParties.length > 0 ? (
+                    <div className={styles.partyCheckList}>
+                      <span className={styles.partyGroupLabel}>
+                        {locale === "ne"
+                          ? casePartySide === "defendant"
+                            ? "वादी / विपक्षी"
+                            : "प्रतिवादी / विपक्षी"
+                          : casePartySide === "defendant"
+                            ? "Plaintiffs"
+                            : "Defendants"}
+                      </span>
+                      {opponentParties.map((party, index) => {
+                        const id = ocrOpponentPartyId(index);
+                        const name = party.पूरा_नाम?.trim() || `${index + 1}`;
+                        return (
+                          <label key={id} className={styles.partyCheck}>
+                            <input
+                              type="checkbox"
+                              checked={selectedPartyIds.includes(id)}
+                              disabled={busy || generating || fieldsLoading || hasGenerated}
+                              onChange={() => togglePartyId(id)}
+                            />
+                            <span>{name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          </div>
         ) : null}
 
         {fieldsLoading ? (
@@ -563,18 +1068,25 @@ export function CaseDocumentModal({
                       type="button"
                       className={styles.secondaryBtn}
                       onClick={reapplyOcr}
-                      disabled={busy || generating}
+                      disabled={busy || generating || hasGenerated}
                     >
                       {locale === "ne" ? "OCR फेरि लागू" : "Re-apply OCR"}
                     </button>
                   ) : null}
                 </div>
+                {hasGenerated ? (
+                  <p className={styles.previewEditHint}>
+                    {locale === "ne"
+                      ? "फिल्ड परिवर्तन गर्न फेरि Generate गर्नुहोस्।"
+                      : "Regenerate to change fields."}
+                  </p>
+                ) : null}
                 {userFields.length === 0 ? (
                   <p className={styles.muted}>
                     This template has no fillable placeholders.
                   </p>
                 ) : (
-                  <div className={styles.formScroll}>
+                  <div className={styles.formScroll} ref={formScrollRef}>
                     <div className={styles.form}>
                       {(() => {
                         let fieldNumber = 1;
@@ -584,24 +1096,58 @@ export function CaseDocumentModal({
                             fieldNumber += 1;
                             return [renderFormField(group.field, index)];
                           }
+                          if (group.type === "fixed-row") {
+                            return [
+                              <div
+                                key={`fixed-${group.tableGroup}-${group.title}`}
+                                className={styles.rowBlock}
+                              >
+                                <div className={styles.rowBlockHeader}>
+                                  <p className={styles.rowBlockTitle}>
+                                    {group.title}
+                                  </p>
+                                </div>
+                                <div className={styles.rowBlockFields}>
+                                  {group.fields.map((field) => {
+                                    const index = fieldNumber;
+                                    fieldNumber += 1;
+                                    return renderFormField(field, index);
+                                  })}
+                                </div>
+                              </div>,
+                            ];
+                          }
+                          const rowCount = rowCountForGroup(group.tableGroup);
                           const blocks = [];
-                          for (let row = 1; row <= tableRowCount; row += 1) {
+                          if (repeatableGroupCount > 1) {
+                            blocks.push(
+                              <p
+                                key={`table-title-${group.tableGroup}`}
+                                className={styles.tableGroupTitle}
+                              >
+                                {tableGroupTitle(group.tableGroup, locale)}
+                              </p>
+                            );
+                          }
+                          for (let row = 1; row <= rowCount; row += 1) {
                             const rowIndex = row;
                             blocks.push(
                               <div
-                                key={`row-${rowIndex}-${group.columns[0].key}`}
+                                key={`row-${group.tableGroup}-${rowIndex}-${group.columns[0].key}`}
                                 className={styles.rowBlock}
                               >
                                 <div className={styles.rowBlockHeader}>
                                   <p className={styles.rowBlockTitle}>
                                     {rowGroupTitle(rowIndex, locale)}
                                   </p>
-                                  {tableRowCount > 1 ? (
+                                  {rowCount > 1 ? (
                                     <button
                                       type="button"
                                       className={styles.rowBlockRemove}
-                                      onClick={() => removeTableRow(rowIndex)}
-                                      disabled={busy || generating}
+                                      onClick={() =>
+                                        removeTableRow(group.tableGroup, rowIndex)
+                                      }
+                                      disabled={busy || generating || hasGenerated}
                                     >
                                       {locale === "ne" ? "हटाउनुहोस्" : "Remove"}
                                     </button>
@@ -629,14 +1175,15 @@ export function CaseDocumentModal({
                           }
                           blocks.push(
                             <button
-                              key={`add-row-${group.columns[0].key}`}
+                              key={`add-row-${group.tableGroup}-${group.columns[0].key}`}
                               type="button"
                               className={styles.rowAddBtn}
-                              onClick={addTableRow}
+                              onClick={() => addTableRow(group.tableGroup)}
                               disabled={
                                 busy ||
                                 generating ||
-                                tableRowCount >= MAX_TABLE_ROWS
+                                hasGenerated ||
+                                rowCount >= MAX_TABLE_ROWS
                               }
                             >
                               {locale === "ne"
@@ -663,36 +1210,72 @@ export function CaseDocumentModal({
                         ? "टेम्प्लेट पूर्वावलोकन"
                         : "Template preview"}
                   </h3>
-                  {!hasGenerated ? (
-                    <button
-                      type="button"
-                      className={styles.secondaryBtn}
-                      onClick={() => void refreshPreview()}
-                      disabled={busy || generating}
-                    >
-                      {busy
-                        ? locale === "ne"
-                          ? "अपडेट…"
-                          : "Updating…"
-                        : locale === "ne"
-                          ? "पूर्वावलोकन अपडेट"
-                          : "Update preview"}
-                    </button>
-                  ) : null}
                 </div>
-                {previewHtml ? (
+                {hasGenerated ? (
+                  <>
+                    <p className={styles.previewEditHint}>
+                      {locale === "ne"
+                        ? "पूर्वावलोकनमा क्लिक गरेर पाठ थप्न/हटाउन र ढाँचा मिलाउन सकिन्छ। माइकबाट कर्सर भएको ठाउँमा बोलेर लेख्न सकिन्छ। डाउनलोड र सेभले सम्पादित प्रति सेभ गर्छ।"
+                        : "Click in the preview to add, remove, or reformat text. Use the mic to dictate at the cursor. Download and Save use your edits."}
+                    </p>
+                    <div className={styles.formatBar} role="toolbar" aria-label="Formatting">
+                      {PREVIEW_FORMAT_ACTIONS.map((action) => (
+                        <button
+                          key={action.command}
+                          type="button"
+                          className={styles.formatBtn}
+                          title={locale === "ne" ? action.titleNe : action.titleEn}
+                          disabled={generating}
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => applyPreviewFormat(action.command)}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                      <VoiceFillButton
+                        locale={locale}
+                        lang="ne-NP"
+                        interimResults={false}
+                        disabled={generating}
+                        className={styles.formatVoiceBtn}
+                        onSessionStart={() => {
+                          previewVoiceSessionTextRef.current = "";
+                          previewDocRef.current?.focus();
+                        }}
+                        onTranscript={insertPreviewVoiceTranscript}
+                      />
+                    </div>
+                  </>
+                ) : null}
+                {previewHtml || hasGenerated ? (
                   <div
+                    key={hasGenerated ? "generated" : "template"}
                     ref={previewDocRef}
-                    className={styles.previewDoc}
-                    dangerouslySetInnerHTML={{ __html: previewHtml }}
+                    className={`${styles.previewDoc} ${
+                      hasGenerated ? styles.previewDocEditable : ""
+                    }`}
+                    contentEditable={hasGenerated && !generating}
+                    suppressContentEditableWarning
+                    onInput={() => {
+                      if (hasGenerated) setPreviewEdited(true);
+                    }}
+                    onClick={(event) => {
+                      if (hasGenerated) return;
+                      const fieldKey = previewFieldKeyFromEvent(event);
+                      if (!fieldKey) return;
+                      handlePreviewFieldActivate(fieldKey);
+                    }}
+                    {...(hasGenerated
+                      ? {}
+                      : { dangerouslySetInnerHTML: { __html: previewHtml } })}
                   />
                 ) : (
                   <p className={styles.muted}>
                     {busy || generating
                       ? generating
                         ? locale === "ne"
-                          ? "Gemini ले कागजात बनाउँदैछ…"
-                          : "Gemini is generating the document…"
+                          ? "कागजात बनाइँदैछ…"
+                          : "Generating the document…"
                         : "Building preview…"
                       : "Preview will appear here after the template loads."}
                   </p>
@@ -725,7 +1308,7 @@ export function CaseDocumentModal({
                     type="button"
                     className={styles.secondaryBtn}
                     onClick={() => void handleGenerate()}
-                    disabled={busy || generating}
+                    disabled={busy || generating || downloading}
                   >
                     {generating
                       ? locale === "ne"
@@ -738,24 +1321,30 @@ export function CaseDocumentModal({
                   <button
                     type="button"
                     className={styles.secondaryBtn}
-                    onClick={handleDownloadGenerated}
-                    disabled={busy || generating}
+                    onClick={() => void handleDownloadGenerated()}
+                    disabled={busy || generating || downloading}
                   >
-                    {locale === "ne" ? "डाउनलोड" : "Download"}
+                    {downloading
+                      ? locale === "ne"
+                        ? "डाउनलोड हुँदैछ…"
+                        : "Downloading…"
+                      : locale === "ne"
+                        ? `डाउनलोड${previewEdited ? " · सम्पादित" : ""}`
+                        : `Download${previewEdited ? " · edited" : ""}`}
                   </button>
                   <button
                     type="button"
                     className={styles.primaryBtn}
                     onClick={() => void handleSaveGenerated()}
-                    disabled={busy || generating}
+                    disabled={busy || generating || downloading}
                   >
                     {busy
                       ? locale === "ne"
                         ? "सेभ हुँदैछ…"
                         : "Saving…"
                       : locale === "ne"
-                        ? "केस कागजातमा सेभ"
-                        : "Save to case Documents"}
+                        ? `केस कागजातमा सेभ${previewEdited ? " · सम्पादित" : ""}`
+                        : `Save to case Documents${previewEdited ? " · edited" : ""}`}
                   </button>
                 </>
               )}

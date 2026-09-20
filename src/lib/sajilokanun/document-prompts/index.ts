@@ -51,6 +51,7 @@ export type {
   ExtractedPartyDetails,
   ExtractedFamilyTree,
   ExtractedFamilyTreePerson,
+  NibedakSide,
 } from "./extract-case-document";
 export {
   emptyExtractedCaseDocument,
@@ -65,6 +66,9 @@ export {
   defendantParties,
   mergePartyLists,
   parseExtractedJsonText,
+  parseNibedakSide,
+  partyHasContent,
+  foldPartyName,
 } from "./extract-case-document";
 
 export type DocumentGenerationRequest = {

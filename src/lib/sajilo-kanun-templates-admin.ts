@@ -135,16 +135,66 @@ export async function adminFetchSkTemplateFile(id: string): Promise<Blob> {
 
 export async function adminSaveSkTemplateContent(
   id: string,
-  content: string
+  content: string,
+  options?: { publish?: boolean }
 ): Promise<SajiloKanunDocumentTemplate> {
   const { authedFetch } = await import("@/lib/auth");
   const res = await authedFetch(`/admin/sajilo-kanun-templates/${id}/content`, {
     method: "PUT",
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({
+      content,
+      publish: options?.publish === true,
+    }),
   });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error ?? "Failed to save template content");
   }
   return data as SajiloKanunDocumentTemplate;
+}
+
+export type SkReviewCourtType = "supreme" | "high" | "district";
+
+export type SkReviewCatalogItem = {
+  courtType: SkReviewCourtType;
+  formNumber: number;
+  title: string;
+  officialUrl: string;
+  documentKind: string;
+  template: SajiloKanunDocumentTemplate | null;
+};
+
+export type SkReviewCatalog = {
+  sourceUrl: string;
+  courtType: SkReviewCourtType;
+  total: number;
+  matched: number;
+  items: SkReviewCatalogItem[];
+};
+
+export async function adminFetchSkReviewCatalog(
+  courtType: SkReviewCourtType
+): Promise<SkReviewCatalog> {
+  const { authedFetch } = await import("@/lib/auth");
+  const res = await authedFetch(
+    `/admin/sajilo-kanun-templates/review-catalog?courtType=${encodeURIComponent(courtType)}`
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error ?? "Failed to load review catalog");
+  return data as SkReviewCatalog;
+}
+
+export async function adminFetchSkOfficialFormFile(
+  courtType: SkReviewCourtType,
+  formNumber: number
+): Promise<Blob> {
+  const { authedFetch } = await import("@/lib/auth");
+  const res = await authedFetch(
+    `/admin/sajilo-kanun-templates/review-official/${courtType}/${formNumber}`
+  );
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error ?? "Failed to load official form");
+  }
+  return res.blob();
 }

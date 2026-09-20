@@ -1404,10 +1404,15 @@ export async function generateSkCaseDocument(input: {
   caseId: string;
   templateId: string;
   variables: Record<string, string>;
+  allowIncomplete?: boolean;
 }): Promise<{ blob: Blob; fileName: string }> {
   return fetchSkDocumentBlob(
     `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/generate`,
-    { templateId: input.templateId, variables: input.variables }
+    {
+      templateId: input.templateId,
+      variables: input.variables,
+      allowIncomplete: input.allowIncomplete === true,
+    }
   );
 }
 
@@ -1462,11 +1467,28 @@ export async function generateSkCaseDocumentWithAi(input: {
   };
 }
 
+export async function skDocxFromEditedHtml(input: {
+  caseId: string;
+  html: string;
+  fileName?: string;
+}): Promise<{ blob: Blob; fileName: string }> {
+  return fetchSkDocumentBlob(
+    `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/from-html`,
+    {
+      html: input.html,
+      fileName: input.fileName,
+    }
+  );
+}
+
 export async function saveSkCaseDocument(input: {
   caseId: string;
   templateId: string;
   variables: Record<string, string>;
   allowIncomplete?: boolean;
+  html?: string;
+  contentBase64?: string;
+  fileName?: string;
 }): Promise<{ upload: CaseUploadedDocumentRecord; fileName: string }> {
   const res = await skAuthedFetch(
     `/api/sajilokanun-auth/cases/${input.caseId}/document-templates/save`,
@@ -1476,6 +1498,9 @@ export async function saveSkCaseDocument(input: {
         templateId: input.templateId,
         variables: input.variables,
         allowIncomplete: input.allowIncomplete === true,
+        ...(input.html ? { html: input.html } : {}),
+        ...(input.contentBase64 ? { contentBase64: input.contentBase64 } : {}),
+        ...(input.fileName ? { fileName: input.fileName } : {}),
       }),
     }
   );
@@ -1995,5 +2020,30 @@ export async function adminDeleteGeminiKey(id: string): Promise<void> {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error ?? "Failed to delete Gemini key");
+}
+
+export type GeminiKeyTestResult = {
+  ok: boolean;
+  label: string;
+  latencyMs: number;
+  error?: string;
+  key: GeminiApiKeyRecord;
+};
+
+export async function adminTestGeminiKey(
+  id: string
+): Promise<GeminiKeyTestResult> {
+  const { authedFetch } = await import("@/lib/auth");
+  const res = await authedFetch(`/admin/gemini-keys/${id}/test`, {
+    method: "POST",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok && data?.ok !== false) {
+    throw new Error(data.error ?? "Failed to test Gemini key");
+  }
+  if (typeof data?.ok !== "boolean" || !data?.key) {
+    throw new Error(data.error ?? "Invalid test response");
+  }
+  return data as GeminiKeyTestResult;
 }
 

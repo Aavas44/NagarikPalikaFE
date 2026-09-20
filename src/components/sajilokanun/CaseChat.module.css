@@ -66,6 +66,32 @@
   color: #0c447c;
 }
 
+.subTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: -0.15rem 0 1rem;
+}
+
+.subTab {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border, #d7e3f4);
+  background: #f7fbff;
+  color: #35516d;
+  border-radius: 999px;
+  padding: 0.32rem 0.8rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subTabActive {
+  border-color: #185fa5;
+  background: #e6f1fb;
+  color: #0c447c;
+}
+
 .tabBadge {
   display: inline-flex;
   align-items: center;

@@ -6,6 +6,7 @@ import {
   adminCreateGeminiKey,
   adminDeleteGeminiKey,
   adminFetchGeminiKeys,
+  adminTestGeminiKey,
   adminUpdateGeminiKey,
   type GeminiApiKeyRecord,
   type GeminiApiKeyRole,
@@ -30,28 +31,36 @@ function roleLabel(role: GeminiApiKeyRole) {
   return "Pool";
 }
 
+function RoleBadge({ role }: { role: GeminiApiKeyRole }) {
+  const tone =
+    role === "default"
+      ? styles.geminiRoleDefault
+      : role === "fallback"
+        ? styles.geminiRoleFallback
+        : styles.geminiRolePool;
+  return <span className={`${styles.geminiRoleBadge} ${tone}`}>{roleLabel(role)}</span>;
+}
+
 function StarIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M12 2.5l2.9 6.1 6.7.7-5 4.5 1.4 6.5L12 16.8 5.9 20.3l1.4-6.5-5-4.5 6.7-.7L12 2.5z" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 3.5l2.6 5.3 5.9.9-4.3 4.2 1 5.8L12 16.9 6.8 19.7l1-5.8L3.5 9.7l5.9-.9L12 3.5z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
 
-/** Spare / reserve mark for fallback key */
 function FallbackIcon() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
-        d="M4 12a8 8 0 0114.2-5.1M20 12a8 8 0 01-14.2 5.1"
+        d="M4 12h10M14 12l-3-3M14 12l-3 3M20 6v12"
         stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M18.2 3.5V7h-3.5M5.8 20.5V17H9.3"
-        stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="1.75"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -59,34 +68,18 @@ function FallbackIcon() {
   );
 }
 
-function RoleBadge({ role }: { role: GeminiApiKeyRole }) {
-  const label = roleLabel(role);
-  if (role === "default") {
-    return (
-      <span
-        className={`${styles.geminiRoleBadge} ${styles.geminiRoleDefault}`}
-        title="Primary key used first"
-      >
-        <StarIcon />
-        {label}
-      </span>
-    );
-  }
-  if (role === "fallback") {
-    return (
-      <span
-        className={`${styles.geminiRoleBadge} ${styles.geminiRoleFallback}`}
-        title="Used when the default key fails (e.g. 429)"
-      >
-        <FallbackIcon />
-        {label}
-      </span>
-    );
-  }
+function TestIcon() {
   return (
-    <span className={`${styles.geminiRoleBadge} ${styles.geminiRolePool}`} title="Extra pool key">
-      {label}
-    </span>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 12.5l2 2 4.5-5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.75" />
+    </svg>
   );
 }
 
@@ -95,19 +88,7 @@ function EyeIcon({ open }: { open: boolean }) {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
         <path
-          d="M3 3l18 18"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-        />
-        <path
-          d="M10.6 10.6a2 2 0 002.8 2.8"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-        />
-        <path
-          d="M9.9 5.2A10.5 10.5 0 0112 5c5 0 9.3 3.1 10.7 7.5a11.3 11.3 0 01-1.7 3.1M6.1 6.1C4.2 7.4 2.8 9.3 2 12.5 3.4 16.9 7.7 20 12.7 20c1.5 0 2.9-.3 4.2-.8"
+          d="M3 3l18 18M10.6 10.6A3 3 0 0012 15a3 3 0 002.4-4.4M9.9 5.1A10.5 10.5 0 0121.5 12c-.6 1.1-1.4 2.1-2.3 2.9M6.1 6.1C4.7 7.2 3.5 8.5 2.5 12c1.6 4.4 5.9 7.5 10.9 7.5 1.4 0 2.7-.3 3.9-.7"
           stroke="currentColor"
           strokeWidth="1.75"
           strokeLinecap="round"
@@ -130,12 +111,14 @@ function EyeIcon({ open }: { open: boolean }) {
 function GeminiKeyKebabMenu({
   busy,
   item,
+  onTest,
   onSetRole,
   onToggleActive,
   onDelete,
 }: {
   busy: boolean;
   item: GeminiApiKeyRecord;
+  onTest: () => void;
   onSetRole: (role: GeminiApiKeyRole) => void;
   onToggleActive: () => void;
   onDelete: () => void;
@@ -158,7 +141,7 @@ function GeminiKeyKebabMenu({
     const gap = 6;
     const spaceBelow = window.innerHeight - rect.bottom - gap;
     const spaceAbove = rect.top - gap;
-    const preferUp = spaceBelow < 220 && spaceAbove > spaceBelow;
+    const preferUp = spaceBelow < 260 && spaceAbove > spaceBelow;
     const left = Math.min(
       Math.max(8, rect.right - menuWidth),
       window.innerWidth - menuWidth - 8
@@ -227,6 +210,20 @@ function GeminiKeyKebabMenu({
             }}
           >
             <div className={styles.skKebabMenuScroll}>
+              <button
+                type="button"
+                className={styles.skKebabItem}
+                role="menuitem"
+                disabled={busy}
+                onClick={() => runAndClose(onTest)}
+              >
+                <span className={styles.skKebabItemLabel}>
+                  <TestIcon />
+                  Test key
+                </span>
+              </button>
+
+              <div className={styles.skKebabDivider} />
               <p className={styles.skKebabSection}>Role</p>
               <button
                 type="button"
@@ -322,6 +319,7 @@ export function AdminGeminiKeysPanel() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [label, setLabel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [adding, setAdding] = useState(false);
@@ -454,6 +452,7 @@ export function AdminGeminiKeysPanel() {
     if (!window.confirm("Delete this Gemini API key?")) return;
     setBusyId(id);
     setError("");
+    setNotice("");
     try {
       await adminDeleteGeminiKey(id);
       setRevealed((prev) => {
@@ -464,6 +463,33 @@ export function AdminGeminiKeysPanel() {
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete key");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleTest(item: GeminiApiKeyRecord) {
+    setBusyId(item.id);
+    setError("");
+    setNotice("");
+    try {
+      const result = await adminTestGeminiKey(item.id);
+      setKeys((prev) =>
+        prev.map((row) => (row.id === result.key.id ? { ...result.key, apiKey: undefined } : row))
+      );
+      if (result.ok) {
+        setNotice(
+          `“${result.label}” works (${result.latencyMs} ms).`
+        );
+      } else {
+        setError(
+          `“${result.label}” failed (${result.latencyMs} ms): ${
+            result.error ?? "Unknown error"
+          }`
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to test key");
     } finally {
       setBusyId(null);
     }
@@ -520,6 +546,11 @@ export function AdminGeminiKeysPanel() {
       </p>
 
       {error ? <p className={styles.formError}>{error}</p> : null}
+      {notice ? (
+        <p className={styles.panelDesc} style={{ color: "#027a48", fontWeight: 600 }}>
+          {notice}
+        </p>
+      ) : null}
 
       <form
         onSubmit={handleAdd}
@@ -639,6 +670,7 @@ export function AdminGeminiKeysPanel() {
                       <GeminiKeyKebabMenu
                         busy={busy}
                         item={item}
+                        onTest={() => void handleTest(item)}
                         onSetRole={(role) => void setRole(item.id, role)}
                         onToggleActive={() => void toggleActive(item)}
                         onDelete={() => void handleDelete(item.id)}

@@ -199,6 +199,13 @@
   border-radius: 0 12px 12px 0;
 }
 
+.tableGroupTitle {
+  margin: 0.85rem 0 0.15rem;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f766e;
+}
+
 .rowBlockTitle {
   margin: 0;
   font-size: 12px;
@@ -536,8 +543,13 @@
   background: #fef9c3;
   border-radius: 3px;
   padding: 0 2px;
+  cursor: pointer;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+
+.previewDoc :global(.sk-preview-field:hover) {
+  background: #fde68a;
 }
 
 .previewDoc :global(.sk-preview-field-active) {

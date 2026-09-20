@@ -24,6 +24,7 @@ type AdminSection =
   | "members"
   | "gemini-keys"
   | "sajilo-kanun-templates"
+  | "sajilo-kanun-template-review"
   | "ward-operators"
   | "ward-templates"
   | null;
@@ -44,6 +45,8 @@ function hashToAdminSection(hash: string): AdminSection {
       return "gemini-keys";
     case "sajilo-kanun-templates":
       return "sajilo-kanun-templates";
+    case "sajilo-kanun-templates-review":
+      return "sajilo-kanun-template-review";
     case "ward-operators":
       return "ward-operators";
     case "ward-templates":
@@ -129,6 +132,8 @@ export function AdminDashboard({
               ? "Sajilo Kanun — Gemini keys"
               : adminSection === "sajilo-kanun-templates"
                 ? "Sajilo Kanun — Document templates"
+                : adminSection === "sajilo-kanun-template-review"
+                  ? "Sajilo Kanun — Review templates"
                 : adminSection === "ward-operators"
                 ? "Ward — Operators"
                 : adminSection === "ward-templates"
@@ -242,6 +247,17 @@ export function AdminDashboard({
                 >
                   <span className="icon">📝</span> SK templates
                 </button>
+                <button
+                  type="button"
+                  className={navClass(
+                    adminSection === "sajilo-kanun-template-review"
+                  )}
+                  onClick={(event) =>
+                    goToSection(event, "sajilo-kanun-templates-review")
+                  }
+                >
+                  <span className="icon">🔍</span> Review templates
+                </button>
               </>
             ) : null}
           </div>
@@ -320,9 +336,12 @@ export function AdminDashboard({
                 Superadmin access is required to manage Gemini API keys.
               </p>
             )
-          ) : adminSection === "sajilo-kanun-templates" ? (
+          ) : adminSection === "sajilo-kanun-templates" ||
+            adminSection === "sajilo-kanun-template-review" ? (
             isSuperadmin ? (
-              <AdminSajiloKanunTemplatesPanel />
+              <AdminSajiloKanunTemplatesPanel
+                openReview={adminSection === "sajilo-kanun-template-review"}
+              />
             ) : (
               <p className={styles.formError}>
                 Superadmin access is required to manage Sajilo Kanun templates.

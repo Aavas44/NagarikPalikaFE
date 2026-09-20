@@ -26,6 +26,7 @@
     "@thednp/dommatrix": "^3.0.4",
     "@types/pdfkit": "^0.17.6",
     "@vercel/analytics": "^2.0.1",
+    "docx-preview": "^0.4.0",
     "dotenv": "^16.4.7",
     "mammoth": "^1.12.0",
     "next": "^15.1.3",

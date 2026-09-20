@@ -74,15 +74,24 @@ function transcriptFromEvent(event: SpeechRecognitionEventLike): string {
 export function useSpeechToText(options: {
   lang?: string;
   listenMs?: number;
+  /** Default true (forms replace the whole field). Prefer false when inserting at a caret. */
+  interimResults?: boolean;
   onTranscript: (text: string) => void;
 }) {
-  const { lang = "ne-NP", listenMs = SPEECH_LISTEN_MS, onTranscript } = options;
+  const {
+    lang = "ne-NP",
+    listenMs = SPEECH_LISTEN_MS,
+    interimResults = true,
+    onTranscript,
+  } = options;
   const onTranscriptRef = useRef(onTranscript);
   onTranscriptRef.current = onTranscript;
   const langRef = useRef(lang);
   langRef.current = lang;
   const listenMsRef = useRef(listenMs);
   listenMsRef.current = listenMs;
+  const interimResultsRef = useRef(interimResults);
+  interimResultsRef.current = interimResults;
 
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const timeoutRef = useRef<number | null>(null);
@@ -157,7 +166,7 @@ export function useSpeechToText(options: {
     const recognition = new Ctor();
     recognition.lang = langRef.current;
     recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.interimResults = interimResultsRef.current;
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event) => {

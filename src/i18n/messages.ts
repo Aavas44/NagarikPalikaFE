@@ -418,6 +418,8 @@ export const messages = {
         tabUsers: "Case users",
         tabPayments: "Payments",
         tabDocuments: "Documents",
+        tabDocumentFiles: "Files",
+        tabDocumentScanner: "Document scanner",
         tabDocumentGenerator: "Document generator",
         tabActivity: "Case activity",
         tabFamilyTree: "Family tree",
@@ -435,7 +437,7 @@ export const messages = {
         fetchPesiHint:
           "Pull this week’s hearing list from the Supreme Court site for this case’s court, then save matching case numbers.",
         fetchPesiNoCourt:
-          "Select a district court on this case first (courts with a Supreme Court daily id).",
+          "Select a court on this case first (district, high, or special), or set court type to सर्वोच्च अदालत.",
         fetchPesiMatched: "Saved {n} matching pesi row(s) from {total} scanned.",
         fetchPesiNone: "No matching rows found for this case number in the weekly list.",
         pesiTableTitle: "Court-published activity matches",
@@ -539,11 +541,23 @@ export const messages = {
         docGroupPetitions: "निवेदनहरू (Petitions)",
         comingSoonAi:
           "Select a form, fill the required fields, and generate a court-ready draft. New petition types appear in the list; AI drafting opens after their variables and templates are added.",
-        documentExtractorTitle: "Document extractor",
+        documentExtractorTitle: "Document scanner",
         documentExtractorHint:
           "Select uploaded case files and/or add PDF/images. Generate extracts structured facts strictly from those documents (Nepali JSON keys).",
         extractorPickUploads: "Use case uploads",
         extractorAddFiles: "Add PDF / image / DOCX",
+        extractorOpenCamera: "Open camera",
+        extractorCloseCamera: "Close camera",
+        extractorCapturePhoto: "Capture photo",
+        extractorCapturing: "Capturing…",
+        extractorSwitchCamera: "Switch camera",
+        extractorCameraUnsupported:
+          "Camera is not available in this browser. Use HTTPS (or localhost) and allow camera access.",
+        extractorCameraPermissionDenied:
+          "Camera permission denied. Allow camera access in the browser, then try again.",
+        extractorCameraError: "Could not use the camera. Try again or upload a file.",
+        extractorCameraHint:
+          "Point the camera at the document, then capture. Each photo is added to the scan list (up to 8).",
         extractorNoFiles: "Select or add at least one document or image.",
         extractorGenerate: "Generate",
         extractorExtracting: "Extracting…",
@@ -567,6 +581,12 @@ export const messages = {
         extractorPlaintiffN: "वादी / निवेदक {n}",
         extractorPlaintiffsTitle: "वादी / निवेदकहरू",
         extractorDefendantsTitle: "प्रतिवादी / विपक्षीहरू",
+        extractorNibedakSideLabel: "निवेदक पक्ष (Badi vs Pratibadi)",
+        extractorNibedakSideHint:
+          "Is the applicant (निवेदक) on the plaintiff or defendant side? Used when generating documents.",
+        extractorNibedakSidePlaintiff: "वादी (Plaintiff / Badi)",
+        extractorNibedakSideDefendant: "प्रतिवादी (Defendant / Pratibadi)",
+        extractorNibedakSideUnclear: "Unclear — infer from names",
         docFormTitle: "प्रतिउत्तरपत्र details",
         docFormHint:
           "Enter court, parties, allegations to refute, legal grounds, and relief. The AI will draft a statutory-format reply.",
@@ -1722,6 +1742,8 @@ export const messages = {
         tabUsers: "प्रयोगकर्ताहरू",
         tabPayments: "भुक्तानी",
         tabDocuments: "कागजात",
+        tabDocumentFiles: "फाइलहरू",
+        tabDocumentScanner: "कागजात स्क्यानर",
         tabDocumentGenerator: "कागजात जेनेरेटर",
         tabActivity: "मुद्दा गतिविधि",
         tabFamilyTree: "वंशावली",
@@ -1739,7 +1761,7 @@ export const messages = {
         fetchPesiHint:
           "यो मुद्दाको अदालतका लागि सर्वोच्च अदालतको साप्ताहिक पेशी सूचीबाट मिल्ने मुद्दा नं. खोजेर बचत गर्नुहोस्।",
         fetchPesiNoCourt:
-          "पहिले यो मुद्दामा जिल्ला अदालत छान्नुहोस् (सर्वोच्च दैनिक आइडी भएको)।",
+          "पहिले यो मुद्दामा अदालत छान्नुहोस् (जिल्ला / उच्च / विशेष), वा अदालत प्रकार सर्वोच्च अदालत राख्नुहोस्।",
         fetchPesiMatched: "{total} मध्ये {n} मिल्ने पेशी पङ्क्ति बचत भयो।",
         fetchPesiNone: "साप्ताहिक सूचीमा यो मुद्दा नम्बर मिल्ने पङ्क्ति भेटिएन।",
         pesiTableTitle: "अदालतमा प्रकाशित गतिविधि मिलान",
@@ -1844,11 +1866,24 @@ export const messages = {
         docGroupPetitions: "निवेदनहरू",
         comingSoonAi:
           "फारम छानी आवश्यक विवरण भरी अदालतमा पेश गर्ने मस्यौदा सिर्जना गर्नुहोस्। नयाँ निवेदन प्रकारहरू सूचीमा देखिन्छन्; चर र टेम्प्लेट थपिएपछि एआई मस्यौदा उपलब्ध हुन्छ।",
-        documentExtractorTitle: "कागजात एक्स्ट्र्याक्टर",
+        documentExtractorTitle: "कागजात स्क्यानर",
         documentExtractorHint:
           "मुद्दामा अपलोड भएका फाइलहरू छान्नुहोस् वा PDF/तस्बिर थप्नुहोस्। Generate ले ती कागजातमा आधारित मात्र संरचित तथ्य निकाल्छ (नेपाली JSON कुञ्जी)।",
         extractorPickUploads: "मुद्दाका अपलोड फाइलहरू",
         extractorAddFiles: "PDF / तस्बिर / DOCX थप्नुहोस्",
+        extractorOpenCamera: "क्यामेरा खोल्नुहोस्",
+        extractorCloseCamera: "क्यामेरा बन्द गर्नुहोस्",
+        extractorCapturePhoto: "फोटो खिच्नुहोस्",
+        extractorCapturing: "खिच्दै…",
+        extractorSwitchCamera: "क्यामेरा बदल्नुहोस्",
+        extractorCameraUnsupported:
+          "यो ब्राउजरमा क्यामेरा उपलब्ध छैन। HTTPS (वा localhost) प्रयोग गरी क्यामेरा अनुमति दिनुहोस्।",
+        extractorCameraPermissionDenied:
+          "क्यामेरा अनुमति अस्वीकार भयो। ब्राउजरमा क्यामेरा अनुमति दिएर फेरि प्रयास गर्नुहोस्।",
+        extractorCameraError:
+          "क्यामेरा प्रयोग गर्न सकिएन। फेरि प्रयास गर्नुहोस् वा फाइल अपलोड गर्नुहोस्।",
+        extractorCameraHint:
+          "कागजाततिर क्यामेरा राखेर फोटो खिच्नुहोस्। प्रत्येक फोटो स्क्यान सूचीमा थपिन्छ (अधिकतम ८)।",
         extractorNoFiles: "कम्तीमा एक कागजात वा तस्बिर छान्नुहोस् वा थप्नुहोस्।",
         extractorGenerate: "Generate",
         extractorExtracting: "निकाल्दै…",
@@ -1872,6 +1907,12 @@ export const messages = {
         extractorPlaintiffN: "वादी / निवेदक {n}",
         extractorPlaintiffsTitle: "वादी / निवेदकहरू",
         extractorDefendantsTitle: "प्रतिवादी / विपक्षीहरू",
+        extractorNibedakSideLabel: "निवेदक पक्ष (वादी वा प्रतिवादी)",
+        extractorNibedakSideHint:
+          "निवेदक/आवेदक वादी पक्षमा हुन् वा प्रतिवादी पक्षमा? कागजात बनाउँदा यही वर्गीकरण प्रयोग हुन्छ।",
+        extractorNibedakSidePlaintiff: "वादी (Badi)",
+        extractorNibedakSideDefendant: "प्रतिवादी (Pratibadi)",
+        extractorNibedakSideUnclear: "अस्पष्ट — नामबाट पत्ता लगाउने",
         docFormTitle: "प्रतिउत्तरपत्र विवरण",
         docFormHint:
           "अदालत, पक्षहरू, खण्डन गर्नुपर्ने आरोप, कानूनी आधार र माग दाबी भर्नुहोस्। एआईले ढाँचाअनुसार प्रतिउत्तरपत्र मस्यौदा गर्नेछ।",

@@ -263,10 +263,9 @@ export function wardBilingualFieldLabel(
   labelEn?: string
 ): string {
   const nepali = wardNepaliFieldLabel(key, labelNe, labelEn);
-  const english = wardEnglishFieldLabel(key, labelEn);
-  if (!english || english === nepali || HAS_DEVANAGARI.test(english)) {
-    return nepali;
-  }
-  if (nepali.includes(`(${english})`)) return nepali;
-  return `${nepali} (${english})`;
+  // Template fill forms show Nepali only — drop Latin glosses like `मिति (Miti)`.
+  return nepali
+    .replace(/\s*\([^)]*[A-Za-z][^)]*\)/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
 }

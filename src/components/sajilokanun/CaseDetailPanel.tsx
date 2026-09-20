@@ -51,6 +51,11 @@ import {
   type ExtractedCaseDocument,
 } from "@/lib/sajilokanun/document-prompts";
 import {
+  withDefendantList,
+  withNibedakSide,
+  withPlaintiffList,
+} from "@/lib/sajilokanun/party-fill";
+import {
   bsToAd,
   daysBetweenAd,
   formatBsDate,
@@ -73,6 +78,7 @@ import caseChatStyles from "@/components/sajilokanun/CaseChat.module.css";
 import { CaseFilePreviewPanel } from "@/components/sajilokanun/CaseFilePreviewPanel";
 import { CaseDocumentModal } from "@/components/sajilokanun/CaseDocumentModal";
 import { CaseFamilyTree } from "@/components/sajilokanun/CaseFamilyTree";
+import { DocumentScannerCamera } from "@/components/sajilokanun/DocumentScannerCamera";
 import { FirmQuotaReachedDialog } from "@/components/sajilokanun/FirmQuotaReachedDialog";
 import { StatusToast } from "@/components/sajilokanun/StatusToast";
 
@@ -119,6 +125,8 @@ type CasesCopy = {
   tabUsers: string;
   tabPayments: string;
   tabDocuments: string;
+  tabDocumentFiles: string;
+  tabDocumentScanner: string;
   tabDocumentGenerator: string;
   tabActivity: string;
   tabFamilyTree: string;
@@ -234,6 +242,15 @@ type CasesCopy = {
   documentExtractorHint: string;
   extractorPickUploads: string;
   extractorAddFiles: string;
+  extractorOpenCamera: string;
+  extractorCloseCamera: string;
+  extractorCapturePhoto: string;
+  extractorCapturing: string;
+  extractorSwitchCamera: string;
+  extractorCameraUnsupported: string;
+  extractorCameraPermissionDenied: string;
+  extractorCameraError: string;
+  extractorCameraHint: string;
   extractorNoFiles: string;
   extractorGenerate: string;
   extractorExtracting: string;
@@ -256,6 +273,11 @@ type CasesCopy = {
   extractorPlaintiffN: string;
   extractorPlaintiffsTitle: string;
   extractorDefendantsTitle: string;
+  extractorNibedakSideLabel: string;
+  extractorNibedakSideHint: string;
+  extractorNibedakSidePlaintiff: string;
+  extractorNibedakSideDefendant: string;
+  extractorNibedakSideUnclear: string;
   familyTreeTitle: string;
   familyTreeEmpty: string;
   familyTreeGeneration: string;
@@ -517,11 +539,13 @@ export function CaseDetailPanel({
     | "messages"
     | "users"
     | "documents"
-    | "generator"
     | "payments"
     | "activity"
     | "family"
   >("messages");
+  const [documentsSection, setDocumentsSection] = useState<
+    "files" | "scanner" | "generator"
+  >("files");
   const [showUserForm, setShowUserForm] = useState(false);
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [uploads, setUploads] = useState<CaseUploadedDocumentRecord[]>([]);
@@ -693,7 +717,11 @@ export function CaseDetailPanel({
 
   async function handleFetchPesi() {
     if (!detail) return;
-    if (typeof detail.courtScDailyId !== "number") {
+    const canFetchPesi =
+      detail.courtType === "supreme" ||
+      typeof detail.courtScDailyId === "number" ||
+      Boolean(detail.courtId?.trim());
+    if (!canFetchPesi) {
       setError(t.fetchPesiNoCourt);
       return;
     }
@@ -734,6 +762,7 @@ export function CaseDetailPanel({
 
   useEffect(() => {
     setActiveTab("messages");
+    setDocumentsSection("files");
     setShowUserForm(false);
     setShowActivityForm(false);
     setUnreadFromClient(0);
@@ -773,13 +802,18 @@ export function CaseDetailPanel({
       setCourtTemplatesError("");
       return;
     }
+    const caseCourtType = detail.courtType;
     let cancelled = false;
+    setCourtTemplates([]);
     setCourtTemplatesLoading(true);
     setCourtTemplatesError("");
-    void fetchSkDocumentTemplates(detail.courtType)
+    void fetchSkDocumentTemplates(caseCourtType)
       .then((list) => {
         if (cancelled) return;
-        setCourtTemplates(list);
+        // Defensive: never show another court tier's forms on this case.
+        setCourtTemplates(
+          list.filter((template) => template.courtType === caseCourtType)
+        );
         setTemplatePage(1);
         setActiveFormTemplate(null);
       })
@@ -1444,19 +1478,6 @@ export function CaseDetailPanel({
             <button
               type="button"
               role="tab"
-              aria-selected={activeTab === "generator"}
-              className={`${caseChatStyles.tab} ${
-                activeTab === "generator" ? caseChatStyles.tabActive : ""
-              }`}
-              onClick={() => setActiveTab("generator")}
-            >
-              {t.tabDocumentGenerator}
-            </button>
-          )}
-          {isFirmUser && (
-            <button
-              type="button"
-              role="tab"
               aria-selected={activeTab === "family"}
               className={`${caseChatStyles.tab} ${
                 activeTab === "family" ? caseChatStyles.tabActive : ""
@@ -1738,6 +1759,50 @@ export function CaseDetailPanel({
 
         {activeTab === "documents" && (
           <>
+            {isFirmUser && (
+              <div
+                className={caseChatStyles.subTabs}
+                role="tablist"
+                aria-label={t.tabDocuments}
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={documentsSection === "files"}
+                  className={`${caseChatStyles.subTab} ${
+                    documentsSection === "files" ? caseChatStyles.subTabActive : ""
+                  }`}
+                  onClick={() => setDocumentsSection("files")}
+                >
+                  {t.tabDocumentFiles}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={documentsSection === "scanner"}
+                  className={`${caseChatStyles.subTab} ${
+                    documentsSection === "scanner" ? caseChatStyles.subTabActive : ""
+                  }`}
+                  onClick={() => setDocumentsSection("scanner")}
+                >
+                  {t.tabDocumentScanner}
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={documentsSection === "generator"}
+                  className={`${caseChatStyles.subTab} ${
+                    documentsSection === "generator" ? caseChatStyles.subTabActive : ""
+                  }`}
+                  onClick={() => setDocumentsSection("generator")}
+                >
+                  {t.tabDocumentGenerator}
+                </button>
+              </div>
+            )}
+
+            {(!isFirmUser || documentsSection === "files") && (
+              <>
             <div className={caseChatStyles.sectionHeader}>
               <div>
                 <h3 className={emiStyles.emiPanelTitle}>{t.documentsTitle}</h3>
@@ -1928,6 +1993,8 @@ export function CaseDetailPanel({
                 );
               })}
             </div>
+              </>
+            )}
           </>
         )}
 
@@ -2475,9 +2542,8 @@ export function CaseDetailPanel({
           />
         )}
 
-        {isFirmUser && activeTab === "generator" && (
-          <>
-            <section style={{ marginBottom: "1.75rem" }}>
+        {isFirmUser && activeTab === "documents" && documentsSection === "scanner" && (
+          <section>
               <h3 className={emiStyles.emiPanelTitle}>{t.documentExtractorTitle}</h3>
               <p className={emiStyles.emiFieldHint}>{t.documentExtractorHint}</p>
 
@@ -2542,14 +2608,45 @@ export function CaseDetailPanel({
                     e.target.value = "";
                   }}
                 />
-                <button
-                  type="button"
-                  className={emiStyles.emiPreset}
-                  onClick={() => extractFileInputRef.current?.click()}
-                  disabled={extracting}
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "0.5rem",
+                    alignItems: "center",
+                    marginBottom: "0.65rem",
+                  }}
                 >
-                  {t.extractorAddFiles}
-                </button>
+                  <button
+                    type="button"
+                    className={emiStyles.emiPreset}
+                    onClick={() => extractFileInputRef.current?.click()}
+                    disabled={extracting}
+                  >
+                    {t.extractorAddFiles}
+                  </button>
+                </div>
+                <DocumentScannerCamera
+                  disabled={extracting}
+                  maxFiles={8}
+                  currentFileCount={extractLocalFiles.length}
+                  onCapture={(file) =>
+                    setExtractLocalFiles((current) =>
+                      [...current, file].slice(0, 8)
+                    )
+                  }
+                  labels={{
+                    openCamera: t.extractorOpenCamera,
+                    closeCamera: t.extractorCloseCamera,
+                    capture: t.extractorCapturePhoto,
+                    capturing: t.extractorCapturing,
+                    switchCamera: t.extractorSwitchCamera,
+                    cameraUnsupported: t.extractorCameraUnsupported,
+                    cameraPermissionDenied: t.extractorCameraPermissionDenied,
+                    cameraError: t.extractorCameraError,
+                    cameraHint: t.extractorCameraHint,
+                  }}
+                />
                 {extractLocalFiles.length > 0 ? (
                   <ul
                     style={{
@@ -2752,6 +2849,42 @@ export function CaseDetailPanel({
                   </div>
 
                   <div style={{ marginTop: "0.85rem" }}>
+                    <label
+                      className={emiStyles.emiField}
+                      htmlFor="ex-nibedak-side"
+                      style={{ display: "grid", gap: "0.35rem" }}
+                    >
+                      <strong style={{ color: "#042c53", fontSize: "0.9rem" }}>
+                        {t.extractorNibedakSideLabel}
+                      </strong>
+                      <span className={emiStyles.emiFieldHint} style={{ margin: 0 }}>
+                        {t.extractorNibedakSideHint}
+                      </span>
+                      <select
+                        id="ex-nibedak-side"
+                        className={emiStyles.emiNumberInput}
+                        value={extractEditForm.निवेदक_पक्ष ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const side =
+                            value === "वादी" || value === "प्रतिवादी"
+                              ? value
+                              : null;
+                          patchExtraction((f) => withNibedakSide(f, side));
+                        }}
+                      >
+                        <option value="">{t.extractorNibedakSideUnclear}</option>
+                        <option value="वादी">
+                          {t.extractorNibedakSidePlaintiff}
+                        </option>
+                        <option value="प्रतिवादी">
+                          {t.extractorNibedakSideDefendant}
+                        </option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <div style={{ marginTop: "0.85rem" }}>
                     <div
                       className="flex flex-wrap items-center justify-between gap-2"
                       style={{ marginBottom: "0.5rem" }}
@@ -2764,12 +2897,10 @@ export function CaseDetailPanel({
                         className={emiStyles.emiPreset}
                         onClick={() =>
                           patchExtraction((f) => {
-                            const next = [...f.वादी_विवरण, emptyExtractedParty()];
-                            return {
-                              ...f,
-                              वादी_विवरण: next,
-                              निवेदक_विवरण: next.map((p) => ({ ...p })),
-                            };
+                            return withPlaintiffList(f, [
+                              ...f.वादी_विवरण,
+                              emptyExtractedParty(),
+                            ]);
                           })
                         }
                       >
@@ -2806,11 +2937,7 @@ export function CaseDetailPanel({
                               onClick={() =>
                                 patchExtraction((f) => {
                                   const next = f.वादी_विवरण.filter((_, i) => i !== index);
-                                  return {
-                                    ...f,
-                                    वादी_विवरण: next,
-                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withPlaintiffList(f, next);
                                 })
                               }
                             >
@@ -2832,11 +2959,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     पूरा_नाम: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    वादी_विवरण: next,
-                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withPlaintiffList(f, next);
                                 })
                               }
                             />
@@ -2854,11 +2977,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     तीनपुस्ते: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    वादी_विवरण: next,
-                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withPlaintiffList(f, next);
                                 })
                               }
                             />
@@ -2878,11 +2997,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     ठेगाना: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    वादी_विवरण: next,
-                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withPlaintiffList(f, next);
                                 })
                               }
                             />
@@ -2900,11 +3015,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     नागरिकता_नं: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    वादी_विवरण: next,
-                                    निवेदक_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withPlaintiffList(f, next);
                                 })
                               }
                             />
@@ -2927,12 +3038,10 @@ export function CaseDetailPanel({
                         className={emiStyles.emiPreset}
                         onClick={() =>
                           patchExtraction((f) => {
-                            const next = [...f.प्रतिवादी_विवरण, emptyExtractedParty()];
-                            return {
-                              ...f,
-                              प्रतिवादी_विवरण: next,
-                              विपक्षी_विवरण: next.map((p) => ({ ...p })),
-                            };
+                            return withDefendantList(f, [
+                              ...f.प्रतिवादी_विवरण,
+                              emptyExtractedParty(),
+                            ]);
                           })
                         }
                       >
@@ -2971,11 +3080,7 @@ export function CaseDetailPanel({
                                   const next = f.प्रतिवादी_विवरण.filter(
                                     (_, i) => i !== index
                                   );
-                                  return {
-                                    ...f,
-                                    प्रतिवादी_विवरण: next,
-                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withDefendantList(f, next);
                                 })
                               }
                             >
@@ -2997,11 +3102,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     पूरा_नाम: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    प्रतिवादी_विवरण: next,
-                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withDefendantList(f, next);
                                 })
                               }
                             />
@@ -3019,11 +3120,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     तीनपुस्ते: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    प्रतिवादी_विवरण: next,
-                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withDefendantList(f, next);
                                 })
                               }
                             />
@@ -3043,11 +3140,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     ठेगाना: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    प्रतिवादी_विवरण: next,
-                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withDefendantList(f, next);
                                 })
                               }
                             />
@@ -3065,11 +3158,7 @@ export function CaseDetailPanel({
                                     ...next[index],
                                     नागरिकता_नं: e.target.value || null,
                                   };
-                                  return {
-                                    ...f,
-                                    प्रतिवादी_विवरण: next,
-                                    विपक्षी_विवरण: next.map((p) => ({ ...p })),
-                                  };
+                                  return withDefendantList(f, next);
                                 })
                               }
                             />
@@ -3269,7 +3358,10 @@ export function CaseDetailPanel({
                 </article>
               ) : null}
             </section>
+        )}
 
+        {isFirmUser && activeTab === "documents" && documentsSection === "generator" && (
+          <>
             <h3 className={emiStyles.emiPanelTitle}>{t.documentGeneratorTitle}</h3>
             <p className={emiStyles.emiFieldHint}>{t.documentGeneratorHint}</p>
             {detail.courtType ? (
@@ -3417,6 +3509,7 @@ export function CaseDetailPanel({
           onSaved={(upload) => {
             setUploads((prev) => [upload, ...prev]);
             setActiveTab("documents");
+            setDocumentsSection("files");
             setActiveFormTemplate(null);
           }}
           onQuotaError={(quota) => {

@@ -51,6 +51,69 @@ function voiceLabels(locale?: "en" | "ne") {
   };
 }
 
+/** Standalone mic/stop control (format bars, toolbars). */
+export function VoiceFillButton({
+  disabled,
+  locale,
+  lang,
+  interimResults = true,
+  className,
+  listeningClassName,
+  onTranscript,
+  onSessionStart,
+}: {
+  disabled?: boolean;
+  locale?: "en" | "ne";
+  lang?: string;
+  interimResults?: boolean;
+  className?: string;
+  listeningClassName?: string;
+  onTranscript: (text: string) => void;
+  /** Called right before a new listen session starts (reset caret-insert state). */
+  onSessionStart?: () => void;
+}) {
+  const labels = voiceLabels(locale);
+  const { supported, listening, error, start, stop } = useSpeechToText({
+    lang: lang ?? speechRecognitionLang(locale),
+    interimResults,
+    onTranscript,
+  });
+
+  if (!supported) return null;
+
+  const label = listening
+    ? labels.stop
+    : error === "not-allowed" || error === "service-not-allowed"
+      ? labels.denied
+      : labels.record;
+
+  return (
+    <button
+      type="button"
+      className={`${styles.btn} ${listening ? styles.btnListening : ""} ${className ?? ""} ${
+        listening && listeningClassName ? listeningClassName : ""
+      }`}
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (listening) {
+          stop();
+          return;
+        }
+        onSessionStart?.();
+        start();
+      }}
+      disabled={disabled}
+      aria-pressed={listening}
+      aria-label={label}
+      title={label}
+    >
+      {listening ? <StopIcon /> : <MicIcon />}
+    </button>
+  );
+}
+
 export function VoiceFillRow({
   children,
   disabled,
@@ -64,42 +127,73 @@ export function VoiceFillRow({
   lang?: string;
   onTranscript: (text: string) => void;
 }) {
-  const labels = voiceLabels(locale);
-  const { supported, listening, error, start, stop } = useSpeechToText({
-    lang: lang ?? speechRecognitionLang(locale),
-    onTranscript,
-  });
-
-  if (!supported) {
-    return <>{children}</>;
-  }
-
-  const label = listening
-    ? labels.stop
-    : error === "not-allowed" || error === "service-not-allowed"
-      ? labels.denied
-      : labels.record;
-
   return (
     <div className={styles.row}>
       <div className={styles.control}>{children}</div>
-      <button
-        type="button"
-        className={`${styles.btn} ${listening ? styles.btnListening : ""}`}
-        onMouseDown={(event) => event.preventDefault()}
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          if (listening) stop();
-          else start();
-        }}
+      <VoiceFillButton
         disabled={disabled}
-        aria-pressed={listening}
-        aria-label={label}
-        title={label}
-      >
-        {listening ? <StopIcon /> : <MicIcon />}
-      </button>
+        locale={locale}
+        lang={lang}
+        onTranscript={onTranscript}
+      />
     </div>
   );
+}
+
+/** Insert plain text at the current selection inside a contentEditable root. */
+export function insertTextAtContentEditableCaret(
+  root: HTMLElement,
+  text: string
+): boolean {
+  if (!text) return false;
+  root.focus();
+  const selection = window.getSelection();
+  if (!selection) return false;
+
+  const anchorInRoot =
+    selection.anchorNode != null && root.contains(selection.anchorNode);
+  if (!anchorInRoot || selection.rangeCount === 0) {
+    const range = document.createRange();
+    range.selectNodeContents(root);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  const inserted = document.execCommand("insertText", false, text);
+  if (inserted) return true;
+
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+  const node = document.createTextNode(text);
+  range.insertNode(node);
+  range.setStartAfter(node);
+  range.collapse(true);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  return true;
+}
+
+/**
+ * Turn cumulative speech transcripts into append-only deltas for caret insert.
+ * Returns the new text to insert (may be empty).
+ */
+export function speechTranscriptDelta(
+  previousSessionText: string,
+  nextSessionText: string
+): { delta: string; nextBaseline: string } {
+  if (!nextSessionText) {
+    return { delta: "", nextBaseline: previousSessionText };
+  }
+  if (nextSessionText.startsWith(previousSessionText)) {
+    return {
+      delta: nextSessionText.slice(previousSessionText.length),
+      nextBaseline: nextSessionText,
+    };
+  }
+  // Interim rewrite / shrink — wait for a longer stable transcript.
+  if (previousSessionText.startsWith(nextSessionText)) {
+    return { delta: "", nextBaseline: previousSessionText };
+  }
+  return { delta: "", nextBaseline: nextSessionText };
 }

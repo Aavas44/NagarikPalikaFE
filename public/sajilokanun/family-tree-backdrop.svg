@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMid slice" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbf7ec"/>
+      <stop offset="100%" stop-color="#f4ead8"/>
+    </linearGradient>
+    <g id="leaf">
+      <path d="M0 9 C3 0 12 -1 18 8 C13 18 4 19 0 9 Z" fill="#8ea07a" fill-opacity="0.38"/>
+      <path d="M2 9 C8 5 13 5 17 8" fill="none" stroke="#6f825c" stroke-opacity="0.28" stroke-width="0.6"/>
+    </g>
+    <g id="rose">
+      <ellipse cx="0" cy="0" rx="12" ry="8.5" fill="none" stroke="#80936c" stroke-opacity="0.55" stroke-width="1.15"/>
+      <ellipse cx="0" cy="0" rx="8.5" ry="6" fill="none" stroke="#80936c" stroke-opacity="0.5" stroke-width="1"/>
+      <ellipse cx="0" cy="0" rx="5" ry="3.5" fill="none" stroke="#6e8260" stroke-opacity="0.55" stroke-width="0.9"/>
+      <circle cx="0" cy="0" r="1.5" fill="#80936c" fill-opacity="0.4"/>
+      <path d="M-16 5 C-11 -5 -4 -9 0 -7 C4 -9 11 -5 16 5" fill="none" stroke="#8fa37c" stroke-opacity="0.35" stroke-width="0.8"/>
+    </g>
+  </defs>
+  <rect width="1600" height="640" fill="url(#paper)"/>
+  <g fill="none" stroke="#8fa37c" stroke-linecap="round" stroke-linejoin="round">
+    <path stroke-width="18" stroke-opacity="0.28" d="M808 640 C798 500 790 390 798 280 C806 180 848 110 910 40"/>
+    <path stroke-width="13" stroke-opacity="0.4" d="M800 640 C792 510 786 400 794 295 C802 200 838 130 890 55"/>
+    <path stroke-width="10" stroke-opacity="0.42" d="M794 420 C700 340 560 280 400 250 C280 226 160 240 50 290"/>
+    <path stroke-width="9" stroke-opacity="0.42" d="M806 390 C920 320 1080 270 1240 260 C1360 254 1480 280 1570 330"/>
+    <path stroke-width="8" stroke-opacity="0.38" d="M792 520 C680 490 520 520 380 580 C300 614 220 630 130 638"/>
+    <path stroke-width="8" stroke-opacity="0.38" d="M812 530 C930 500 1100 530 1240 590 C1330 622 1430 634 1520 638"/>
+    <path stroke-width="7" stroke-opacity="0.4" d="M790 300 C690 230 600 140 540 50"/>
+    <path stroke-width="7" stroke-opacity="0.4" d="M830 250 C940 170 1060 100 1200 50"/>
+    <path stroke-width="6" stroke-opacity="0.36" d="M760 340 C640 300 500 290 360 330"/>
+    <path stroke-width="6" stroke-opacity="0.36" d="M840 310 C980 250 1140 220 1300 210"/>
+    <path stroke-width="5.5" stroke-opacity="0.34" d="M430 248 C360 170 300 90 270 20"/>
+    <path stroke-width="5.5" stroke-opacity="0.34" d="M1180 255 C1260 180 1360 100 1440 40"/>
+    <path stroke-width="5" stroke-opacity="0.32" d="M220 255 C140 200 70 190 8 220"/>
+    <path stroke-width="5" stroke-opacity="0.32" d="M1400 275 C1490 230 1560 230 1596 260"/>
+    <path stroke-width="4.5" stroke-opacity="0.3" d="M580 120 C520 70 450 30 370 8"/>
+    <path stroke-width="4.5" stroke-opacity="0.3" d="M1040 90 C1120 40 1220 12 1340 4"/>
+  </g>
+  <g>
+    <g transform="translate(86 220) rotate(-16)"><use href="#rose"/></g>
+    <g transform="translate(150 155) rotate(14) scale(0.86)"><use href="#rose"/></g>
+    <g transform="translate(58 305) rotate(24) scale(0.74)"><use href="#rose"/></g>
+    <g transform="translate(210 88) rotate(-10) scale(0.7)"><use href="#rose"/></g>
+    <g transform="translate(1488 250) rotate(18)"><use href="#rose"/></g>
+    <g transform="translate(1412 168) rotate(-22) scale(0.82)"><use href="#rose"/></g>
+    <g transform="translate(1530 328) rotate(8) scale(0.7)"><use href="#rose"/></g>
+    <g transform="translate(1338 78) rotate(12) scale(0.68)"><use href="#rose"/></g>
+    <g transform="translate(372 38) rotate(-14) scale(0.72)"><use href="#rose"/></g>
+    <g transform="translate(1176 28) rotate(16) scale(0.64)"><use href="#rose"/></g>
+    <g transform="translate(176 248) rotate(42)"><use href="#leaf"/></g>
+    <g transform="translate(238 198) rotate(-22)"><use href="#leaf"/></g>
+    <g transform="translate(304 138) rotate(52)"><use href="#leaf"/></g>
+    <g transform="translate(428 88) rotate(-34)"><use href="#leaf"/></g>
+    <g transform="translate(522 42) rotate(16)"><use href="#leaf"/></g>
+    <g transform="translate(638 68) rotate(-48)"><use href="#leaf"/></g>
+    <g transform="translate(742 28) rotate(12)"><use href="#leaf"/></g>
+    <g transform="translate(862 18) rotate(-16)"><use href="#leaf"/></g>
+    <g transform="translate(978 48) rotate(38)"><use href="#leaf"/></g>
+    <g transform="translate(1100 88) rotate(-28)"><use href="#leaf"/></g>
+    <g transform="translate(1224 128) rotate(22)"><use href="#leaf"/></g>
+    <g transform="translate(1322 188) rotate(-38)"><use href="#leaf"/></g>
+    <g transform="translate(1382 258) rotate(14)"><use href="#leaf"/></g>
+    <g transform="translate(458 278) rotate(58)"><use href="#leaf"/></g>
+    <g transform="translate(578 218) rotate(-24)"><use href="#leaf"/></g>
+    <g transform="translate(978 208) rotate(28)"><use href="#leaf"/></g>
+    <g transform="translate(1082 278) rotate(-52)"><use href="#leaf"/></g>
+    <g transform="translate(318 358) rotate(18)"><use href="#leaf"/></g>
+    <g transform="translate(1240 398) rotate(-16)"><use href="#leaf"/></g>
+    <g transform="translate(618 478) rotate(-8)"><use href="#leaf"/></g>
+    <g transform="translate(918 498) rotate(32)"><use href="#leaf"/></g>
+    <g transform="translate(498 558) rotate(-38)"><use href="#leaf"/></g>
+    <g transform="translate(1102 558) rotate(18)"><use href="#leaf"/></g>
+    <g transform="translate(690 160) rotate(60) scale(0.8)"><use href="#leaf"/></g>
+    <g transform="translate(910 150) rotate(-55) scale(0.8)"><use href="#leaf"/></g>
+    <g transform="translate(250 430) rotate(8) scale(0.85)"><use href="#leaf"/></g>
+    <g transform="translate(1360 450) rotate(-12) scale(0.85)"><use href="#leaf"/></g>
+  </g>
+</svg>

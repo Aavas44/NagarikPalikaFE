@@ -32,6 +32,7 @@ export interface WardTemplateVariable {
   label: { en: string; ne: string };
   type: WardTemplateVariableType;
   required: boolean;
+  section?: string;
 }
 
 export interface WardDocumentTemplate {

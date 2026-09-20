@@ -15,8 +15,9 @@ export const DOCUMENT_EXTRACTION_SYSTEM_PROMPT = `तिमी नेपाल�
 - स्ट्रिङभित्रको नयाँ पङ्क्ति \\n ले लेख; उद्धरण चिन्ह \\" ले escape गर्; trailing comma नराख।
 - JSON सधैं पूर्ण र parse हुने होस् (काटिएको वस्तु नफर्काउ)।
 
-- वादी/निवेदक र प्रतिवादी/विपक्षी दुवै पक्ष १…N हुन सक्छन् — सधैं एरेमा राख (एउटा मात्र भए पनि)।
-- फिराद/देवानीमा प्रायः "वादी"/"प्रतिवादी"; रिट/निवेदनमा "निवेदक"/"विपक्षी" — दुवै कुञ्जी भर् यदि कागजातमा छ; नत्र मिल्ने पक्ष एरेमा राख।
+- वादी, निवेदक, प्रतिवादी, विपक्षी छुट्टाछुट्टै एरेमा राख (१…N)। निवेदकलाई सधैं वादी नमान्नु।
+- फिराद/देवानीमा प्रायः "वादी"/"प्रतिवादी"; रिट/निवेदनमा "निवेदक"/"विपक्षी"; प्रतिउत्तर/लिखित जवाफमा निवेदक प्रायः प्रतिवादी पक्ष।
+- "निवेदक_पक्ष" मा निवेदक/आवेदक वादी पक्षमा छ कि प्रतिवादी पक्षमा भनेर राख। कागजातबाट स्पष्ट नभए null। अनुमान नलगाउनु।
 - तीनपुस्ते / बाबु-आमा / हजुरबुबा-हजुरआमा / छोरा-छोरी जस्ता नाताबाट "वंशावली" बनाउ। कागजातमा उल्लेख भएका व्यक्ति मात्र राख; अनुमान नगर्।
 - वंशावलीमा प्रत्येक व्यक्तिको स्थिर "आईडी" (जस्तै vadi_1, vadi_1_babu, prati_1) राख; अभिभावक_आईडीहरूले माता/पिता जनाउ।
 - पुस्ता: मूल व्यक्ति 0, बाबु/आमा −1, हजुरबुबा/हजुरआमा −2, छोरा/छोरी +1।
@@ -92,6 +93,7 @@ export const DOCUMENT_EXTRACTION_SYSTEM_PROMPT = `तिमी नेपाल�
   },
   "प्रमाणहरू": string[],
   "साक्षीहरू": string[],
+  "निवेदक_पक्ष": "वादी" | "प्रतिवादी" | null,
   "वंशावली": {
     "मूल_व्यक्ति_आईडी": string | null,
     "व्यक्तिहरू": [
@@ -110,8 +112,8 @@ export const DOCUMENT_EXTRACTION_SYSTEM_PROMPT = `तिमी नेपाल�
 }`;
 
 export const DOCUMENT_EXTRACTION_USER_PROMPT = `तलका संलग्न कागजात/तस्बिरबाट माथिको नेपाली JSON ढाँचामा तथ्य निकाल।
-सबै वादी/निवेदक र प्रतिवादी/विपक्षी अलग-अलग एरे वस्तुमा राख (१…N)। तीनपुस्ते र नाताबाट वंशावली पनि भर्।
-कागजातमा स्पष्ट नभएका कुरा null वा [] राख। केवल JSON फर्काउ।`;
+सबै वादी, निवेदक, प्रतिवादी, विपक्षी अलग-अलग एरे वस्तुमा राख (१…N)। निवेदक वादी हो वा प्रतिवादी हो भन्ने "निवेदक_पक्ष" मा राख।
+तीनपुस्ते र नाताबाट वंशावली पनि भर्। कागजातमा स्पष्ट नभएका कुरा null वा [] राख। केवल JSON फर्काउ।`;
 
 export type ExtractedPartyDetails = {
   पूरा_नाम: string | null;
@@ -140,6 +142,8 @@ export type ExtractedFamilyTree = {
   स्रोत_टिप्पणी: string | null;
 };
 
+export type NibedakSide = "वादी" | "प्रतिवादी";
+
 export type ExtractedCaseDocument = {
   अदालत_विवरण: {
     अदालतको_नाम: string | null;
@@ -147,14 +151,16 @@ export type ExtractedCaseDocument = {
     दर्ता_मिति_वि_सं: string | null;
     मुद्दाको_विषय: string | null;
   };
-  /** Plaintiffs / petitioners — always an array after normalization (1…N). */
+  /** True plaintiffs (वादी) — not merged with निवेदक. */
   वादी_विवरण: ExtractedPartyDetails[];
-  /** Alias of plaintiff side (writ/petition wording); mirrored for display. */
+  /** Named applicant(s) on the pleading (निवेदक / आवेदक). May be either side. */
   निवेदक_विवरण: ExtractedPartyDetails[];
-  /** Defendants / respondents — always an array after normalization. */
+  /** True defendants (प्रतिवादी). */
   प्रतिवादी_विवरण: ExtractedPartyDetails[];
-  /** Alias of defendant side; mirrored for display. */
+  /** Named opponents (विपक्षी) on the pleading. */
   विपक्षी_विवरण: ExtractedPartyDetails[];
+  /** Whether the applicant (निवेदक) is on the plaintiff or defendant side. */
+  निवेदक_पक्ष: NibedakSide | null;
   आर्थिक_तथा_तथ्य: {
     बिगो_रकम_रु: number | null;
     घटना_मिति_वि_सं: string | null;
@@ -226,6 +232,7 @@ export function emptyExtractedCaseDocument(): ExtractedCaseDocument {
     },
     प्रमाणहरू: [],
     साक्षीहरू: [],
+    निवेदक_पक्ष: null,
     वंशावली: emptyExtractedFamilyTree(),
   };
 }
@@ -256,7 +263,7 @@ function asNullableNumber(value: unknown): number | null {
   return null;
 }
 
-function partyHasContent(d: ExtractedPartyDetails): boolean {
+export function partyHasContent(d: ExtractedPartyDetails): boolean {
   return Boolean(
     d.पूरा_नाम ||
       d.तीनपुस्ते ||
@@ -328,14 +335,100 @@ export function mergePartyLists(
   return out.length > 0 ? out : [emptyExtractedParty()];
 }
 
-/** Plaintiff / petitioner side (वादी ∪ निवेदक). */
-export function plaintiffParties(doc: ExtractedCaseDocument): ExtractedPartyDetails[] {
-  return mergePartyLists(doc.वादी_विवरण, doc.निवेदक_विवरण);
+export function foldPartyName(value: string | null | undefined): string {
+  return (value ?? "")
+    .toLowerCase()
+    .replace(/श्रीमती|श्रीमान्|श्रीमान|श्री/g, "")
+    .replace(/[\s।.,_\-–—()/\\'"]+/g, "")
+    .trim();
 }
 
-/** Defendant / respondent side (प्रतिवादी ∪ विपक्षी). */
+export function namesOverlap(
+  a: ExtractedPartyDetails[],
+  b: ExtractedPartyDetails[]
+): number {
+  let hits = 0;
+  for (const left of a) {
+    const ln = foldPartyName(left.पूरा_नाम);
+    if (ln.length < 3) continue;
+    for (const right of b) {
+      const rn = foldPartyName(right.पूरा_नाम);
+      if (rn.length < 3) continue;
+      if (ln === rn || ln.includes(rn) || rn.includes(ln)) {
+        hits += 1;
+        break;
+      }
+    }
+  }
+  return hits;
+}
+
+export function parseNibedakSide(value: unknown): NibedakSide | null {
+  if (typeof value !== "string") return null;
+  const v = value.trim().toLowerCase();
+  if (
+    v === "वादी" ||
+    v === "plaintiff" ||
+    v === "petitioner" ||
+    v === "vadi" ||
+    v === "badi"
+  ) {
+    return "वादी";
+  }
+  if (
+    v === "प्रतिवादी" ||
+    v === "defendant" ||
+    v === "respondent" ||
+    v === "prativadi" ||
+    v === "pratibadi"
+  ) {
+    return "प्रतिवादी";
+  }
+  return null;
+}
+
+/** Infer निवेदक side from name overlap; null if unclear. */
+export function inferNibedakSideFromParties(
+  petitioners: ExtractedPartyDetails[],
+  plaintiffs: ExtractedPartyDetails[],
+  defendants: ExtractedPartyDetails[],
+  respondents: ExtractedPartyDetails[]
+): NibedakSide | null {
+  const namedPetitioners = petitioners.filter(partyHasContent);
+  if (namedPetitioners.length === 0) return null;
+  const plaintiffHits = namesOverlap(namedPetitioners, plaintiffs.filter(partyHasContent));
+  const defendantHits = namesOverlap(
+    namedPetitioners,
+    mergePartyLists(defendants, respondents).filter(partyHasContent)
+  );
+  if (defendantHits > plaintiffHits && defendantHits > 0) return "प्रतिवादी";
+  if (plaintiffHits > defendantHits && plaintiffHits > 0) return "वादी";
+  if (defendantHits > 0 && defendantHits === plaintiffHits) return null;
+  return null;
+}
+
+function listOrEmpty(list: ExtractedPartyDetails[]): ExtractedPartyDetails[] {
+  return list.filter(partyHasContent).length > 0 ? list : [emptyExtractedParty()];
+}
+
+/** True plaintiff (वादी) parties — not mixed with a defendant-side निवेदक. */
+export function plaintiffParties(doc: ExtractedCaseDocument): ExtractedPartyDetails[] {
+  const vadi = mergePartyLists(doc.वादी_विवरण);
+  if (vadi.some(partyHasContent)) return vadi;
+  if (doc.निवेदक_पक्ष === "प्रतिवादी") {
+    return mergePartyLists(doc.विपक्षी_विवरण);
+  }
+  return mergePartyLists(doc.निवेदक_विवरण);
+}
+
+/** True defendant (प्रतिवादी) parties — not mixed with a plaintiff-side निवेदक. */
 export function defendantParties(doc: ExtractedCaseDocument): ExtractedPartyDetails[] {
-  return mergePartyLists(doc.प्रतिवादी_विवरण, doc.विपक्षी_विवरण);
+  const prati = mergePartyLists(doc.प्रतिवादी_विवरण);
+  if (prati.some(partyHasContent)) return prati;
+  if (doc.निवेदक_पक्ष === "प्रतिवादी") {
+    return mergePartyLists(doc.निवेदक_विवरण);
+  }
+  return mergePartyLists(doc.विपक्षी_विवरण);
 }
 
 function normalizePartySide(
@@ -537,19 +630,55 @@ export function normalizeExtractedCaseDocument(raw: unknown): ExtractedCaseDocum
     };
   }
 
-  const plaintiffs = mergePartyLists(
-    normalizePartyList(plaintiffsRaw),
-    normalizePartyList(petitionersRaw)
-  );
-  const defendants = mergePartyLists(
-    normalizePartyList(defendantsRaw),
-    normalizePartyList(respondentsRaw)
-  );
+  const plaintiffsRawList = normalizePartyList(plaintiffsRaw);
+  const petitionersRawList = normalizePartyList(petitionersRaw);
+  const defendantsRawList = normalizePartyList(defendantsRaw);
+  const respondentsRawList = normalizePartyList(respondentsRaw);
 
-  base.वादी_विवरण = plaintiffs;
-  base.निवेदक_विवरण = plaintiffs.map((p) => ({ ...p }));
-  base.प्रतिवादी_विवरण = defendants;
-  base.विपक्षी_विवरण = defendants.map((p) => ({ ...p }));
+  const parsedSide = parseNibedakSide(
+    obj["निवेदक_पक्ष"] ?? obj.applicant_side ?? obj.nibedak_side
+  );
+  const inferredSide = inferNibedakSideFromParties(
+    petitionersRawList,
+    plaintiffsRawList,
+    defendantsRawList,
+    respondentsRawList
+  );
+  const side = parsedSide ?? inferredSide;
+
+  let plaintiffs = plaintiffsRawList.filter(partyHasContent);
+  let petitioners = petitionersRawList.filter(partyHasContent);
+  let defendants = defendantsRawList.filter(partyHasContent);
+  let respondents = respondentsRawList.filter(partyHasContent);
+
+  if (plaintiffs.length === 0 && petitioners.length > 0 && side !== "प्रतिवादी") {
+    plaintiffs = petitioners.map((p) => ({ ...p }));
+  }
+  if (defendants.length === 0 && respondents.length > 0 && side !== "प्रतिवादी") {
+    defendants = respondents.map((p) => ({ ...p }));
+  }
+  if (defendants.length === 0 && petitioners.length > 0 && side === "प्रतिवादी") {
+    defendants = petitioners.map((p) => ({ ...p }));
+  }
+  if (plaintiffs.length === 0 && respondents.length > 0 && side === "प्रतिवादी") {
+    plaintiffs = respondents.map((p) => ({ ...p }));
+  }
+  if (petitioners.length === 0) {
+    petitioners = (side === "प्रतिवादी" ? defendants : plaintiffs).map((p) => ({
+      ...p,
+    }));
+  }
+  if (respondents.length === 0) {
+    respondents = (side === "प्रतिवादी" ? plaintiffs : defendants).map((p) => ({
+      ...p,
+    }));
+  }
+
+  base.वादी_विवरण = listOrEmpty(plaintiffs);
+  base.निवेदक_विवरण = listOrEmpty(petitioners);
+  base.प्रतिवादी_विवरण = listOrEmpty(defendants);
+  base.विपक्षी_विवरण = listOrEmpty(respondents);
+  base.निवेदक_पक्ष = side;
 
   if (facts) {
     base.आर्थिक_तथा_तथ्य = {

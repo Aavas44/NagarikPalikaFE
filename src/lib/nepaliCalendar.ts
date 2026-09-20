@@ -169,6 +169,57 @@ export function getTodayBs(): BsDate {
   return adToBs(new Date(year, month - 1, day));
 }
 
+export const BS_WEEKDAYS_NE = [
+  "आइतबार",
+  "सोमबार",
+  "मंगलबार",
+  "बुधबार",
+  "बिहिबार",
+  "शुक्रबार",
+  "शनिबार",
+] as const;
+
+function nepalTodayAdParts(): { year: number; month: number; day: number } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kathmandu",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value),
+    month: Number(parts.find((part) => part.type === "month")?.value),
+    day: Number(parts.find((part) => part.type === "day")?.value),
+  };
+}
+
+/** Sunday = 0, matching Nepali legal "रोज १" = आइतबार. */
+export function getNepalWeekdayIndex(ad?: Date): number {
+  if (ad) return ad.getDay();
+  const { year, month, day } = nepalTodayAdParts();
+  if (!year || !month || !day) return new Date().getDay();
+  return new Date(year, month - 1, day).getDay();
+}
+
+/** Placeholders for इति संवत् {साल} साल {महिना} महिना {गते} गते रोज {रोज} शुभम् । */
+export function formatItiSamvatParts(date?: BsDate): {
+  साल: string;
+  महिना: string;
+  गते: string;
+  रोज: string;
+  संवत्: string;
+} {
+  const bs = date ?? getTodayBs();
+  const weekday = BS_WEEKDAYS_NE[getNepalWeekdayIndex()] ?? "";
+  return {
+    साल: toDevanagariDigits(String(bs.year)),
+    महिना: toDevanagariDigits(String(bs.month).padStart(2, "0")),
+    गते: toDevanagariDigits(String(bs.day)),
+    रोज: weekday,
+    संवत्: toDevanagariDigits(String(bs.year)),
+  };
+}
+
 export function formatBsDate(date: BsDate, locale: "en" | "ne"): string {
   const monthName = locale === "ne" ? BS_MONTHS_NE[date.month - 1] : BS_MONTHS_EN[date.month - 1];
   if (locale === "ne") {

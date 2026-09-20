@@ -4,6 +4,10 @@ const path = require("path");
 const nextConfig = {
   outputFileTracingRoot: path.join(__dirname),
   serverExternalPackages: ["pdf-parse"],
+  // High/supreme portal peši pulls several court pages; default rewrite proxy is ~30s.
+  experimental: {
+    proxyTimeout: 180_000,
+  },
   async rewrites() {
     return {
       afterFiles: [

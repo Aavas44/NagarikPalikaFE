@@ -1943,3 +1943,176 @@
 .skTemplatePageBtnActive:hover:not(:disabled) {
   background: #1d4ed8;
 }
+
+.skTemplateReviewModal {
+  display: flex;
+  flex-direction: column;
+  width: min(1400px, 100%);
+  max-height: calc(100vh - 1.5rem);
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+.skTemplateReviewHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.skTemplateReviewHeaderMain h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.skTemplateReviewTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+
+.skTemplateReviewNav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.skTemplateReviewJump {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.skTemplateReviewJump select {
+  max-width: min(420px, 55vw);
+  padding: 0.3rem 0.45rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.skTemplateReviewMeta {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.skTemplateReviewSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+@media (max-width: 960px) {
+  .skTemplateReviewSplit {
+    grid-template-columns: 1fr;
+    overflow: auto;
+  }
+}
+
+.skTemplateReviewPane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.skTemplateReviewPane:last-child {
+  border-right: none;
+}
+
+.skTemplateReviewPaneHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f1f5f9;
+  font-size: 0.85rem;
+}
+
+.skTemplateReviewPaneHeader span {
+  color: #64748b;
+}
+
+.skTemplateReviewPaneBody {
+  flex: 1;
+  overflow: auto;
+  padding: 0.85rem;
+  min-height: 280px;
+}
+
+.skTemplateReviewOfficialStyles {
+  /* Host for docx-preview injected <style> tags; keep in DOM for cascading. */
+  height: 0;
+  overflow: hidden;
+}
+
+.skTemplateReviewOfficial {
+  color: #0f172a;
+  min-height: 240px;
+}
+
+.skTemplateReviewOfficial :global(.docx-wrapper) {
+  background: #e2e8f0;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.skTemplateReviewOfficial :global(.docx-wrapper > section.docx),
+.skTemplateReviewOfficial :global(section.docx) {
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
+  margin: 0 auto;
+  padding: 1.25rem 1.4rem !important;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.skTemplateReviewOfficial :global(.docx p),
+.skTemplateReviewOfficial :global(.docx span),
+.skTemplateReviewOfficial :global(.docx td),
+.skTemplateReviewOfficial :global(.docx th) {
+  font-family: "Noto Sans Devanagari", Mangal, "Preeti", sans-serif;
+}
+
+.skTemplateReviewOfficial :global(.docx table) {
+  border-collapse: collapse;
+}
+
+.skTemplateReviewOfficial :global(.docx td),
+.skTemplateReviewOfficial :global(.docx th) {
+  border: 1px solid #94a3b8;
+  vertical-align: top;
+}
+
+.skTemplateReviewEditor {
+  flex: 1;
+  min-height: 280px;
+  max-height: none;
+  overflow: auto;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+}
