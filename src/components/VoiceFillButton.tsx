@@ -56,6 +56,7 @@ export function VoiceFillButton({
   disabled,
   locale,
   lang,
+  listenMs,
   interimResults = true,
   className,
   listeningClassName,
@@ -65,6 +66,8 @@ export function VoiceFillButton({
   disabled?: boolean;
   locale?: "en" | "ne";
   lang?: string;
+  /** Pass `null` to disable the auto-stop timer (chat dictation). */
+  listenMs?: number | null;
   interimResults?: boolean;
   className?: string;
   listeningClassName?: string;
@@ -75,6 +78,7 @@ export function VoiceFillButton({
   const labels = voiceLabels(locale);
   const { supported, listening, error, start, stop } = useSpeechToText({
     lang: lang ?? speechRecognitionLang(locale),
+    listenMs,
     interimResults,
     onTranscript,
   });
@@ -119,13 +123,17 @@ export function VoiceFillRow({
   disabled,
   locale,
   lang,
+  listenMs,
   onTranscript,
+  onSessionStart,
 }: {
   children: ReactNode;
   disabled?: boolean;
   locale?: "en" | "ne";
   lang?: string;
+  listenMs?: number | null;
   onTranscript: (text: string) => void;
+  onSessionStart?: () => void;
 }) {
   return (
     <div className={styles.row}>
@@ -134,7 +142,9 @@ export function VoiceFillRow({
         disabled={disabled}
         locale={locale}
         lang={lang}
+        listenMs={listenMs}
         onTranscript={onTranscript}
+        onSessionStart={onSessionStart}
       />
     </div>
   );

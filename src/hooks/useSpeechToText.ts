@@ -73,7 +73,11 @@ function transcriptFromEvent(event: SpeechRecognitionEventLike): string {
 
 export function useSpeechToText(options: {
   lang?: string;
-  listenMs?: number;
+  /**
+   * Auto-stop after this many ms. Pass `null` or `0` for chat-style
+   * dictation that runs until the user presses stop.
+   */
+  listenMs?: number | null;
   /** Default true (forms replace the whole field). Prefer false when inserting at a caret. */
   interimResults?: boolean;
   onTranscript: (text: string) => void;
@@ -190,9 +194,11 @@ export function useSpeechToText(options: {
     setListening(true);
 
     const armTimeout = () => {
+      const ms = listenMsRef.current;
+      if (ms == null || ms <= 0) return;
       timeoutRef.current = window.setTimeout(() => {
         stopRef.current();
-      }, listenMsRef.current);
+      }, ms);
     };
 
     try {
